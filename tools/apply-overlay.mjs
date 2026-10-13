@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 /*
- * apply-overlay.mjs —— 把本仓的**平台覆盖层**叠到你自备的官方《卫戍协议》0.2.5 上
+ * apply-overlay.mjs —— 把本仓的**平台覆盖层**叠到你自备的官方《卫戍协议》0.2.6 上
  *
  * 它做什么：逐文件校验 + 先备份 + 再写入，最后可选把 11 个 Mod 一起拷进 mods/。
  * 它不做什么：不含任何官方素材；不会替你下载游戏本体；不联网。
  *
  * 用法（在本仓根目录下跑）：
- *   node tools/apply-overlay.mjs --target "D:\Stronghold-Protocol-0.2.5" --dry-run
- *   node tools/apply-overlay.mjs --target "D:\Stronghold-Protocol-0.2.5"
- *   node tools/apply-overlay.mjs --target "D:\Stronghold-Protocol-0.2.5" --with-mods
- *   node tools/apply-overlay.mjs --target "D:\Stronghold-Protocol-0.2.5" --with-mods --no-state
- *   node tools/apply-overlay.mjs --target "D:\Stronghold-Protocol-0.2.5" --rollback "<备份目录>"
+ *   node tools/apply-overlay.mjs --target "D:\Stronghold-Protocol-0.2.6" --dry-run
+ *   node tools/apply-overlay.mjs --target "D:\Stronghold-Protocol-0.2.6"
+ *   node tools/apply-overlay.mjs --target "D:\Stronghold-Protocol-0.2.6" --with-mods
+ *   node tools/apply-overlay.mjs --target "D:\Stronghold-Protocol-0.2.6" --with-mods --no-state
+ *   node tools/apply-overlay.mjs --target "D:\Stronghold-Protocol-0.2.6" --rollback "<备份目录>"
  *
  * `--with-mods` 把 **11 个 Mod** 拷进 `mods/`，它们**默认全部启用** ⇒ **不写** `mods/.state.json`；
  * 已存在的 `.state.json` **一个字都不动**。`--no-state` 保留为**兼容参数**（现在已经没有状态需要写了）。
@@ -38,7 +38,7 @@ const REPO = resolve(HERE, '..');
 const OVERLAY = join(REPO, 'overlay');
 const MANIFEST = join(OVERLAY, 'MANIFEST.sha256');
 const ORIGIN = join(OVERLAY, 'ORIGIN.sha256');
-const EXPECTED_GAME_VERSION = '0.2.5';
+const EXPECTED_GAME_VERSION = '0.2.6';
 
 const argv = process.argv.slice(2);
 function opt(name, fallback = null) { const i = argv.indexOf(name); return i === -1 ? fallback : (argv[i + 1] ?? true); }
@@ -52,8 +52,8 @@ const jsonOut = opt('--json');
 function usage(msg) {
   if (msg) console.error('错误: ' + msg);
   console.error('用法:');
-  console.error('  node tools/apply-overlay.mjs --target <官方 0.2.5 目录> [--dry-run] [--with-mods] [--no-state] [--force] [--json <file>]');
-  console.error('  node tools/apply-overlay.mjs --target <官方 0.2.5 目录> --rollback <备份目录>');
+  console.error('  node tools/apply-overlay.mjs --target <官方 0.2.6 目录> [--dry-run] [--with-mods] [--no-state] [--force] [--json <file>]');
+  console.error('  node tools/apply-overlay.mjs --target <官方 0.2.6 目录> --rollback <备份目录>');
   process.exit(2);
 }
 if (!target) usage('缺 --target');
@@ -140,7 +140,7 @@ for (const rel of rels) {
   if (sha256(p) !== manifest.get(rel)) corrupt.push(rel + '（sha256 不符）');
 }
 
-/* 目标是不是官方 0.2.5 */
+/* 目标是不是官方 0.2.6 */
 let gameVersion = null;
 const pkg = join(TARGET, 'package.json');
 if (existsSync(pkg)) {
@@ -159,7 +159,7 @@ for (const rel of rels) {
   else plan.conflict.push({ rel, now: cur, expect: want });
 }
 
-console.log('=== apply-overlay · 把平台补丁叠到官方 0.2.5 ===');
+console.log('=== apply-overlay · 把平台补丁叠到官方 0.2.6 ===');
 console.log('仓库    : ' + REPO);
 console.log('目标    : ' + TARGET);
 console.log('目标版本: package.json version = ' + String(gameVersion) + (versionOk ? '  ✓' : '  ✗ 期望 ' + EXPECTED_GAME_VERSION));

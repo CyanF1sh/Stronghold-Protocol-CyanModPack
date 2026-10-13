@@ -15,13 +15,22 @@
 //     /packs/index.json → the content packs of this server (server/packs.js: the language packs of
 //                public/i18n/ and the pack folders of packs/, re-read when they change; never cached)
 //     /packs/<id>/<file> → a file of a pack folder — only one its manifest names (server/packs.js servable)
+//     /assets/~<hash>/…, /fonts/~<hash>/…, /media/~<hash>/… → the same files: the content-hash segment
+//                (shared/assetPaths.js) is stripped. A hash that names the file's current bytes (assetIndex.js
+//                urlHashOk: its own hash, or its Spine model's) answers `immutable` for a year; any other hash —
+//                an old page, a URL derived from another file's — the current file with `no-cache`
+//     /data/assets.json, /data/local-assets.json → the served manifests (assetViews.js: every art URL with its
+//                content-hash segment; no-cache, the ETag of the view) once the asset index is ready, the files as
+//                they are before that or without an index
 //     /mods/   → <SP_MODS> (Mod 仓库, read-only, dotfiles 404 — MOD SYSTEM). Two uses: Mod 的 content/index.js
 //                (L3 行为模块，浏览器端 import，必须与服务端同一份) 与 Mod 的 assets/（美术资源兜底根）。
 //                ★ 裸 `/mods`（不带斜杠）**不是**这里处理的：它会被这条挂载抢走并 301 到 `/mods/`，
 //                  所以 JSON 快照由 routes.js 先拦（见那里的 `/mods` 路由）。
 //
-// Traversal & dotfile protection, a directory without its trailing slash → 301, 404 page; an absent
-// data/local-assets.json is answered with an empty manifest. Files go out through files.js serveFile.
+// Files under public/assets/ and public/fonts/ get their content hash as ETag when the index has it (a file whose
+// size or mtime changed since asks for a rescan), others size + mtime. Traversal & dotfile protection, a directory
+// without its trailing slash → 301, 404 page; an absent data/local-assets.json is answered with an empty manifest.
+// Files go out through files.js serveFile.
 // `/data/<f>.json` of a data file a Mod patched is answered from memory with the **merged** JSON (see
 // buildDataOverrides), so the client sees exactly what the server loaded.
 
@@ -29,9 +38,11 @@ import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { MEDIA_PREFIX } from '../../shared/media.js';
+import { splitHashedPath } from '../../shared/assetPaths.js';
 import { ROOT, noopLog } from './config.js';
 import { sendError, sendJson } from './common.js';
-import { MIME, GzipCache, isNotModified, serveFile } from './files.js';
+import { MIME, CompressCache, isNotModified, serveFile, serveBuffer } from './files.js';
+import { ASSET_INDEX_ROOTS, hashedFileOpts } from './assetIndex.js';
 import { serveMedia } from './media.js';
 import { createPackRegistry } from '../packs.js';
 import { PACKS_URL, PACK_INDEX_FILE } from '../../shared/packs.js';
@@ -80,9 +91,12 @@ export function buildDataOverrides(data, patched) {
  * Create the static request handler.
  * @param {{ publicDir: string, dataDir: string, sharedDir: string, simDir?: string, packsDir?: string,
  *   packs?: ReturnType<typeof createPackRegistry>, log?: object,
+ *   assetIndex?: ReturnType<typeof import('./assetIndex.js').createAssetIndex> | null,
+ *   views?: ReturnType<typeof import('./assetViews.js').createManifestViews> | null,
  *   dataOverrides?: Map<string, { body: Buffer, etag: string }> | null, modsDir?: string | null,
  *   modAssetDirs?: string[] | (() => string[]) }} dirs
- *   packs: the server's pack registry (default: one over publicDir, dataDir and packsDir — ROOT/packs)
+ *   packs: the server's pack registry (default: one over publicDir, dataDir and packsDir — ROOT/packs);
+ *   assetIndex / views: the content hashes and the served manifests (none: plain URLs, size-mtime ETags)
  *   dataOverrides / modsDir / modAssetDirs: 全部**可选**（缺省 = 不启用 Mod 层，与改动前逐值相同；
  *   test/static-local-art.test.js 就只传三个目录）。
  *   ★ modAssetDirs 允许传**求值函数**：管理页热重载后新装的 Mod 美术立刻可命中，不必重建 handler。
@@ -90,7 +104,8 @@ export function buildDataOverrides(data, patched) {
  */
 export function createStaticHandler({
   publicDir, dataDir, sharedDir, simDir = path.join(ROOT, 'server', 'sim'), packsDir = path.join(ROOT, 'packs'),
-  packs = null, log = noopLog, dataOverrides = null, modsDir = null, modAssetDirs = [],
+  packs = null, log = noopLog, assetIndex = null, views = null,
+  dataOverrides = null, modsDir = null, modAssetDirs = [],
 }) {
   const registry = packs || createPackRegistry({ publicDir, dataDir, packsDir }, { log: /** @type {any} */ (log) });
   const mounts = [
@@ -109,7 +124,7 @@ export function createStaticHandler({
     : () => (modAssetDirs || []).filter((d) => typeof d === 'string' && d);
   const shimBody = Buffer.from(DATA_SHIM_JS);
   const shimTag = `"shim-${shimBody.length.toString(16)}"`;
-  const gzipCache = new GzipCache();
+  const gzipCache = new CompressCache(); // brotli and gzip bodies (files.js)
 
   return async function serveStatic(req, res, rawPath, query) {
     let decoded;
@@ -118,6 +133,10 @@ export function createStaticHandler({
       sendError(req, res, 400, '请求地址无效 · Bad request');
       return;
     }
+    // /assets/~<hash>/x → /assets/x (the hash decides the cache policy below)
+    const hashed = splitHashedPath(decoded);
+    const urlHash = hashed.hash;
+    decoded = hashed.path;
     if (decoded === '/data.js') {
       const headers = { 'Content-Type': MIME['.js'], 'Cache-Control': 'no-cache', ETag: shimTag, 'Content-Length': shimBody.length };
       if (isNotModified(req, shimTag, new Date(0))) { delete headers['Content-Length']; res.writeHead(304, headers); res.end(); return; }
@@ -137,8 +156,16 @@ export function createStaticHandler({
     }
     // Extension-less audio (download-manager avoidance): /media/bgm/act1 → /assets/audio/bgm/act1.mp3
     if (decoded.startsWith(MEDIA_PREFIX)) {
-      await serveMedia(req, res, decoded.slice(MEDIA_PREFIX.length), query, publicDir, gzipCache, log);
+      await serveMedia(req, res, decoded.slice(MEDIA_PREFIX.length), query, publicDir, gzipCache, log, { urlHash, assetIndex });
       return;
+    }
+    // The served manifests: every art URL with its content hash (assetViews.js), once the index is ready
+    if (views && (decoded === '/data/assets.json' || decoded === '/data/local-assets.json')) {
+      const view = await views.get(decoded.slice('/data/'.length));
+      if (view) {
+        await serveBuffer(req, res, { body: view.body, hash: view.hash, type: MIME['.json'], cacheControl: 'no-cache', key: `view:${decoded}`, cache: gzipCache });
+        return;
+      }
     }
     // Bare mount paths (e.g. "/data") → treat as the mount directory.
     const mount = mounts.find((m) => decoded.startsWith(m.prefix) || decoded === m.prefix.slice(0, -1)) || mounts[mounts.length - 1];
@@ -224,6 +251,8 @@ export function createStaticHandler({
       }
       return;
     }
-    await serveFile(req, res, absPath, stat, mount.name, segments, query, gzipCache, log);
+    const indexed = mount.name === 'public' && segments.length > 1 && ASSET_INDEX_ROOTS.includes(segments[0]);
+    const opts = indexed ? hashedFileOpts(assetIndex, segments.join('/'), stat, urlHash) : (urlHash ? { cacheControl: 'no-cache' } : {});
+    await serveFile(req, res, absPath, stat, mount.name, segments, query, gzipCache, log, opts);
   };
 }

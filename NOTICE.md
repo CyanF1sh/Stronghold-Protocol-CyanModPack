@@ -1,7 +1,7 @@
 # 版权与使用声明（NOTICE）
 
 **本仓 = 卫戍协议 · CyanFish 平台补丁与 Mod 集**：给《明日方舟》限时玩法「卫戍协议：盟约」的
-**非官方同人复刻项目**（上游 **Stronghold Protocol 0.2.5**）做的**平台覆盖层 + 14 个 Mod**。
+**非官方同人复刻项目**（上游 **Stronghold Protocol 0.2.6**）做的**平台覆盖层 + 14 个 Mod**。
 
 与上海鹰角网络科技有限公司（Hypergryph）、Yostar 及其关联方**没有任何关联**，也未获得其授权或认可。
 
@@ -19,7 +19,7 @@ Copyright (C) 2026 CyanFish（本仓覆盖层、Mod 与文档的作者）
 
 ## 2. 上游项目与它的口径
 
-- **上游**：Stronghold Protocol（`sganggs/Stronghold-Protocol`），本仓基于其 **0.2.5** 版本；
+- **上游**：Stronghold Protocol（`sganggs/Stronghold-Protocol`），本仓基于其 **0.2.6** 版本；
   上游自身以 **GPL-3.0-or-later** 发布，并在其 `NOTICE.md` §1 里给出同样的许可证声明
   （Copyright (C) 2026 Stronghold-Protocol contributors）。
 - **上游 `NOTICE.md` §2 的原文口径**（同样适用于本仓，逐条照录其含义）：
@@ -42,7 +42,7 @@ Copyright (C) 2026 CyanFish（本仓覆盖层、Mod 与文档的作者）
 | 官方语音 / 音乐 / 音效 | 一个音频文件都没有（含 `cyanfish.dj-bgm` 那首第三方曲子，见 [THIRD-PARTY.md](THIRD-PARTY.md)） |
 | 官方字体 | `public/fonts/**` 一个文件都没有 |
 | 官方数据表拷贝 | 没有 `data/*.json` 拷贝；Mod 里的 `data/*.json` 是**我们写的局部补丁**（只写要改的键） |
-| 游戏本体 | 本仓是**补丁 + Mod**，游玩需自备官方 0.2.5 本体与素材 |
+| 游戏本体 | 本仓是**补丁 + Mod**，游玩需自备官方 0.2.6 本体与素材 |
 | ★ **唯一例外** | `mods/cyanfish.dj-all/assets/amiya-spin.gif` —— **1 张同人二创表情包**（128×128 · 117 KB · 局内入口图标）。**不是**官方美术文件；来源与删除办法见该目录的 `assets/图标说明.md` 与 [THIRD-PARTY.md](THIRD-PARTY.md) §5。**权利人要求即删。** |
 
 自查命令：`node tools/publish-scan.mjs --repo .`（会检查素材文件、令牌、真实主机名、本地绝对路径、体积）。
@@ -68,7 +68,7 @@ Copyright (C) 2026 CyanFish（本仓覆盖层、Mod 与文档的作者）
 ---
 
 **English summary.** Unofficial, non-commercial fan project: a **platform patch layer plus 14 mods** for the
-unofficial Stronghold Protocol remake, targeting upstream **0.2.5**. Our own code and docs are
+unofficial Stronghold Protocol remake, targeting upstream **0.2.6**. Our own code and docs are
 **GPL-3.0-or-later** (the overlay is a derivative of upstream GPL code). All Arknights names, art, models,
 audio and data are © Hypergryph / Yostar and their licensors and are **not** covered by the GPL.
 The repository ships no official asset; the **only** third-party image is one **fan-made sticker**

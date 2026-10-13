@@ -10,7 +10,8 @@
 //   | 对局内弹幕 | `sp.pref.chat.danmaku` | 对局内顶部那条飘过的弹幕出现 / 消失 | 开关本身就是撤回（默认**开**） |
 //   | 弹幕速度 | `sp.pref.chat.speed` | 同一条消息飘过屏幕用的时间变短 / 变长 | 「标准」档 |
 //   | 聊天字号 | `sp.pref.chat.font` | 右侧聊天面板里的名字与正文变大 / 变小 | 「标准」档 |
-//   ⇒ 三条都**有真值、有可观察差别、有撤回**，没有展示行 / 分隔行 / 占位旋钮。
+//   | 打开聊天键 | `sp.pref.chat.openKey` | 收起聊天后**按一下就能把聊天打开并直接打字**（回车 / T / 斜杠 / 禁用） | 「回车」档 |
+//   ⇒ 四条都**有真值、有可观察差别、有撤回**，没有展示行 / 分隔行 / 占位旋钮。
 //
 // ★ 排版照 §4.12.9.3：一行一个控件（宿主 `.set-row` 的三列 grid）；控件全部用**宿主已有的** class
 //   （`.set-toggle` / `.set-seg`），一个都不自己画。
@@ -22,11 +23,11 @@
 //   `title` ≤ 6 全角字；长说明一律收进「？」小圈（`HintDot`，纯 CSS + `data-tip` + `tabindex`，
 //   **不并存原生 `title`** —— §4.12.2 二 / §4.12.9.6 的 R7）。
 //
-// ★ 「？」小圈**正好 3 个**（每行一个），可数、可取证。小圈文案 ≤ 160 全角字、一句一档、零实现细节。
+// ★ 「？」小圈**正好 4 个**（每行一个），可数、可取证。小圈文案 ≤ 160 全角字、一句一档、零实现细节。
 // ★ 唯一的一行**状态读数**（`.sp-chat__hint`）保留：它写的是"约 N 秒飘完"——**会变、是玩家能感知的量**，
 //   而且用的是**真值**算出来的（不是把倍率换个说法）。
 
-import { TRAVEL_BASE_MS } from './plan.js';
+import { OPEN_KEY_CHOICES, TRAVEL_BASE_MS } from './plan.js';
 import { getPrefs, setPrefs, subscribe as subscribePrefs } from './store.js';
 
 /** 「？」小圈的规范形状（§4.12.2 二：`aria-label` + `data-tip` + `tabindex`，**不加原生 `title`**）。 */
@@ -101,6 +102,17 @@ export function renderChatSection({ api }) {
             aria-checked=${prefs.font === s.v ? 'true' : 'false'}
             class=${prefs.font === s.v ? 'is-on' : ''} data-sp-chat-value=${String(s.v)}
             onClick=${() => setLocal(setPrefs({ font: s.v }))}>${s.label}</button>`)}
+        </div>
+      </div>
+
+      <div class="set-row">
+        <span class="set-row__label">${'打开聊天键'}${HintDot(html,
+          '收起聊天后，按这个键把聊天窗打开，光标会直接落在输入框里，抬手就能打字。回车是默认档；T 或斜杠适合和游戏里已有的按键错开；选「禁用」就只用鼠标点开。')}</span>
+        <div class="set-seg" role="radiogroup" aria-label=${'打开聊天键'} data-sp-chat-set="openKey">
+          ${OPEN_KEY_CHOICES.map((c) => html`<button key=${c.v || 'off'} type="button" role="radio"
+            aria-checked=${prefs.openKey === c.v ? 'true' : 'false'}
+            class=${prefs.openKey === c.v ? 'is-on' : ''} data-sp-chat-value=${c.v || 'off'}
+            onClick=${() => setLocal(setPrefs({ openKey: c.v }))}>${c.label}</button>`)}
         </div>
       </div>
 

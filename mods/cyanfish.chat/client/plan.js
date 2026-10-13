@@ -45,13 +45,26 @@ export const SPEED_MAX = 2;
 export const FONT_MIN = 0.8;
 export const FONT_MAX = 1.6;
 
-/** 出厂偏好：**弹幕关、速度标准、字号标准** —— 与"没装这个设置项"的最小惊讶一致（面板本身照常）。 */
+/** 出厂偏好：**弹幕开、速度标准、字号标准、`Enter` 打开聊天** —— 与"没装这个设置项"的最小惊讶一致（面板本身照常）。 */
 export const PREF_DEFAULTS = Object.freeze({
   danmaku: true,
   speed: 1,
   font: 1,
   open: true,
+  openKey: 'Enter',
 });
+
+/**
+ * 「打开聊天键」的可选项（**第一项 = 出厂档**）。`v` 就是 `KeyboardEvent.key` 的比对值，
+ * `''` = 禁用（只用鼠标点开）。★ 只收**白名单**：写坏 / 手改 localStorage 一律回落 `Enter`。
+ * ★ 用 `e.key` 而不是 `e.keyCode`：`key` 不受键盘布局 / 大小写影响（`T` 与 `t` 都命中，无需 `toLowerCase`）。
+ */
+export const OPEN_KEY_CHOICES = Object.freeze([
+  { v: 'Enter', label: '回车' },
+  { v: 't', label: 'T' },
+  { v: '/', label: '/' },
+  { v: '', label: '禁用' },
+]);
 
 const finite = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 const clampNum = (v, lo, hi, dflt) => {
@@ -63,11 +76,13 @@ const clampNum = (v, lo, hi, dflt) => {
 export const clampSpeed = (v) => clampNum(v, SPEED_MIN, SPEED_MAX, PREF_DEFAULTS.speed);
 /** 字号夹取（写坏 ⇒ 标准档）。 */
 export const clampFont = (v) => clampNum(v, FONT_MIN, FONT_MAX, PREF_DEFAULTS.font);
+/** 「打开聊天键」洗值（不在白名单 ⇒ 回落 `Enter`）。 */
+export const clampOpenKey = (v) => (OPEN_KEY_CHOICES.some((c) => c.v === v) ? v : PREF_DEFAULTS.openKey);
 
 /**
  * 洗一份本机偏好（缺字段 / 写坏 ⇒ 出厂档；**绝不抛**）。
  * @param {any} raw `loadPref('chat', …)` 的返回值
- * @returns {{ danmaku: boolean, speed: number, font: number, open: boolean }}
+ * @returns {{ danmaku: boolean, speed: number, font: number, open: boolean, openKey: string }}
  */
 export function readPrefs(raw) {
   const o = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
@@ -76,6 +91,7 @@ export function readPrefs(raw) {
     speed: clampSpeed(o.speed),
     font: clampFont(o.font),
     open: typeof o.open === 'boolean' ? o.open : PREF_DEFAULTS.open,
+    openKey: clampOpenKey(o.openKey),
   };
 }
 

@@ -1,6 +1,6 @@
 # 安装（step-by-step）
 
-> 目标：在你自己的机器上，把本仓的**平台覆盖层 + 14 个 Mod** 叠到**你自备的官方 0.2.5** 上。
+> 目标：在你自己的机器上，把本仓的**平台覆盖层 + 14 个 Mod** 叠到**你自备的官方 0.2.6** 上。
 > 全程**本地操作**，脚本不联网、不碰任何服务器、不索取任何凭据。
 > 预计 15 分钟（其中大部分时间是官方素材下载）。
 
@@ -10,7 +10,7 @@
 
 | 项 | 要求 | 为什么 |
 |---|---|---|
-| **游戏本体** | **官方 0.2.5**（上游 `package.json` 的 `"version": "0.2.5"`） | 19 个核心 Mod 的 `gameVersion` 就写 0.2.5；装载器严格校验，版本不符会**整批跳过** |
+| **游戏本体** | **官方 0.2.6**（上游 `package.json` 的 `"version": "0.2.6"`） | 19 个核心 Mod 的 `gameVersion` 就写 0.2.6；装载器严格校验，版本不符会**整批跳过** |
 | **Node.js** | **≥ 22**（上游 `engines.node`） | 服务器与所有工具都是 Node 程序 |
 | **素材** | 由官方 `tools/setup.mjs` 在你本机自取（约 270 MB） | 官方美术 / 字体**不在本仓**，也不能再分发 |
 | **磁盘** | 本体 + 素材 + 依赖约 1 GB 起 | 与上游要求一致 |
@@ -20,21 +20,21 @@
 
 ---
 
-## 1. 准备官方 0.2.5（自备）
+## 1. 准备官方 0.2.6（自备）
 
-任选一条路，最后都要得到一个**目录**（下称 `<游戏目录>`，例如 `D:\Stronghold-Protocol-0.2.5`）：
+任选一条路，最后都要得到一个**目录**（下称 `<游戏目录>`，例如 `D:\Stronghold-Protocol-0.2.6`）：
 
 **路线 A（推荐·源码）**
 
 ```bash
 git clone https://github.com/sganggs/Stronghold-Protocol.git "<游戏目录>"
 cd "<游戏目录>"
-git checkout 0.2.5          # 或与 0.2.5 对应的 tag / commit
+git checkout 0.2.6          # 或与 0.2.6 对应的 tag / commit
 npm install                 # postinstall 会跑 tools/vendor.mjs
 npm run setup               # ★ 自取官方素材（public/assets/** + public/fonts/**）
 ```
 
-**路线 B（官方 Releases 的 0.2.5 完整包）**：下载解压 → `npm install`。
+**路线 B（官方 Releases 的 0.2.6 完整包）**：下载解压 → `npm install`。
 若包内已带素材，可跳过 `npm run setup`。
 
 > ⚠ **路线 B 有个已知坑（2026-10-13 在真机上实测出来的）**：官方**发行包**为了瘦身**不含 `test/**`（661 个文件）
@@ -49,7 +49,7 @@ npm run setup               # ★ 自取官方素材（public/assets/** + public
 **确认两件事**（`apply-overlay.mjs` 也会自己核对）：
 
 ```bash
-node -e "console.log(require('./package.json').version)"   # 期望输出 0.2.5
+node -e "console.log(require('./package.json').version)"   # 期望输出 0.2.6
 ls server public docs tools test                            # 这五个目录都要在
 ```
 
@@ -73,7 +73,7 @@ node tools/apply-overlay.mjs --target "<游戏目录>" --dry-run
 期望输出（要点）：
 
 ```
-目标版本: package.json version = 0.2.5  ✓
+目标版本: package.json version = 0.2.6  ✓
 覆盖层  : 105 个文件
 闸① 覆盖层自身完整性: ✓ 105/105
 闸② 目标现状: 可写 105 · 已是本仓版本 0 · 冲突 0
@@ -131,7 +131,7 @@ node tools/mod.mjs validate
 14 个 Mod 全部通过  （另有 1 个 Mod 有提示，不影响通过）
 ```
 
-★ 退出码 **0**、**0 个未通过** —— 本仓 14 个 Mod 的 `gameVersion` **全部**是 `0.2.5`。
+★ 退出码 **0**、**0 个未通过** —— 本仓 14 个 Mod 的 `gameVersion` **全部**是 `0.2.6`。
 
 > Mod 目录默认取 `<游戏目录>/mods`（也可用 `SP_MODS=<目录>` 指定）。本仓的 `mods/` 就是自足的，
 > 直接把目录拷过去即可，**不需要任何环境变量**。
@@ -173,9 +173,9 @@ node tools/apply-overlay.mjs --target "<游戏目录>" --rollback "<第 4 步打
 
 | 症状 | 原因 / 处理 |
 |---|---|
-| 干跑报一堆冲突 | 你的树不是官方 0.2.5 全量包（少了 `test/` 之类），或你改过那些文件。逐个看冲突清单再决定 |
-| 干跑报「目标不是官方 0.2.5」 | `package.json` 的 `version` 不是 `0.2.5`。请先升级本体 |
-| `validate` 报未通过 | 本仓 14 个 Mod 的 `gameVersion` **全是 `0.2.5`** ⇒ 正常应 **0 错误 · 退出码 0**。若真报了错，先确认你的游戏本体确实是 **0.2.5** |
+| 干跑报一堆冲突 | 你的树不是官方 0.2.6 全量包（少了 `test/` 之类），或你改过那些文件。逐个看冲突清单再决定 |
+| 干跑报「目标不是官方 0.2.6」 | `package.json` 的 `version` 不是 `0.2.6`。请先升级本体 |
+| `validate` 报未通过 | 本仓 14 个 Mod 的 `gameVersion` **全是 `0.2.6`** ⇒ 正常应 **0 错误 · 退出码 0**。若真报了错，先确认你的游戏本体确实是 **0.2.6** |
 | `/mods` 显示 7 个「停用」 | **预期**：那是「历史归档 / 上游已修」的 7 个，工具替你停用了（见 [MODS-LIST.md](MODS-LIST.md) 第三节） |
 | 不想让它写 `mods/.state.json` | 加 `--no-state`；或事后删掉那个文件（等于「全部启用」） |
 | `/mods` 显示 `modsConfigured:false` | 服务器的 Mod 目录没指对：默认是 `<游戏目录>/mods`，或用 `SP_MODS` 指定 |

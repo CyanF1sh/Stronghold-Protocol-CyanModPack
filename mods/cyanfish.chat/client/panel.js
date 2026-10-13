@@ -73,6 +73,8 @@ export function ChatPanel({ api, onCollapse }) {
   const store = (() => { try { return globalThis.__SP__?.store ?? null; } catch { return null; } })();
   const [, force] = useState(0);
   const feedRef = useRef(null);
+  /** 输入框的 ref：**打开后必须立刻可打字** —— 由下面那条 `[open]` effect 统一聚焦（鼠标点开也一样）。 */
+  const fieldRef = useRef(null);
   const open = prefs.open;
 
   // ---- 本机偏好（设置页也会改它 ⇒ 订阅）--------------------------------------------------------
@@ -114,6 +116,52 @@ export function ChatPanel({ api, onCollapse }) {
     if (!el) return;
     try { el.scrollTop = el.scrollHeight; } catch { /* ignore */ }
   }, [feed.length, open]);
+
+  // ---- ★★ 按键打开聊天（设置页「打开聊天键」可改 / 可禁用，出厂 `Enter`）-------------------------
+  //   ★ 服主口径：「增加一个打开聊天框的按键配置（默认 Enter）；**打开时即可输入**，
+  //      而不是还要用鼠标去点输入框」。
+  //   ★ 五条边界（每条都有原因，别删）：
+  //     ① **捕获阶段**监听：宿主或别的 Mod 也可能用同一个键 ⇒ 捕获阶段先拿到，再 `preventDefault()` 拦下；
+  //     ② 焦点在别的输入框（INPUT / TEXTAREA / contenteditable）**一律不管** —— 否则玩家在别处打字会被打断；
+  //     ③ 带 Ctrl / Alt / Meta 的组合键不管；中文输入法组字中（`isComposing`）不管；
+  //     ④ 已经开着（`prefs.open`）或被禁用（`openKey === ''`）不管；
+  //     ⑤ 真正的"点一下才能打字"根因是**焦点没进输入框** ⇒ 交给下面那条 `[open]` effect（渲染完再 focus）。
+  useEffect(() => {
+    const onKey = (e) => {
+      try {
+        const p = getPrefs();
+        if (p.open || !p.openKey) return;
+        if (e.defaultPrevented || e.isComposing || e.key !== p.openKey) return;
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        const t = e.target;
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+        e.preventDefault();
+        setPrefs({ open: true });
+      } catch { /* ignore */ }
+    };
+    const doc = globalThis.document;
+    try { doc?.addEventListener?.('keydown', onKey, true); } catch { /* ignore */ }
+    return () => { try { doc?.removeEventListener?.('keydown', onKey, true); } catch { /* ignore */ } };
+  }, []);
+
+  // ---- 打开就把光标放进输入框（鼠标点开 / 按键开 都走这里 ⇒ 行为统一）----------------------------
+  //   ★ Preact 的渲染是**异步**的：`setPrefs({open:true})` 之后同一帧里 DOM 还没挂上 ⇒ 直接 focus 会扑空，
+  //     玩家就得再点一次 —— 这正是"打开后还要用鼠标点输入框"的根因。所以：先试一次，没挂上再等 rAF（最多 3 帧）。
+  useEffect(() => {
+    if (!open) return undefined;
+    const focusField = () => {
+      const el = fieldRef.current || document.querySelector('.sp-chat__field[data-sp-chat-input="1"]');
+      if (!el) return false;
+      try { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } catch { /* ignore */ }
+      return true;
+    };
+    if (focusField()) return undefined;
+    let n = 0;
+    const tick = () => { if (n < 3) { n += 1; if (!focusField()) globalThis.requestAnimationFrame?.(tick); } };
+    const raf = globalThis.requestAnimationFrame;
+    if (typeof raf === 'function') raf(tick); else focusField();
+    return undefined;
+  }, [open]);
 
   const onSend = useCallback(() => {
     if (busy) return;
@@ -196,7 +244,7 @@ export function ChatPanel({ api, onCollapse }) {
 
     <div class="sp-chat__foot">
       <div class="sp-chat__inputrow">
-        <textarea class="sp-chat__field" data-sp-chat-input="1"
+        <textarea class="sp-chat__field" data-sp-chat-input="1" ref=${fieldRef}
           placeholder=${enabled ? '说点什么…' : (hint || '暂时不能发言')}
           disabled=${!enabled} rows=${2} maxlength=${String(inputMaxLength(cap))}
           value=${draft}

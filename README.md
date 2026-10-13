@@ -1,6 +1,6 @@
 # 卫戍协议 · CyanFish 平台补丁与 Mod 集
 
-> 给《明日方舟》限时玩法「卫戍协议：盟约」的**非官方同人复刻项目**（上游 **Stronghold Protocol 0.2.5**）做的
+> 给《明日方舟》限时玩法「卫戍协议：盟约」的**非官方同人复刻项目**（上游 **Stronghold Protocol 0.2.6**）做的
 > **平台补丁 + 14 个 Mod**。仓库里**只有我们自己写的代码与文档**，**不含任何官方素材**。
 > ★ 唯一例外：`mods/cyanfish.dj-all/assets/amiya-spin.gif` —— 一张**同人二创表情包**（128×128 · 117 KB · 局内入口图标，**若侵权可联系删除**，见 [NOTICE.md](NOTICE.md) §5 与 [THIRD-PARTY.md](THIRD-PARTY.md) §5）。
 
@@ -8,7 +8,7 @@
 
 ## ⚠ 先看这里（三句话）
 
-1. **这里没有游戏本体，下载本仓库不能直接玩。** 它是一个**补丁 + Mod 集**：先自己准备好**官方 0.2.5 版本体与素材**，
+1. **这里没有游戏本体，下载本仓库不能直接玩。** 它是一个**补丁 + Mod 集**：先自己准备好**官方 0.2.6 版本体与素材**，
    再把本仓的补丁与 `mods/` 叠上去（见 [docs/INSTALL.md](docs/INSTALL.md)）。
 2. **仓库里所有美术、语音、音乐都不是我们的**，因此**一个素材文件都没放**。本仓只含我们自己编写的代码与文档。
 3. **禁止任何形式的盈利**（收费开服、付费房间、广告、打赏、打包进收费产品）。仅供**学习、研究和个人非商业娱乐**。
@@ -23,24 +23,24 @@
 | 是 | 不是 |
 |---|---|
 | 14 个 **Mod**（自足目录：`mod.json` + `client`/`content`/`data` + `README.md`） | ❌ 不是整合包，**不含** `public/assets/**`（约 270 MB 官方美术）、`public/fonts/**` |
-| 一层 **平台覆盖层**（105 个文件 / 3.3 MB）：Mod 装载器、插槽宿主、设置页外壳、Mod 开发规范等 | ❌ 不是上游 0.2.5 的 fork 分支，也不改上游的许可证 |
+| 一层 **平台覆盖层**（105 个文件 / 3.3 MB）：Mod 装载器、插槽宿主、设置页外壳、Mod 开发规范等 | ❌ 不是上游 0.2.6 的 fork 分支，也不改上游的许可证 |
 | 两个 **安装/自检工具**：`tools/apply-overlay.mjs`（一键叠补丁 + 可回滚）、`tools/publish-scan.mjs`（发布前自检） | ❌ 不含任何令牌、服务器地址、部署脚本 |
 
 ★ **为什么必须叠覆盖层**：这 14 个 Mod 依赖我们改过的平台接缝（Mod 装载器与插槽宿主）。
-**只在纯上游 0.2.5 上放 `mods/`，14 个 Mod 全部装不上。**
+**只在纯上游 0.2.6 上放 `mods/`，14 个 Mod 全部装不上。**
 
 ---
 
 ## 30 秒安装
 
 ```bash
-# 0) 先自己准备好官方 0.2.5 本体（步骤见 docs/INSTALL.md）
+# 0) 先自己准备好官方 0.2.6 本体（步骤见 docs/INSTALL.md）
 # 1) 干跑：只报告，不写任何文件
-node tools/apply-overlay.mjs --target "D:\Stronghold-Protocol-0.2.5" --dry-run
+node tools/apply-overlay.mjs --target "D:\Stronghold-Protocol-0.2.6" --dry-run
 # 2) 真跑：先备份，再逐文件叠补丁，并把 14 个 Mod 拷进 mods/
-node tools/apply-overlay.mjs --target "D:\Stronghold-Protocol-0.2.5" --with-mods
+node tools/apply-overlay.mjs --target "D:\Stronghold-Protocol-0.2.6" --with-mods
 # 3) 校验
-cd "D:\Stronghold-Protocol-0.2.5" && node tools/mod.mjs validate
+cd "D:\Stronghold-Protocol-0.2.6" && node tools/mod.mjs validate
 ```
 
 **第 3 步的预期输出**：`✓` **14 个全部通过 · 0 错误 · 退出码 0**。
@@ -106,15 +106,15 @@ CORS 是**白名单**（基线 = 同源 + 字面量 `null`，可用 `SP_ADMIN_OR
 
 ---
 
-## 兼容性：为什么必须 0.2.5
+## 兼容性：为什么必须 0.2.6
 
-- **14 个 Mod 的 `mod.json` 全部**写 `gameVersion: "0.2.5"`；
+- **14 个 Mod 的 `mod.json` 全部**写 `gameVersion: "0.2.6"`；
 - **装载器要求 `gameVersion` 与本版游戏版本严格相等**，否则**整包被跳过**；
-- 所以**游戏本体必须是官方 0.2.5**（上游 `package.json` 的 `"version": "0.2.5"`）。
+- 所以**游戏本体必须是官方 0.2.6**（上游 `package.json` 的 `"version": "0.2.6"`）。
   用 0.2.4 或更早：**14 个 Mod 会被整批拒装**。
 
-覆盖层是按官方 **0.2.5** 逐字节对齐的（见 `overlay/ORIGIN.sha256`）：它记录了**每个文件在你那棵官方 0.2.5 上
-应有的 sha256**，`apply-overlay.mjs` 会先核对再写 —— 只要你的本体是干净的 0.2.5，这一步不会失败。
+覆盖层是按官方 **0.2.6** 逐字节对齐的（见 `overlay/ORIGIN.sha256`）：它记录了**每个文件在你那棵官方 0.2.6 上
+应有的 sha256**，`apply-overlay.mjs` 会先核对再写 —— 只要你的本体是干净的 0.2.6，这一步不会失败。
 
 ---
 
@@ -124,7 +124,7 @@ CORS 是**白名单**（基线 = 同源 + 字面量 `null`，可用 `SP_ADMIN_OR
 .
 ├─ README.md · RELEASE-NOTES.md · LICENSE · NOTICE.md · THIRD-PARTY.md · .gitignore
 ├─ docs/
-│   ├─ INSTALL.md          # step-by-step 安装（含「自备正版 0.2.5 本体与素材」）
+│   ├─ INSTALL.md          # step-by-step 安装（含「自备正版 0.2.6 本体与素材」）
 │   └─ MODS-LIST.md         # 14 个 Mod 逐条清单
 ├─ overlay/                # ★ 平台补丁层：105 个文件，目录层次与上游一致
 │   ├─ MANIFEST.sha256      # 本仓每个覆盖层文件的 sha256（完整性校验）
@@ -152,7 +152,7 @@ A：不能。代码是 GPL-3.0-or-later（GPL 本身允许商用**代码**），
 收费开服、付费房间、广告、打赏、打包进收费产品都不允许。
 
 **Q：能不能只发 `mods/`、不叠覆盖层？**
-A：那样 14 个 Mod 在纯上游 0.2.5 上**全部装不上**。
+A：那样 14 个 Mod 在纯上游 0.2.6 上**全部装不上**。
 
 ---
 
@@ -160,7 +160,7 @@ A：那样 14 个 Mod 在纯上游 0.2.5 上**全部装不上**。
 
 - 本仓（覆盖层 + Mod + 文档）整体按 **GNU GPL v3 或任何更新版本（GPL-3.0-or-later）** 发布，全文见 [LICENSE](LICENSE)。
   **为什么必须是 GPL**：覆盖层是上游 GPL 代码的**派生作品**（copyleft）⇒ 没有选 MIT 的余地。
-- 上游项目：**Stronghold Protocol**（`sganggs/Stronghold-Protocol`，GPL-3.0-or-later），本仓基于其 **0.2.5**。
+- 上游项目：**Stronghold Protocol**（`sganggs/Stronghold-Protocol`，GPL-3.0-or-later），本仓基于其 **0.2.6**。
 - 上游 `NOTICE.md` 的完整口径（哪些属于上游、哪些属于鹰角/Yostar、非商业限制）见本仓 [NOTICE.md](NOTICE.md)。
 - 第三方与署名（英文翻译 **@YuriRestia**、上游第三方库等）见 [THIRD-PARTY.md](THIRD-PARTY.md)。
 

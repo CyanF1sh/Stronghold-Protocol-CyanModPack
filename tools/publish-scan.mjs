@@ -48,7 +48,7 @@ const PUBLISH_SET = [
 // ①b 每个 Mod 期望的 gameVersion。默认与本版游戏一致。
 //     ★ 2026-10-13 收窄后，仓里**不再有**版本过时的 Mod（两个 DJ 整活已移除）⇒ 本表为空。
 const EXPECTED_GAME_VERSION = {};
-const EXPECTED_DEFAULT = '0.2.5';
+const EXPECTED_DEFAULT = '0.2.6';
 // 过时集合：必须随包带「版本过时」提醒。★ 现为空（没有过时 Mod）。
 const OUTDATED = new Set();
 
@@ -126,15 +126,15 @@ const WARN_PATTERNS = [
 ];
 
 // ★★ 已知误报表（上游原文，不是本仓的凭据）。命中 ⇒ WARN + 打印 why，绝不静默。
-//    收录条件：该行与官方 0.2.5 全量包**逐字节相同**，且人工确认不是机密。
+//    收录条件：该行与官方 0.2.6 全量包**逐字节相同**，且人工确认不是机密。
 const KNOWN_FALSE_POSITIVES = [
   {
     file: 'public/js/net.js', what: '被赋值的令牌或口令',
-    why: '上游 0.2.5 原文：const K_TOKEN = \'sp.token\' 是 sessionStorage 的键名（浏览器本地键，不是服务器凭据）',
+    why: '上游 0.2.6 原文：const K_TOKEN = \'sp.token\' 是 sessionStorage 的键名（浏览器本地键，不是服务器凭据）',
   },
   {
     file: 'test/lobby.test.js', what: '真实主机 IP:端口（回环/私网示例除外）',
-    why: '上游 0.2.5 原文：203.0.113.4 是 RFC 5737 的 TEST-NET-3 文档示例地址（normalizeIp 的夹具）',
+    why: '上游 0.2.6 原文：203.0.113.4 是 RFC 5737 的 TEST-NET-3 文档示例地址（normalizeIp 的夹具）',
   },
 ];
 function knownFp(where, what) {

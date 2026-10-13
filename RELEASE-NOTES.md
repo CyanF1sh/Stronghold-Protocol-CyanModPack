@@ -1,7 +1,7 @@
 # 首版发布说明（RELEASE NOTES）
 
 **发布物**：卫戍协议 · CyanFish 平台补丁与 Mod 集 —— 首个开源版
-**上游基线**：Stronghold Protocol **0.2.5**
+**上游基线**：Stronghold Protocol **0.2.6**
 **许可**：GPL-3.0-or-later（整仓）
 
 ---
@@ -11,7 +11,7 @@
 | 组成 | 数量 | 体积 |
 |---|---|---|
 | **Mod** | **14 个目录 / 132 文件** | **3.8 MB** |
-| **平台覆盖层**（Mod 平台本体 + 对上游 0.2.5 的改动） | **105 个文件** | **3.34 MB** |
+| **平台覆盖层**（Mod 平台本体 + 对上游 0.2.6 的改动） | **105 个文件** | **3.34 MB** |
 | 工具 | `tools/apply-overlay.mjs`（一键叠补丁 · 可回滚）、`tools/publish-scan.mjs`（发布前自检） | — |
 | **服主管理页** | `overlay/tools/mod-admin.html`（单文件 · 零外部依赖）+ `overlay/server/admin.js`（后端 API） | — |
 | 文档 | 本文件 + `README.md` + `docs/INSTALL.md` + `docs/MODS-LIST.md` + `NOTICE.md` + `THIRD-PARTY.md` + `LICENSE` | — |
@@ -46,18 +46,18 @@
 ## ⚠ 已知问题 / 预期症状（不是 bug）
 
 1. **没有游戏本体**：本仓**不含**任何官方素材（美术 / 语音 / 音乐 / 字体 / 官方数据表）。
-   必须先自备官方 0.2.5 本体与素材，再叠本仓的覆盖层与 `mods/`。
-2. **14 个 Mod 全部要求 `gameVersion = 0.2.5`**：游戏本体不是 0.2.5 ⇒ **整批拒装**（设计如此，不是 bug）。
+   必须先自备官方 0.2.6 本体与素材，再叠本仓的覆盖层与 `mods/`。
+2. **14 个 Mod 全部要求 `gameVersion = 0.2.6`**：游戏本体不是 0.2.6 ⇒ **整批拒装**（设计如此，不是 bug）。
 
 ## 安装（三条命令）
 
 ```bash
-node tools/apply-overlay.mjs --target "<你的官方 0.2.5 目录>" --dry-run   # 只报告
-node tools/apply-overlay.mjs --target "<你的官方 0.2.5 目录>" --with-mods # 先备份再写入
-cd "<你的官方 0.2.5 目录>" && node tools/mod.mjs validate                # 期望 14 个全部通过 · 0 错误
+node tools/apply-overlay.mjs --target "<你的官方 0.2.6 目录>" --dry-run   # 只报告
+node tools/apply-overlay.mjs --target "<你的官方 0.2.6 目录>" --with-mods # 先备份再写入
+cd "<你的官方 0.2.6 目录>" && node tools/mod.mjs validate                # 期望 14 个全部通过 · 0 错误
 ```
 
-完整步骤（含「怎么自备官方 0.2.5」与常见问题）见 [`docs/INSTALL.md`](docs/INSTALL.md)。
+完整步骤（含「怎么自备官方 0.2.6」与常见问题）见 [`docs/INSTALL.md`](docs/INSTALL.md)。
 
 ## 质量门禁（本版发布前实测）
 
@@ -65,13 +65,13 @@ cd "<你的官方 0.2.5 目录>" && node tools/mod.mjs validate                #
 |---|---|
 | `tools/publish-scan.mjs --repo`（机密 / 素材 / 体积自检） | **FAIL 0**（WARN 全为上游原文误报 / 已打码的 IP 类） |
 | `tools/publish-scan.mjs --mods`（白名单 Mod 严格档） | **FAIL 0**（★ 现有 1 条「白名单 Mod 缺失：`cyanfish.skinvoice`」WARN —— 它已裁定改造、尚未进仓，属**预期提醒**） |
-| 14 个 Mod 的 `mod.json` 解析 / `apiVersion` / `gameVersion` | **14/14 通过**（`apiVersion` 全 `1` · `gameVersion` 全 `0.2.5`） |
+| 14 个 Mod 的 `mod.json` 解析 / `apiVersion` / `gameVersion` | **14/14 通过**（`apiVersion` 全 `1` · `gameVersion` 全 `0.2.6`） |
 | 全部 Mod 的 `.js` 过 `node --check` | **32/32 通过** |
 | 两个工具脚本 `node --check` | `apply-overlay.mjs` · `publish-scan.mjs` 通过 |
 | 真跑装载器（装完 `node tools/mod.mjs validate`） | 期望 **14 个全部通过 · 0 错误 · 退出码 0** |
 
 > ★ 上表**本版（收窄后）已重跑**。以下三行是**首版（工序 host-028）实测**、本次**未重跑** —— 它们只与**覆盖层**有关，
-> 而覆盖层本次**一个字节未改**：`apply-overlay.mjs` 在纯净 0.2.5 副本上的 dry-run / 真跑（105 可写 · 0 冲突 · 105/105 sha256 一致）·
+> 而覆盖层本次**一个字节未改**：`apply-overlay.mjs` 在纯净 0.2.6 副本上的 dry-run / 真跑（105 可写 · 0 冲突 · 105/105 sha256 一致）·
 > 应用结果 vs 线上覆盖层 105/105 一致 · `--rollback` 105/105 复原。
 
 ## 与上一版（服务器私有版）的差别
