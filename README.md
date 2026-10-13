@@ -4,6 +4,9 @@
 > **平台补丁 + 14 个 Mod**。仓库里**只有我们自己写的代码与文档**，**不含任何官方素材**。
 > ★ 唯一例外：`mods/cyanfish.dj-all/assets/amiya-spin.gif` —— 一张**同人二创表情包**（128×128 · 117 KB · 局内入口图标，**若侵权可联系删除**，见 [NOTICE.md](NOTICE.md) §5 与 [THIRD-PARTY.md](THIRD-PARTY.md) §5）。
 
+> ★★ **本仓对齐的官方版本 = 仓根 [`VERSION`](VERSION)**（本文里出现的具体版本号以它为准）。
+> 本仓会跟着官方版本走：升级时按 [`docs/BUMP.md`](docs/BUMP.md) 过一遍即可 —— 工具**不写死版本号**，它们直接读 `VERSION`。
+
 ---
 
 ## ⚠ 先看这里（三句话）
@@ -39,11 +42,11 @@
 ```bash
 # 0) 先自己准备好官方 0.2.6 本体（步骤见 docs/INSTALL.md）
 # 1) 干跑：只报告，不写任何文件
-node tools/apply-overlay.mjs --target "D:\Stronghold-Protocol-0.2.6" --dry-run
+node tools/apply-overlay.mjs --target "<你的官方目录>" --dry-run
 # 2) 真跑：先备份，再逐文件叠补丁，并把 14 个 Mod 拷进 mods/
-node tools/apply-overlay.mjs --target "D:\Stronghold-Protocol-0.2.6" --with-mods
+node tools/apply-overlay.mjs --target "<你的官方目录>" --with-mods
 # 3) 校验
-cd "D:\Stronghold-Protocol-0.2.6" && node tools/mod.mjs validate
+cd "<你的官方目录>" && node tools/mod.mjs validate
 ```
 
 **第 3 步的预期输出**：`✓` **14 个全部通过 · 0 错误 · 退出码 0**。

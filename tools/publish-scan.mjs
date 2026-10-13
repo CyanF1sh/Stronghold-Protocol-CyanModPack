@@ -48,7 +48,21 @@ const PUBLISH_SET = [
 // ①b 每个 Mod 期望的 gameVersion。默认与本版游戏一致。
 //     ★ 2026-10-13 收窄后，仓里**不再有**版本过时的 Mod（两个 DJ 整活已移除）⇒ 本表为空。
 const EXPECTED_GAME_VERSION = {};
-const EXPECTED_DEFAULT = '0.2.6';
+/* ★★ 本仓对齐的官方版本：**不写死** —— 先从仓根 `VERSION` 读，读不到退到覆盖层 `shared/constants.js` 的 APP_VERSION。
+ *   升级官方版本时只要改 `VERSION`（见 docs/BUMP.md），本文件不用动。 */
+function readAlignedDefault() {
+  try {
+    const s = readFileSync(join(HERE, '..', 'VERSION'), 'utf8').trim();
+    if (/^\d+\.\d+\.\d+/.test(s)) return s.split(/\s+/)[0];
+  } catch { /* 往下退 */ }
+  try {
+    const c = readFileSync(join(HERE, '..', 'overlay', 'shared', 'constants.js'), 'utf8');
+    const m = /APP_VERSION\s*=\s*'([^']+)'/.exec(c);
+    if (m) return m[1];
+  } catch { /* ignore */ }
+  return '';
+}
+const EXPECTED_DEFAULT = readAlignedDefault();
 // 过时集合：必须随包带「版本过时」提醒。★ 现为空（没有过时 Mod）。
 const OUTDATED = new Set();
 
