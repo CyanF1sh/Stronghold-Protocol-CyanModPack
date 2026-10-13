@@ -2,7 +2,7 @@
 /*
  * apply-overlay.mjs —— 把本仓的**平台覆盖层**叠到你自备的官方《卫戍协议》0.2.6 上
  *
- * 它做什么：逐文件校验 + 先备份 + 再写入，最后可选把 11 个 Mod 一起拷进 mods/。
+ * 它做什么：逐文件校验 + 先备份 + 再写入，最后可选把 14 个 Mod 一起拷进 mods/。
  * 它不做什么：不含任何官方素材；不会替你下载游戏本体；不联网。
  *
  * 用法（在本仓根目录下跑）：
@@ -12,7 +12,7 @@
  *   node tools/apply-overlay.mjs --target "D:\Stronghold-Protocol-0.2.6" --with-mods --no-state
  *   node tools/apply-overlay.mjs --target "D:\Stronghold-Protocol-0.2.6" --rollback "<备份目录>"
  *
- * `--with-mods` 把 **11 个 Mod** 拷进 `mods/`，它们**默认全部启用** ⇒ **不写** `mods/.state.json`；
+ * `--with-mods` 把 **14 个 Mod** 拷进 `mods/`，它们**默认全部启用** ⇒ **不写** `mods/.state.json`；
  * 已存在的 `.state.json` **一个字都不动**。`--no-state` 保留为**兼容参数**（现在已经没有状态需要写了）。
  *
  * 三个安全闸：
@@ -223,7 +223,7 @@ console.log('写后逐文件复核: ' + (bad.length ? '✗ ' + bad.length + ' �
  *   `--no-state` 保留为**兼容参数**（现在是空操作），免得旧命令行报错。 */
 const noState = argv.includes('--no-state');   // 兼容保留：现在没有状态需要写
 
-/* 可选：把 11 个 Mod 拷进 mods/ */
+/* 可选：把 14 个 Mod 拷进 mods/ */
 let modsResult = null;
 if (withMods) {
   const src = join(REPO, 'mods');
@@ -241,10 +241,10 @@ if (withMods) {
   const statePath = join(dst, '.state.json');
   let stateAction;
   if (existsSync(statePath)) {
-    stateAction = '已有 mods/.state.json ⇒ 一个字都没动（11 个 Mod 默认全启用；要停用请自己跑'
+    stateAction = '已有 mods/.state.json ⇒ 一个字都没动（14 个 Mod 默认全启用；要停用请自己跑'
       + ' node tools/mod.mjs disable <id>）';
   } else {
-    stateAction = '11 个 Mod **默认全部启用** ⇒ 不写 mods/.state.json'
+    stateAction = '14 个 Mod **默认全部启用** ⇒ 不写 mods/.state.json'
       + (noState ? '（--no-state 已保留为兼容参数）' : '');
   }
   modsResult.stateAction = stateAction;
