@@ -195,8 +195,13 @@ function repoModeEx(relPath) {
   const p = String(relPath || '').replace(/^\.\//, '');
   for (const [modId, ex] of Object.entries(ASSET_EXCEPTIONS)) {
     for (const q of ex.paths) {
-      const dir = q.replace(/\/[^/]*$/, '/');
-      if (p === 'mods/' + modId + '/' + q || p.startsWith('mods/' + modId + '/' + dir)) return ex;
+      const full = 'mods/' + modId + '/' + q;
+      // ★★ 2026-10-14（host-057）：**单文件例外只认那一个文件**。
+      //    旧写法按「目录前缀」匹配 ⇒ 登记了 assets/amiya-spin.gif 就把整个 assets/ 都放行了，
+      //    结果同目录里那张 1.8 MB 的素材源也被判成「服主拍板项」而漏过（真踩过）。
+      //    约定：条目**以 / 结尾** = 目录例外；否则 = 单文件例外。
+      if (q.endsWith('/')) { if (p.startsWith(full)) return ex; }
+      else if (p === full) return ex;
     }
   }
   return null;

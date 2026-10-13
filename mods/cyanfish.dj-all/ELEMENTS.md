@@ -138,7 +138,7 @@
 | 稳定 id | 中文名 | 选择器 | 来源 | 单件/多个 | 可旋转性 | 备注 |
 |---|---|---|---|---|---|---|
 | `top.left` | 顶栏左区 | `.gtop__left` | 原版 | 单件 | 可转（轴转 / 平面内） | 退出键 + 延迟/观战席 + 难度标识。 |
-| `top.exit` | ⚠ 离开 / 暂离按键 | `.gtop__left .gtop__exit` | 原版 | 单件 | 可转（轴转 / 平面内） | 官方 Button（danger/lg/square）挂的类；是一个要点的功能键 ⇒ 与 DOM 组同一套角度上限。 |
+| `top.exit` | 离开 / 暂离按键 | `.gtop__left .gtop__exit` | 原版 | 单件 | 可转（轴转 / 平面内） | 官方 Button（danger/lg/square）挂的类；是一个要点的功能键 ⇒ 与 DOM 组同一套角度上限。 |
 | `top.ping` | 延迟显示 | `.gtop__left .ping` | 原版 | 单件 | 可转（轴转 / 平面内） | 图标 + 数字 + 单位，四档着色（low/medium/high/off）。 |
 | `top.specpill` | 观战席胶囊 | `.specpill` | 原版 | 单件 | 可转（轴转 / 平面内） | 只在房间有观战席时出现；点开是观战席弹窗。 |
 | `top.dtag` | 难度标识 | `.gtop__meta .dtag` | 原版 | 单件 | 可转（轴转 / 平面内） | 图标 + 难度名；颜色由 `--d-color` 决定。 |
@@ -299,16 +299,16 @@
 
 | 稳定 id | 中文名 | 选择器 | 来源 | 单件/多个 | 可旋转性 | 备注 |
 |---|---|---|---|---|---|---|
-| `corner.emote` | ⚠ 表情开关键 | `.gm__corner .ewheel__btn` | 原版 | 单件 | 可转（轴转 / 平面内） | 「交流」按钮；点开是表情面板（面板本身另算）。 |
+| `corner.emote` | 表情开关键 | `.gm__corner .ewheel__btn` | 原版 | 单件 | 可转（轴转 / 平面内） | 「交流」按钮；点开是表情面板（面板本身另算）。 |
 | `corner.gear` | ⚠ 设置按键 | `.gm__corner .gm__gear` | 原版 | 单件 | 可转（轴转 / 平面内） | ★ 服主点名的那个「左下设置按钮」；只对 `.gm__gear` 第一个匹配项。 |
-| `corner.guide` | ⚠ 玩法说明按键 | `.gm__corner .gm__guide` | 原版 | 单件 | 可转（轴转 / 平面内） | 与设置键同一个 `.gm__gear` 类，另有 `.gm__guide` 区分。 |
-| `corner.fs` | ⚠ 全屏按键 | `.gm__corner .gm__fs` | 原版 | 单件 | 可转（轴转 / 平面内） | FullscreenButton 挂的类；真正的样式在 `devices.css`（`.fsbtn`）。 |
+| `corner.guide` | 玩法说明按键 | `.gm__corner .gm__guide` | 原版 | 单件 | 可转（轴转 / 平面内） | 与设置键同一个 `.gm__gear` 类，另有 `.gm__guide` 区分。 |
+| `corner.fs` | 全屏按键 | `.gm__corner .gm__fs` | 原版 | 单件 | 可转（轴转 / 平面内） | FullscreenButton 挂的类；真正的样式在 `devices.css`（`.fsbtn`）。 |
 
 #### 表情面板（3 个）· 组节点 `G:corner/emote`
 
 | 稳定 id | 中文名 | 选择器 | 来源 | 单件/多个 | 可旋转性 | 备注 |
 |---|---|---|---|---|---|---|
-| `corner.epanel` | ⚠ 表情面板 | `.ewheel__panel` | 原版 | 单件 | 默认不转 | 展开的那块面板（分页 + 网格）；它是"要点的功能面"，只让它里面的条目转。 |
+| `corner.epanel` | 表情面板 | `.ewheel__panel` | 原版 | 单件 | 默认不转 | 展开的那块面板（分页 + 网格）；它是"要点的功能面"，只让它里面的条目转。 |
 | `corner.eitem` | 表情条目（每个） | `.ewheel__panel .ewheel__item` | 原版 | 一屏多个（各自独立） | 可转（轴转 / 平面内） | ★ 一屏多个、每个独立；`data-emote=<id>`。 |
 | `corner.edot` | 表情分页点 | `.ewheel__panel .ewheel__dot` | 原版 | 一屏多个（各自独立） | 可转（轴转 / 平面内） | ★ 一屏多个、每个独立；当前页 `is-on`。 |
 
@@ -444,11 +444,11 @@
 
 | 稳定 id | 中文名 | 选择器 | 来源 | 单件/多个 | 可旋转性 | 备注 |
 |---|---|---|---|---|---|---|
-| `modal.box` | ⚠ 设置弹窗框 | `.modal__box` | 原版 | 单件 | 默认不转 | ★ 默认不转：宿主给 `.modal__box` 自带入场动画（写着 transform）⇒ 我们再转就是抢 transform（dj-models 的 style.js 明确记过这条）。这里的第一处匹配就是**设置弹窗**（战斗屏里唯一常驻的那个弹窗）。 |
-| `modal.settings` | ⚠ 设置弹窗 | `.set-list` | 原版 | 单件 | 默认不转 | ★ 默认不转：设置项本体（滑块 / 开关 / 输入框），转起来没法用。 |
-| `modal.setrow` | ⚠ 设置行 | `.set-row` | 原版 | 一屏多个（各自独立） | 默认不转 | ★ 默认不转：一行 = 标签 + 控件 + 读数。 |
-| `modal.settoggle` | ⚠ 设置开关 | `.set-toggle` | 原版 | 一屏多个（各自独立） | 默认不转 | ★ 默认不转：宿主现成的开关控件。 |
-| `modal.setseg` | ⚠ 设置分段控件 | `.set-seg` | 原版 | 一屏多个（各自独立） | 默认不转 | ★ 默认不转：宿主现成的分段控件。 |
+| `modal.box` | 设置弹窗框 | `.modal__box` | 原版 | 单件 | 默认不转 | ★ 默认不转：宿主给 `.modal__box` 自带入场动画（写着 transform）⇒ 我们再转就是抢 transform（dj-models 的 style.js 明确记过这条）。这里的第一处匹配就是**设置弹窗**（战斗屏里唯一常驻的那个弹窗）。 |
+| `modal.settings` | 设置弹窗 | `.set-list` | 原版 | 单件 | 默认不转 | ★ 默认不转：设置项本体（滑块 / 开关 / 输入框），转起来没法用。 |
+| `modal.setrow` | 设置行 | `.set-row` | 原版 | 一屏多个（各自独立） | 默认不转 | ★ 默认不转：一行 = 标签 + 控件 + 读数。 |
+| `modal.settoggle` | 设置开关 | `.set-toggle` | 原版 | 一屏多个（各自独立） | 默认不转 | ★ 默认不转：宿主现成的开关控件。 |
+| `modal.setseg` | 设置分段控件 | `.set-seg` | 原版 | 一屏多个（各自独立） | 默认不转 | ★ 默认不转：宿主现成的分段控件。 |
 
 #### 离开弹窗（1 个）· 组节点 `G:modal/exit`
 
@@ -503,7 +503,7 @@
 
 | 稳定 id | 中文名 | 选择器 | 来源 | 单件/多个 | 可旋转性 | 备注 |
 |---|---|---|---|---|---|---|
-| `mod.chat.tab` | ⚠ 聊天图标键（cyanfish.chat） | `.sp-chat__tab` | cyanfish.chat | 单件 | 默认不转 | 右上角一枚方块键，摆在官方「生效效果」列的正上方。★ 默认**不转**：它是 Mod 的唯一入口，转起来可能点不到；（dj-models 的「保护设置入口」兜底同此口径）。 |
+| `mod.chat.tab` | 聊天图标键（cyanfish.chat） | `.sp-chat__tab` | cyanfish.chat | 单件 | 默认不转 | 右上角一枚方块键，摆在官方「生效效果」列的正上方。★ 默认**不转**：它是 Mod 的唯一入口，转起来可能点不到；（dj-models 的「保护设置入口」兜底同此口径）。 |
 | `mod.chat.dot` | 聊天未读红点（cyanfish.chat） | `.sp-chat__dot` | cyanfish.chat | 单件 | 只宜平面内 | ★ 只宜平面内：绝对定位的小圆点（跟着图标键的角落）。 |
 | `mod.chat.box` | 聊天面板（cyanfish.chat） | `.sp-chat__box` | cyanfish.chat | 单件 | 默认不转 | ★ 默认不转：输入框 + 消息流，转起来没法打字（同设置面板的理由）。 |
 | `mod.chat.danmaku` | 对局内聊天弹幕（cyanfish.chat） | `.sp-cm` | cyanfish.chat | 单件 | 默认不转 | ★ 默认不转：它**自己就是一条自右向左的飞行动画**（逐次实测像素 + 每行独立 keyframes）；再叠加旋转会与它自己的位移打架。要"动一条弹幕"的观感，应该关掉它的飞行、改用本 Mod 的旋转（后续版再给）。 |
@@ -520,15 +520,15 @@
 
 | 稳定 id | 中文名 | 选择器 | 来源 | 单件/多个 | 可旋转性 | 备注 |
 |---|---|---|---|---|---|---|
-| `mod.dc.gear` | ⚠ 调试控制台键（cyanfish.debug-console） | `.gm__corner .sp-dc__gear` | cyanfish.debug-console | 单件 | 默认不转 | 左下角官方三键右侧那一格；只在单人 / 全 AI 局出现。★ 默认**不转**：它是唯一入口。 |
+| `mod.dc.gear` | 调试控制台键（cyanfish.debug-console） | `.gm__corner .sp-dc__gear` | cyanfish.debug-console | 单件 | 默认不转 | 左下角官方三键右侧那一格；只在单人 / 全 AI 局出现。★ 默认**不转**：它是唯一入口。 |
 | `mod.dc.pane` | 调试面板（cyanfish.debug-console） | `.sp-dc__pane` | cyanfish.debug-console | 单件 | 默认不转 | ★ 默认不转：一整个表单面板。 |
 
 #### cyanfish.mod-settings（2 个）· 组节点 `G:mod/ms`
 
 | 稳定 id | 中文名 | 选择器 | 来源 | 单件/多个 | 可旋转性 | 备注 |
 |---|---|---|---|---|---|---|
-| `mod.ms.embed` | ⚠ 模组设置栏（cyanfish.mod-settings） | `.sp-ms__embed` | cyanfish.mod-settings | 单件 | 默认不转 | ★ 默认不转：它渲染在**官方设置弹窗内**（宿主 UI_SLOTS.SETTINGS_SECTIONS），是一整块设置面板。 |
-| `mod.ms.nav` | ⚠ 模组设置分栏导航 | `.sp-ms__nav` | cyanfish.mod-settings | 单件 | 默认不转 | ★ 默认不转：一列可点的栏位标签。 |
+| `mod.ms.embed` | 模组设置栏（cyanfish.mod-settings） | `.sp-ms__embed` | cyanfish.mod-settings | 单件 | 默认不转 | ★ 默认不转：它渲染在**官方设置弹窗内**（宿主 UI_SLOTS.SETTINGS_SECTIONS），是一整块设置面板。 |
+| `mod.ms.nav` | 模组设置分栏导航 | `.sp-ms__nav` | cyanfish.mod-settings | 单件 | 默认不转 | ★ 默认不转：一列可点的栏位标签。 |
 
 ### ⑯ 附：局外（非战斗屏）（9 个）
 
@@ -562,13 +562,13 @@
 
 | 稳定 id | 中文名 | 选择器 | 来源 | 单件/多个 | 可旋转性 | 备注 |
 |---|---|---|---|---|---|---|
-| `out.ms.gear` | 模组设置入口键（cyanfish.mod-settings） | `.sp-ms__gear` | cyanfish.mod-settings | 单件 | 默认不转 | 干员调配顶栏那一枚齿轮（插槽 `loadout.topbar`）。 |
+| `out.ms.gear` | ⚠ 模组设置入口键（cyanfish.mod-settings） | `.sp-ms__gear` | cyanfish.mod-settings | 单件 | 默认不转 | 干员调配顶栏那一枚齿轮（插槽 `loadout.topbar`）。 |
 
 #### cyanfish.skinvoice（2 个）· 组节点 `G:outgame/sv`
 
 | 稳定 id | 中文名 | 选择器 | 来源 | 单件/多个 | 可旋转性 | 备注 |
 |---|---|---|---|---|---|---|
-| `out.sv.gear` | 皮肤语音入口键（cyanfish.skinvoice） | `.sp-sv__gear` | cyanfish.skinvoice | 单件 | 默认不转 | 干员调配顶栏那枚「皮肤与语音」键；★ 战斗内那枚浮动键已由该 Mod 自行删除。 |
+| `out.sv.gear` | ⚠ 皮肤语音入口键（cyanfish.skinvoice） | `.sp-sv__gear` | cyanfish.skinvoice | 单件 | 默认不转 | 干员调配顶栏那枚「皮肤与语音」键；★ 战斗内那枚浮动键已由该 Mod 自行删除。 |
 | `out.sv.fab` | 皮肤语音浮键（cyanfish.skinvoice） | `.sp-sv__fab--loadout` | cyanfish.skinvoice | 单件 | 默认不转 | 调配页左上那枚浮动键（`--loadout` 变体）。 |
 
 #### cyanfish.diy-34（1 个）· 组节点 `G:outgame/diy`

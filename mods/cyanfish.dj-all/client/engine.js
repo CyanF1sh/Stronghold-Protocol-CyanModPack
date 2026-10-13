@@ -33,11 +33,11 @@ export function resolveGroups(items) {
     if (!it || !it.pixi) continue;
     const rank = RANK[it.kind] || 0;
     const cur = best.get(it.pixi);
-    if (!cur || rank > cur.rank) best.set(it.pixi, { gid: it.pixi, id: it.id, vals: it.vals, rank });
+    if (!cur || rank > cur.rank) best.set(it.pixi, { gid: it.pixi, id: it.id, vals: it.vals, phase: it.phase || 0, rank });
   }
   // 输出顺序固定按 GROUP_ORDER（= 引擎处理顺序），便于复算与取证
   const out = [];
-  for (const gid of GROUP_ORDER) if (best.has(gid)) out.push({ gid, id: best.get(gid).id, vals: best.get(gid).vals });
+  for (const gid of GROUP_ORDER) if (best.has(gid)) out.push({ gid, id: best.get(gid).id, vals: best.get(gid).vals, phase: best.get(gid).phase || 0 });
   return out;
 }
 
@@ -74,6 +74,8 @@ export function createEngine({ getCfg, tree, log = null, doc = globalThis.docume
   const pixi = createPixiEngine({
     log, win, g,
     getGroups: () => groups,
+    // ★★ 1.0.0：把「随机偏移」那一块也交给画布引擎 —— 它按 `view.uid` **逐实例**算幅度与初相位。
+    getRnd: () => { try { const c = getCfg(); return c ? c.rnd : null; } catch { return null; } },
   });
 
   /** 重新编译（配置变了 / 树变了都调它）——**同步、幂等**。 */
@@ -98,11 +100,15 @@ export function createEngine({ getCfg, tree, log = null, doc = globalThis.docume
     sync,
     /** 立刻跑一帧画布侧（dev / E2E 用：不等 ticker 时机）。 */
     step() { return pixi.step(); },
+    /** ★ ⑤b 换面现场（只读）：每个被管过的单位视图的 dir / 正背 / 被什么挡住（报告与 E2E 用）。 */
+    fbProbe: () => pixi.fbProbe(),
     /** DOM 侧当前会注入的 CSS 原文（报告 / 排错用）。 */
     domCss: () => dom.css(),
     stats: snapshot,
     /** 某个画布分组此刻会被动的目标数（只读）。 */
     probe: (gid) => pixi.probe(gid),
+    /** ★ 1.0.0 逐实例读数：某分组前 N 个目标**此刻**用的实例键 / 幅度 / 相位（只读）。 */
+    instProbe: (gid, max) => pixi.instProbe(gid, max),
     /** 卸载：DOM 摘 style、画布逐值还原。 */
     dispose() {
       try { dom.dispose(); } catch { /* ignore */ }

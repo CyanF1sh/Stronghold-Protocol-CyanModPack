@@ -38,12 +38,14 @@ const CSS = `
   color: var(--text-lo); font-size: .115rem; line-height: 1; cursor: help; outline: none;
   transition: color .12s var(--ease-out), border-color .12s var(--ease-out); }
 .sp-dja__info:hover, .sp-dja__info:focus { border-color: var(--mint-500); color: var(--mint-400); }
-.sp-dja__info::after { content: attr(data-tip); position: absolute; left: 50%; bottom: 165%; transform: translateX(-50%);
-  width: 3.1rem; padding: .09rem .11rem; border: 1px solid var(--line-2); border-radius: 2px; background: var(--bg-2);
-  color: var(--text-md); font-size: .125rem; line-height: 1.6; letter-spacing: .01em; text-align: left; white-space: normal;
-  box-shadow: 0 4px 14px rgba(0,0,0,.35); opacity: 0; visibility: hidden; pointer-events: none; z-index: 9;
-  transition: opacity .12s var(--ease-out); }
-.sp-dja__info:hover::after, .sp-dja__info:focus::after { opacity: 1; visibility: visible; }
+/* ★③ 气泡**不再**用 ::after：那是小圆点的子元素，会被祖先的 overflow 裁掉
+   （弹窗 .modal__body{overflow:auto} + 我们的 .sp-dja__tree{overflow:auto}）⇒ 越靠边的「？」越看不全。
+   现在由 client/tips.js 画在**挂在 body 的 fixed 层** #sp-dja-tip 上（见文件末尾那一节）。 */
+#sp-dja-tip { position: fixed; inset: 0; z-index: 9998; pointer-events: none; }
+.sp-dja__tip { position: fixed; max-width: 3.4rem; padding: .09rem .11rem; border: 1px solid var(--line-3);
+  border-radius: 2px; background: var(--bg-2); color: var(--text-md); font-size: max(calc(.13 * var(--t)), 10px);
+  line-height: 1.65; letter-spacing: .01em; text-align: left; white-space: normal; overflow-wrap: anywhere;
+  box-shadow: 0 4px 14px rgba(0,0,0,.45); }
 
 /* ---- 危险警示条 ---- */
 .sp-dja__warn { display: flex; gap: .1rem; align-items: flex-start; padding: .1rem .12rem;
@@ -76,8 +78,11 @@ const CSS = `
   font-size: max(calc(.13 * var(--t)), 10px); line-height: 1.6; white-space: normal; overflow-wrap: anywhere; }
 
 /* ---- ★★ 可展开目录树 ---- */
+/* ★③ overflow-anchor:none —— 滚动锚定是"点一个元素后视口跳到它那儿"的真凶之一：
+   浏览器会在内容变化时挑一个"锚点元素"、把它的位置钉住 ⇒ 目录自己往上/往下挪。
+   关掉它，再把"保 scrollTop"改成一次性的（见 section.js），滚动位置就完全由玩家掌握。 */
 .sp-dja__tree { max-height: 6.4rem; overflow: auto; border: 1px solid var(--line); border-radius: 2px;
-  padding: .06rem .04rem; background: #0a0d0c; }
+  padding: .06rem .04rem; background: #0a0d0c; overflow-anchor: none; }
 .sp-dja__node { margin: 0; }
 .sp-dja__node > summary { display: flex; align-items: center; gap: .06rem; cursor: pointer; list-style: none;
   padding: .035rem .06rem; border-radius: 2px; outline: none; }
@@ -148,19 +153,55 @@ const CSS = `
   border: 1px solid var(--line-3); border-left-width: 3px; border-radius: 3px;
   box-shadow: 0 8px 28px rgba(0,0,0,.5); backdrop-filter: blur(2px); }
 .sp-dja__winbar { flex: 0 0 auto; display: flex; align-items: center; gap: .06rem; cursor: move;
-  padding: .06rem .1rem; border-bottom: 1px solid var(--line-2); background: rgba(0,0,0,.25); }
+  padding: .06rem .1rem; border-bottom: 1px solid var(--line-2); background: rgba(0,0,0,.25); user-select: none; }
+.sp-dja__win.is-dragging { backdrop-filter: none; }
+/* ★① 确认期间把浮窗**彻底移出视野**（不再只是 opacity:0）。
+   类打在**宿主容器** #sp-dja-win 上（不是 vnode 的 class）—— Preact 只管容器的子节点，
+   永远不会覆写容器自己的 class ⇒ 对 700ms 心跳重绘免疫。理由与两次失败的写法见 client/fab.js 的 setModal 注释。 */
+#sp-dja-win.is-modal { display: none !important; }
 .sp-dja__wintitle { color: var(--text-hi); font-size: calc(.15 * var(--t)); font-weight: 600; }
-.sp-dja__winsub { flex: 1 1 auto; color: var(--text-dim); font-size: max(calc(.11 * var(--t)), 9px); text-align: right; }
+.sp-dja__winsub { flex: 1 1 auto; min-width: 0; color: var(--text-dim); font-size: max(calc(.11 * var(--t)), 9px);
+  text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sp-dja__winx { flex: 0 0 auto; background: none; border: 1px solid var(--line-2); color: var(--text-lo);
   border-radius: 2px; font-size: calc(.13 * var(--t)); line-height: 1.2; padding: 0 .05rem; cursor: pointer; }
 .sp-dja__winx:hover { border-color: var(--red-premium); color: var(--red-premium); }
-.sp-dja__winbody { flex: 1 1 auto; overflow: auto; padding: .08rem .1rem .12rem; }
+.sp-dja__winbody { flex: 1 1 auto; overflow: auto; padding: .08rem .1rem .12rem; overflow-anchor: none; }
 /* 浮窗里的目录矮一点，别把窗口撑满（窗口要能"看着像浮在上面"） */
 .sp-dja__float .sp-dja__tree { max-height: 3.6rem; }
 .sp-dja__float { gap: .12rem; }
 
+/* ================================================================================
+   ★★ ① 本 Mod 自己的二次确认层（client/confirm.js）
+   为什么不用宿主的 confirmDialog：它画在 .app-root 的 DialogHost 里、用的是 --z-modal: 80
+   （public/css/theme.css:99）—— 与游戏内设置弹窗**同一层**，而本 Mod 的局内浮窗挂在 body 上、
+   z-index 950 ⇒ 确认框必然被压住（服主 2026-10-14 的实测结论）。
+   所以这里自己建一层挂在 body 上、z-index 10050：高于本 Mod 的浮窗(950)/高亮(900)/气泡(9998)，
+   也远高于宿主的 modal(80)/toast(90)/tooltip(95)/rotate(100)。
+   ================================================================================ */
+#sp-dja-confirm { position: fixed; inset: 0; z-index: 10050; display: flex; align-items: center;
+  justify-content: center; }
+.sp-dja__cfm-back { position: absolute; inset: 0; background: rgba(4,6,5,.66); }
+.sp-dja__cfm { position: relative; z-index: 1; box-sizing: border-box; width: 5.2rem;
+  max-width: calc(100vw - 1.1rem); max-height: calc(100vh - 1.1rem); overflow: auto;
+  display: flex; flex-direction: column; gap: .14rem; padding: .18rem .2rem .16rem;
+  background: var(--bg-2); border: 1px solid var(--line-3); border-left-width: 3px; border-radius: 3px;
+  box-shadow: 0 14px 40px rgba(0,0,0,.6); }
+.sp-dja__cfm-wrap.is-danger .sp-dja__cfm { border-left-color: var(--amber); }
+.sp-dja__cfm-title { color: var(--text-hi); font-size: calc(.19 * var(--t)); font-weight: 600; line-height: 1.55; }
+.sp-dja__cfm-text { color: var(--text-md); font-size: calc(.155 * var(--t)); line-height: 1.75;
+  overflow-wrap: anywhere; }
+.sp-dja__cfm-row { display: flex; justify-content: flex-end; gap: .1rem; margin-top: .04rem; }
+.sp-dja__cfm-btn { font: inherit; font-size: calc(.16 * var(--t)); line-height: 1.5; padding: .06rem .18rem;
+  border-radius: 2px; border: 1px solid var(--line-2); background: transparent; color: var(--text-md);
+  cursor: pointer; transition: border-color .12s var(--ease-out), color .12s var(--ease-out); }
+.sp-dja__cfm-btn:hover { border-color: var(--mint-500); color: var(--mint-400); }
+.sp-dja__cfm-btn.is-ok { border-color: var(--line-3); color: var(--mint-400); }
+.sp-dja__cfm-wrap.is-danger .sp-dja__cfm-btn.is-ok { border-color: var(--amber); color: var(--amber); }
+.sp-dja__cfm-btn:focus-visible { outline: 2px solid var(--mint-500); outline-offset: 1px; }
+
 @media (prefers-reduced-motion: reduce) {
-  .sp-dja__info, .sp-dja__caret, .sp-dja__leaf, .sp-dja__node > summary, .sp-dja__fab { transition: none; }
+  .sp-dja__info, .sp-dja__caret, .sp-dja__leaf, .sp-dja__node > summary, .sp-dja__fab,
+  .sp-dja__cfm-btn { transition: none; }
   .sp-dja__fabimg--spin { animation: none; }   /* ★ 系统要求"减少动态效果"时，静态图不再自转（动图无法用 CSS 停） */
 }
 `;

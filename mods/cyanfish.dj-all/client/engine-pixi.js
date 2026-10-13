@@ -30,10 +30,18 @@
 //   伤害数字是 24 px 的 BitmapText，压到零点几倍宽时笔画只剩两三个像素 ⇒ 抗锯齿采样率 < 1 采样/像素
 //   ⇒ 笔画明暗随机化 ⇒ **撕裂 / 毛边**（服主反馈过的现场）。文字的唯一用途就是"读" ⇒ 这一组不写 `cos θ`。
 //
-// ★ 本轮**不做**（如实登记）：转身换面（正/背）、混乱模式、dev 用的相位冻结。
-//   它们都在 `dj-models` 里实现过，但服主本轮的规格里没有；等控制页定稿后再决定要不要回来补。
+// ★★ 0.6.0 **接上了转身换面**（服主第 ⑤ 条末段：「干员现在在宽度=0时仅进行了对称未切换正反」）：
+//   `op / enemy / token` 三组在「绕竖直轴」下按 `cos θ` 的符号调 `view.setDir()` 换正/背骨架，
+//   **横向永远是带符号的 `cos θ`（不做 `|cos θ|` 修正）** —— 服主 2026-10-14 实测：背面资产是**对称**的、
+//   并非「转过 180° 的那张图」，所以「换面」与「镜像」各自独立、两者都要（理由见 frontback.js 抬头）。
+//   · `hud / item / device / fx / num` **不换面**（血条、掉落物、装置、特效、伤害数字都没有"背面"这回事）
+//     ⇒ 只有 `collectUnits()` 出来的目标带 `v`（视图句柄），换面只看 `tgt.v` 在不在。
+//   · 平面内 / 仅压缩模式下调用 `restoreView()` **逐值还原**（那时宽度不过零，按定义不换面）。
+//
+// ★ 本轮仍**不做**（如实登记）：混乱模式、dev 用的相位冻结 —— 服主规格里没有。
 
-import { FPS } from './config.js';
+import { FPS, squashProfile, NO_SPIN_MODES, applyRandom, phaseOf } from './config.js';
+import { createFrontBack, FB_DEFAULT_DEAD } from './frontback.js';
 
 /** 每帧回调挂到宿主 ticker 上的优先级（PIXI v7 按 priority 降序；宿主自己的 frame 是 NORMAL(0)、渲染在 LOW(-25)）。 */
 export const TICK_PRIORITY = -20;
@@ -85,11 +93,11 @@ function eachView(host, fn) {
 const MODE_FREE = 'free';
 const MODE_DIV = 'div';
 
-/** 某一种 kind 的 UnitView → 写 body（宿主全都不碰）。 */
+/** 某一种 kind 的 UnitView → 写 body（宿主全都不碰）。★ `v` 留给 ⑤b 的换面器（只有单位才有正/背）。 */
 function collectUnits(host, kind, out) {
   eachView(host, (v) => {
     if (kindOf(v) !== kind || !hasBody(v) || !modelReady(v)) return;
-    out.push({ o: v.body, scale: MODE_FREE, rot: MODE_FREE });
+    out.push({ o: v.body, scale: MODE_FREE, rot: MODE_FREE, v });
   });
 }
 
@@ -232,13 +240,37 @@ export function collectTargets(gid, host, out) {
 }
 
 /**
+ * ★★ 1.0.0：**每个实例**自己的随机值（服主：「随机要具体到某一个元素实例上，例如干员 A 与干员 B，
+ *    甚至场上两个同名的干员」）。
+ *
+ * 种子 = `view.uid`（服务端 `nextUid()` 发的"每件棋子唯一"的号 —— 两个同名干员 uid 不同）⇒
+ *   · **相位**：两个干员各自处于压缩周期的不同位置（一个正在压、另一个正在弹）；
+ *   · **幅度**：各自的压缩强度 / 横向补偿也各差一点。
+ * 拿不到 uid 时退回 `kind:defId:序号`（同屏多个同类实例仍然互不相同）。
+ *
+ * ★ 结果**按对象缓存**（WeakMap 的 state 里存一份）⇒ 每帧不重算、也不会因为掉帧而抖动。
+ * @param {any} v 渲染层 UnitView（可空：没有视图句柄的目标用对象自身的序号兜底）
+ * @param {any} o 被写的容器对象（兜底种子的来源）
+ * @param {number} seq 这个对象在收集数组里的序号（最后的兜底）
+ */
+export function instanceKey(v, o, seq) {
+  try {
+    if (v && v.uid != null) return 'u' + v.uid;
+    const info = v && v.info;
+    if (info) return 'd' + (info.defId || info.id || '?') + ':' + (seq >= 0 ? seq : 0);
+    if (o && o.name) return 'n' + o.name + ':' + (seq >= 0 ? seq : 0);
+  } catch { /* ignore */ }
+  return 'x' + (seq >= 0 ? seq : 0);
+}
+
+/**
  * 本帧要写进容器的乘数（纯函数，便于单测与报告复算）。
- *   s(τ)  = (1 − cos(2π·τ/Tq)) / 2      压缩深度，0 = 原高，1 = 压到最低
+ *   s(τ)  = squashProfile(τ/Tq + φ)      压缩深度，0 = 原高，1 = 压到最低
  *   yK    = 1 − (1 − M)·s               M = squashMinPct/100   ⇒ 最低点高度 = 面板百分比
  *   xK    = 1 + (W − 1)·s               W = widthMaxPct/100    ⇒ 最低点宽度 = 面板百分比
- *   θ(τ)  = 2π·τ/Ts                     Ts = spinPeriod/60 ⇒ 一个 Ts 正好一圈
- *   axisK = cos θ（绕竖直轴）/ 1（平面内）
- * @param {{spinMode:string,spinPeriod:number,squashPeriod:number,squashMinPct:number,widthMaxPct:number}} c
+ *   θ(τ)  = 2π·(τ/Ts + φ)               Ts = spinPeriod/60 ⇒ 一个 Ts 正好一圈
+ *   axisK = cos θ（绕竖直轴）/ 1（其它）
+ * @param {{spinMode:string,spinPeriod:number,squashPeriod:number,squashMinPct:number,widthMaxPct:number,phase?:number}} c
  * @param {number} t 已经累计的动画时间（秒）
  */
 export function frameFactors(c, t) {
@@ -246,10 +278,26 @@ export function frameFactors(c, t) {
   const W = clampNum(num0(c && c.widthMaxPct, 110) / 100, 1, 2);
   const Tq = Math.max(1, num0(c && c.squashPeriod, 38)) / FPS;
   const Ts = Math.max(1, num0(c && c.spinPeriod, 67)) / FPS;
-  const s = 0.5 - 0.5 * Math.cos(TAU * (Number(t) || 0) / Tq);
-  const theta = TAU * (Number(t) || 0) / Ts;
-  const axis = !c || c.spinMode !== 'flat';
-  return { yK: 1 - (1 - M) * s, xK: 1 + (W - 1) * s, axisK: axis ? Math.cos(theta) : 1, theta, axis, s };
+  const mode = (c && c.spinMode) || 'axis';
+  const phi = num0(c && c.phase, 0);          // ★ 初相位（0..1）：脉冲与旋转**同相**地整体错开
+  const tt = Number(t) || 0;
+  // ★★ 压缩脉冲：**40% 压到底 + 40% 弹回 + 20% 保持原状**（与 DOM 侧同一个 squashProfile）
+  const s = squashProfile(tt / Tq + phi);
+  const theta = TAU * (tt / Ts + phi);
+  const noSpin = NO_SPIN_MODES.indexOf(mode) >= 0;      // 「仅压缩」：不乘 cos θ
+  const axis = mode === 'axis';
+  return {
+    yK: 1 - (1 - M) * s,
+    xK: 1 + (W - 1) * s,
+    // ★ axis 模式：宽度额外乘 cos θ（**允许为负** ⇒ 镜像 = 转到了背面）；
+    //   squash 模式：不乘（≡1）；flat 模式：不乘（它靠 rotation 转）
+    axisK: axis ? Math.cos(theta) : 1,
+    theta,
+    axis,
+    flat: mode === 'flat',
+    noSpin,
+    s,
+  };
 }
 
 /**
@@ -257,18 +305,20 @@ export function frameFactors(c, t) {
  * @param {{ getGroups: () => Array<{gid:string, vals:any}>, log?: any, win?: any, g?: any, nowMs?: () => number }} opts
  *        `getGroups()` 返回**去重后的** `[{ gid, vals }]`（谁生效由调用方决定，见 engine.js 的"更具体的节点优先"）。
  */
-export function createPixiEngine({ getGroups, log = null, win = globalThis, g = globalThis, nowMs = () => performance.now() } = {}) {
+export function createPixiEngine({ getGroups, getRnd = null, log = null, win = globalThis, g = globalThis, nowMs = () => performance.now() } = {}) {
   const state = new WeakMap();          // 目标对象 → 基准值 / 上次写入值（缓存句柄，每帧不重算）
   const touched = new Map();            // gid → 被我们写过的对象集合（关组 / 关总闸 / 卸载要还原）
   const scratch = new Map();            // gid → 复用的收集数组（每帧零分配）
   const hscratch = { raw: null, views: null, penViews: null, fx: null, ticker: null, leaderView: null };
   const counts = {};
   for (const gid of GROUP_ORDER) counts[gid] = 0;
+  /** ★★ ⑤b 换面器（视图的 dir / 朝向指示由它负责，与 scale 的还原路径各自独立）。 */
+  const fb = createFrontBack({ log });
 
   const stats = {
     hook: null, view: false, groupsOn: 0, writesFrame: 0, writes: 0, budget: BUDGET, budgetHit: 0,
     pending: 0, everTouched: 0, costMs: 0, costMsMax: 0, errors: 0, phase: 0,
-    counts, flatWrites: 0,
+    counts, flatWrites: 0, instanced: 0,
   };
 
   let host = null, attach = null, rafId = 0, timer = 0, phase = 0, lastT = 0, tickNo = 0, disposed = false, writes = 0;
@@ -277,6 +327,32 @@ export function createPixiEngine({ getGroups, log = null, win = globalThis, g = 
   const setOf = (gid) => { let s = touched.get(gid); if (!s) { s = new Set(); touched.set(gid, s); } return s; };
   const scratchOf = (gid) => { let a = scratch.get(gid); if (!a) { a = []; scratch.set(gid, a); } return a; };
   const stOf = (o) => { let s = state.get(o); if (!s) { s = {}; state.set(o, s); } return s; };
+
+  /** 一份参数集合的指纹（用来判断"基准变了没有"，决定实例缓存要不要重算）。 */
+  const fpOfVals = (v) => [v && v.spinMode, v && v.spinPeriod, v && v.squashPeriod, v && v.squashMinPct, v && v.widthMaxPct].join('|');
+
+  /**
+   * ★★ 1.0.0：拿到**这个目标实例**本帧的乘数。
+   *   `rnd` 没开 ⇒ 直接返回分组级的那一份（全组同步，与旧版一致）。
+   *   `rnd` 开了 ⇒ 用 `instanceKey(tgt.v, o, seq)` 逐对象算一份幅度 + 初相位，**按对象缓存**
+   *   （带基准指纹：玩家改了分组参数才重算，否则每帧零成本、也不会因为掉帧而抖动）。
+   */
+  function instanceCtx(tgt, baseCtx, baseVals, baseFp, t, rnd, seq, sid) {
+    if (!rnd || rnd.on !== true) return baseCtx;
+    const o = tgt.o;
+    if (!o) return baseCtx;
+    const s = stOf(o);
+    if (s.ipFp !== baseFp) {
+      const key = instanceKey(tgt.v, o, seq);
+      const v = applyRandom(baseVals, key, rnd);
+      s.ipKey = key;
+      s.ipVals = { squashMinPct: v.squashMinPct, widthMaxPct: v.widthMaxPct };
+      s.ipPhase = phaseOf({ rnd }, key);
+      s.ipFp = baseFp;
+    }
+    sid.n++;
+    return frameFactors({ ...baseVals, ...s.ipVals, phase: s.ipPhase }, t);
+  }
 
   /** 把一个目标还原到"我们碰它之前"的样子。 */
   function restoreOne(o, s) {
@@ -304,13 +380,13 @@ export function createPixiEngine({ getGroups, log = null, win = globalThis, g = 
 
   function restoreGroup(gid) {
     const set = touched.get(gid);
-    if (!set || !set.size) return;
-    for (const o of set) restoreOne(o, state.get(o));
-    set.clear();
+    if (set && set.size) { for (const o of set) restoreOne(o, state.get(o)); set.clear(); }
+    try { fb.restoreGroup(gid); } catch { stats.errors++; }   // ★ ⑤b：换面也逐值还原
   }
 
   function restoreAll() {
     for (const gid of touched.keys()) restoreGroup(gid);
+    try { fb.restoreAll(); } catch { stats.errors++; }
     wasOn.clear();
     stats.everTouched = 0;
     for (const gid of GROUP_ORDER) counts[gid] = 0;
@@ -331,7 +407,15 @@ export function createPixiEngine({ getGroups, log = null, win = globalThis, g = 
     if (!o || o.destroyed) return 0;
     const flatOnly = FLAT_ONLY_GROUPS.indexOf(gid) >= 0;
     const axis = ctx.axis && !flatOnly;              // ★ num 组恒为平面内（不吃 cos θ）
-    const axisK = axis ? ctx.axisK : 1;
+    // ★★ ⑤b 转身换面：只有单位视图（op/enemy/token）带 `tgt.v`。
+    //    · 轴转模式 ⇒ 按 cos θ 的符号换正/背骨架；横向乘数**不做** |cos θ| 修正（服主 1.0.1 口径）；
+    //    · 其它模式 ⇒ 宽度不过零，按定义不换面 ⇒ 把我们之前可能改过的 dir 逐值还回去。
+    let sign = 1;
+    if (tgt.v) {
+      if (axis) sign = fb.step(tgt.v, ctx.axisK, FB_DEFAULT_DEAD, gid);
+      else fb.restoreView(tgt.v);
+    }
+    const axisK = axis ? ctx.axisK * sign : 1;
     const s = stOf(o);
     if (typeof tgt.ax === 'number' && typeof tgt.ay === 'number' && o.pivot && o.position) {
       if (s.ax !== tgt.ax || s.ay !== tgt.ay) {
@@ -354,7 +438,9 @@ export function createPixiEngine({ getGroups, log = null, win = globalThis, g = 
     }
     if (tgt.rot === MODE_FREE && typeof o.rotation === 'number') {
       if (typeof s.rot !== 'number') s.rot = o.rotation;
-      o.rotation = axis ? s.rot : s.rot + ctx.theta;
+      // ★ 只有「平面内」才真的写 rotation（绕自身中心转一圈）；绕竖直轴/仅压缩都不写 —— 前者靠 scale.x 的
+      //   cos 乘数表达（`axisK`），后者完全没有旋转。
+      o.rotation = ctx.flat ? s.rot + ctx.theta : s.rot;
       s.wr = o.rotation;
     }
     setOf(gid).add(o);
@@ -362,8 +448,7 @@ export function createPixiEngine({ getGroups, log = null, win = globalThis, g = 
   }
 
   /** 每帧：按分组写容器的 transform（受固定预算约束）。 */
-  function tick() {
-    if (disposed) return;
+  function tick() {    if (disposed) return;
     const t0 = nowMs();
     let list = [];
     try { list = getGroups() || []; } catch { list = []; }
@@ -386,7 +471,11 @@ export function createPixiEngine({ getGroups, log = null, win = globalThis, g = 
     hh.leaderView = liveLeader(h);
 
     let frameWrites = 0, budgetHit = 0, groupsOn = 0, pending = 0, flatWrites = 0;
+    const sid = { n: 0 };
+    let rnd = null;
+    try { rnd = getRnd ? getRnd() : null; } catch { rnd = null; }
     const onNow = new Set();
+    try { fb.beginFrame(true); } catch { stats.errors++; }     // ★ ⑤b：清逐帧计数
     try {
       for (const it of list) {
         const gid = it && it.gid;
@@ -395,13 +484,18 @@ export function createPixiEngine({ getGroups, log = null, win = globalThis, g = 
         if (wasOn.has(gid) === false) wasOn.add(gid);
         groupsOn++;
         if (frameWrites >= BUDGET) { counts[gid] = -1; budgetHit++; continue; }
-        const ctx = frameFactors(it.vals, phase);
+        // ★ 分组级的相位（旧的"整组同步"那一份；rnd 关时就是它）
+        const gvals = it.vals || {};
+        const gfp = fpOfVals(gvals);
+        const ctx = frameFactors({ ...gvals, phase: it.phase || 0 }, phase);
         const flatOnly = FLAT_ONLY_GROUPS.indexOf(gid) >= 0;
         const targets = collectTargets(gid, hh, scratchOf(gid));
         let n = 0;
         for (let i = 0; i < targets.length; i++) {
           if (frameWrites >= BUDGET) { budgetHit++; break; }
-          const wrote = applyTarget(targets[i], ctx, gid);
+          // ★★ 逐实例：rnd 开着时每个对象各算一份幅度 + 初相位（干员 A 与 B、两个同名干员都不同）
+          const c2 = instanceCtx(targets[i], ctx, gvals, gfp, phase, rnd, i, sid);
+          const wrote = applyTarget(targets[i], c2, gid);
           frameWrites++; n++; writes++;
           if (wrote && flatOnly) flatWrites++;
         }
@@ -419,6 +513,7 @@ export function createPixiEngine({ getGroups, log = null, win = globalThis, g = 
     if (cost > stats.costMsMax) stats.costMsMax = cost;
     stats.groupsOn = groupsOn; stats.writesFrame = frameWrites; stats.writes = writes;
     stats.budgetHit = budgetHit; stats.pending = pending; stats.flatWrites = flatWrites;
+    stats.instanced = sid.n;                      // ★ 本帧用了"逐实例"参数的目标数（rnd 关时为 0）
     let ever = 0;
     for (const s2 of touched.values()) ever += s2.size;
     stats.everTouched = ever;
@@ -426,6 +521,7 @@ export function createPixiEngine({ getGroups, log = null, win = globalThis, g = 
       for (const set of touched.values()) for (const o of set) if (o.destroyed) set.delete(o);
       stats.everTouched = 0;
       for (const s2 of touched.values()) stats.everTouched += s2.size;
+      try { fb.prune(); } catch { stats.errors++; }        // ★ ⑤b：顺手清掉已销毁视图的换面状态
     }
   }
 
@@ -472,7 +568,9 @@ export function createPixiEngine({ getGroups, log = null, win = globalThis, g = 
     },
     refresh() { discover(); },
     step() { tick(); return this.stats(); },
-    stats() { return { ...stats, counts: { ...counts } }; },
+    stats() { return { ...stats, counts: { ...counts }, frontback: { ...fb.stats } }; },
+    /** ★ ⑤b 换面现场（只读）：每个被管过的视图的 dir / 正背 / 是否被强控挡住…（报告与 E2E 用）。 */
+    fbProbe() { return fb.probe(); },
     /** 某个分组此刻会被动的目标数（只读）。 */
     probe(gid) {
       const h = host;
@@ -481,6 +579,32 @@ export function createPixiEngine({ getGroups, log = null, win = globalThis, g = 
       const list = collectTargets(gid, { ...h, leaderView: liveLeader(h) }, []);
       for (const t of list) out.push(t.o);
       return out;
+    },
+    /**
+     * ★★ 1.0.0 逐实例读数（**只读**，报告 / E2E / 服主自证用）：
+     * 列出某个分组前 N 个目标**此刻**用的实例键与它自己的幅度/相位 ⇒ 一眼看出"每个实例是不是真的各算各的"。
+     */
+    instProbe(gid, max = 8) {
+      const h = host;
+      const out = [];
+      if (!h) return out;
+      let rnd = null;
+      try { rnd = getRnd ? getRnd() : null; } catch { rnd = null; }
+      const list = collectTargets(gid, { ...h, leaderView: liveLeader(h) }, []);
+      for (let i = 0; i < list.length && out.length < max; i++) {
+        const o = list[i].o;
+        const s = o ? state.get(o) : null;
+        const info = list[i].v && list[i].v.info ? list[i].v.info : null;
+        out.push({
+          uid: list[i].v && list[i].v.uid != null ? list[i].v.uid : null,
+          defId: info ? (info.defId || info.id) || null : null,
+          key: s ? (s.ipKey || null) : null,
+          m: s && s.ipVals ? s.ipVals.squashMinPct : null,
+          w: s && s.ipVals ? s.ipVals.widthMaxPct : null,
+          phi: s && typeof s.ipPhase === 'number' ? +s.ipPhase.toFixed(4) : null,
+        });
+      }
+      return { rndOn: !!(rnd && rnd.on === true), rows: out };
     },
     dispose() {
       if (disposed) return;

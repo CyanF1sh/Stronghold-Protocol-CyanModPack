@@ -3593,12 +3593,14 @@ html:not(.sp-in-match) .toast-host { margin-top: var(--sa-t); }
   color: var(--text-lo); font-size: .115rem; line-height: 1; cursor: help; outline: none;
   transition: color .12s var(--ease-out), border-color .12s var(--ease-out); }
 .sp-dja__info:hover, .sp-dja__info:focus { border-color: var(--mint-500); color: var(--mint-400); }
-.sp-dja__info::after { content: attr(data-tip); position: absolute; left: 50%; bottom: 165%; transform: translateX(-50%);
-  width: 3.1rem; padding: .09rem .11rem; border: 1px solid var(--line-2); border-radius: 2px; background: var(--bg-2);
-  color: var(--text-md); font-size: .125rem; line-height: 1.6; letter-spacing: .01em; text-align: left; white-space: normal;
-  box-shadow: 0 4px 14px rgba(0,0,0,.35); opacity: 0; visibility: hidden; pointer-events: none; z-index: 9;
-  transition: opacity .12s var(--ease-out); }
-.sp-dja__info:hover::after, .sp-dja__info:focus::after { opacity: 1; visibility: visible; }
+/* ★③ 气泡**不再**用 ::after：那是小圆点的子元素，会被祖先的 overflow 裁掉
+   （弹窗 .modal__body{overflow:auto} + 我们的 .sp-dja__tree{overflow:auto}）⇒ 越靠边的「？」越看不全。
+   现在由 client/tips.js 画在**挂在 body 的 fixed 层** #sp-dja-tip 上（见文件末尾那一节）。 */
+#sp-dja-tip { position: fixed; inset: 0; z-index: 9998; pointer-events: none; }
+.sp-dja__tip { position: fixed; max-width: 3.4rem; padding: .09rem .11rem; border: 1px solid var(--line-3);
+  border-radius: 2px; background: var(--bg-2); color: var(--text-md); font-size: max(calc(.13 * var(--t)), 10px);
+  line-height: 1.65; letter-spacing: .01em; text-align: left; white-space: normal; overflow-wrap: anywhere;
+  box-shadow: 0 4px 14px rgba(0,0,0,.45); }
 
 /* ---- 危险警示条 ---- */
 .sp-dja__warn { display: flex; gap: .1rem; align-items: flex-start; padding: .1rem .12rem;
@@ -3631,8 +3633,11 @@ html:not(.sp-in-match) .toast-host { margin-top: var(--sa-t); }
   font-size: max(calc(.13 * var(--t)), 10px); line-height: 1.6; white-space: normal; overflow-wrap: anywhere; }
 
 /* ---- ★★ 可展开目录树 ---- */
+/* ★③ overflow-anchor:none —— 滚动锚定是"点一个元素后视口跳到它那儿"的真凶之一：
+   浏览器会在内容变化时挑一个"锚点元素"、把它的位置钉住 ⇒ 目录自己往上/往下挪。
+   关掉它，再把"保 scrollTop"改成一次性的（见 section.js），滚动位置就完全由玩家掌握。 */
 .sp-dja__tree { max-height: 6.4rem; overflow: auto; border: 1px solid var(--line); border-radius: 2px;
-  padding: .06rem .04rem; background: #0a0d0c; }
+  padding: .06rem .04rem; background: #0a0d0c; overflow-anchor: none; }
 .sp-dja__node { margin: 0; }
 .sp-dja__node > summary { display: flex; align-items: center; gap: .06rem; cursor: pointer; list-style: none;
   padding: .035rem .06rem; border-radius: 2px; outline: none; }
@@ -3690,7 +3695,10 @@ html:not(.sp-in-match) .toast-host { margin-top: var(--sa-t); }
 .sp-dja__fab:hover { border-color: var(--mint-500); transform: scale(1.06); }
 .sp-dja__fab.is-drag { cursor: grabbing; border-color: var(--mint-400); }
 .sp-dja__fabimg { width: 38px; height: 38px; object-fit: contain; border-radius: 50%;
-  animation: sp-dja-spin 6s linear infinite; pointer-events: none; user-select: none; }
+  pointer-events: none; user-select: none; }
+/* ★ 只有**静态图**才加这个修饰类（动图自己会动；再加自转就成了双倍转速）。
+   现状用的是真动图 ⇒ 这个类不会出现（见 fab.js 的 ASSET_ANIMATED）。 */
+.sp-dja__fabimg--spin { animation: sp-dja-spin 6s linear infinite; }
 @keyframes sp-dja-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 /* 半透明浮窗：不遮战场（这正是它存在的理由） */
@@ -3700,20 +3708,56 @@ html:not(.sp-in-match) .toast-host { margin-top: var(--sa-t); }
   border: 1px solid var(--line-3); border-left-width: 3px; border-radius: 3px;
   box-shadow: 0 8px 28px rgba(0,0,0,.5); backdrop-filter: blur(2px); }
 .sp-dja__winbar { flex: 0 0 auto; display: flex; align-items: center; gap: .06rem; cursor: move;
-  padding: .06rem .1rem; border-bottom: 1px solid var(--line-2); background: rgba(0,0,0,.25); }
+  padding: .06rem .1rem; border-bottom: 1px solid var(--line-2); background: rgba(0,0,0,.25); user-select: none; }
+.sp-dja__win.is-dragging { backdrop-filter: none; }
+/* ★① 确认期间把浮窗**彻底移出视野**（不再只是 opacity:0）。
+   类打在**宿主容器** #sp-dja-win 上（不是 vnode 的 class）—— Preact 只管容器的子节点，
+   永远不会覆写容器自己的 class ⇒ 对 700ms 心跳重绘免疫。理由与两次失败的写法见 client/fab.js 的 setModal 注释。 */
+#sp-dja-win.is-modal { display: none !important; }
 .sp-dja__wintitle { color: var(--text-hi); font-size: calc(.15 * var(--t)); font-weight: 600; }
-.sp-dja__winsub { flex: 1 1 auto; color: var(--text-dim); font-size: max(calc(.11 * var(--t)), 9px); text-align: right; }
+.sp-dja__winsub { flex: 1 1 auto; min-width: 0; color: var(--text-dim); font-size: max(calc(.11 * var(--t)), 9px);
+  text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sp-dja__winx { flex: 0 0 auto; background: none; border: 1px solid var(--line-2); color: var(--text-lo);
   border-radius: 2px; font-size: calc(.13 * var(--t)); line-height: 1.2; padding: 0 .05rem; cursor: pointer; }
 .sp-dja__winx:hover { border-color: var(--red-premium); color: var(--red-premium); }
-.sp-dja__winbody { flex: 1 1 auto; overflow: auto; padding: .08rem .1rem .12rem; }
+.sp-dja__winbody { flex: 1 1 auto; overflow: auto; padding: .08rem .1rem .12rem; overflow-anchor: none; }
 /* 浮窗里的目录矮一点，别把窗口撑满（窗口要能"看着像浮在上面"） */
 .sp-dja__float .sp-dja__tree { max-height: 3.6rem; }
 .sp-dja__float { gap: .12rem; }
 
+/* ================================================================================
+   ★★ ① 本 Mod 自己的二次确认层（client/confirm.js）
+   为什么不用宿主的 confirmDialog：它画在 .app-root 的 DialogHost 里、用的是 --z-modal: 80
+   （public/css/theme.css:99）—— 与游戏内设置弹窗**同一层**，而本 Mod 的局内浮窗挂在 body 上、
+   z-index 950 ⇒ 确认框必然被压住（服主 2026-10-14 的实测结论）。
+   所以这里自己建一层挂在 body 上、z-index 10050：高于本 Mod 的浮窗(950)/高亮(900)/气泡(9998)，
+   也远高于宿主的 modal(80)/toast(90)/tooltip(95)/rotate(100)。
+   ================================================================================ */
+#sp-dja-confirm { position: fixed; inset: 0; z-index: 10050; display: flex; align-items: center;
+  justify-content: center; }
+.sp-dja__cfm-back { position: absolute; inset: 0; background: rgba(4,6,5,.66); }
+.sp-dja__cfm { position: relative; z-index: 1; box-sizing: border-box; width: 5.2rem;
+  max-width: calc(100vw - 1.1rem); max-height: calc(100vh - 1.1rem); overflow: auto;
+  display: flex; flex-direction: column; gap: .14rem; padding: .18rem .2rem .16rem;
+  background: var(--bg-2); border: 1px solid var(--line-3); border-left-width: 3px; border-radius: 3px;
+  box-shadow: 0 14px 40px rgba(0,0,0,.6); }
+.sp-dja__cfm-wrap.is-danger .sp-dja__cfm { border-left-color: var(--amber); }
+.sp-dja__cfm-title { color: var(--text-hi); font-size: calc(.19 * var(--t)); font-weight: 600; line-height: 1.55; }
+.sp-dja__cfm-text { color: var(--text-md); font-size: calc(.155 * var(--t)); line-height: 1.75;
+  overflow-wrap: anywhere; }
+.sp-dja__cfm-row { display: flex; justify-content: flex-end; gap: .1rem; margin-top: .04rem; }
+.sp-dja__cfm-btn { font: inherit; font-size: calc(.16 * var(--t)); line-height: 1.5; padding: .06rem .18rem;
+  border-radius: 2px; border: 1px solid var(--line-2); background: transparent; color: var(--text-md);
+  cursor: pointer; transition: border-color .12s var(--ease-out), color .12s var(--ease-out); }
+.sp-dja__cfm-btn:hover { border-color: var(--mint-500); color: var(--mint-400); }
+.sp-dja__cfm-btn.is-ok { border-color: var(--line-3); color: var(--mint-400); }
+.sp-dja__cfm-wrap.is-danger .sp-dja__cfm-btn.is-ok { border-color: var(--amber); color: var(--amber); }
+.sp-dja__cfm-btn:focus-visible { outline: 2px solid var(--mint-500); outline-offset: 1px; }
+
 @media (prefers-reduced-motion: reduce) {
-  .sp-dja__info, .sp-dja__caret, .sp-dja__leaf, .sp-dja__node > summary, .sp-dja__fab { transition: none; }
-  .sp-dja__fabimg { animation: none; }         /* ★ 系统要求"减少动态效果"时，图标不再自转 */
+  .sp-dja__info, .sp-dja__caret, .sp-dja__leaf, .sp-dja__node > summary, .sp-dja__fab,
+  .sp-dja__cfm-btn { transition: none; }
+  .sp-dja__fabimg--spin { animation: none; }   /* ★ 系统要求"减少动态效果"时，静态图不再自转（动图无法用 CSS 停） */
 }
 
 </style>
@@ -3911,10 +3955,49 @@ body{margin:0;background:#0a0d0c;color:#cfe0da;font:14px/1.65 system-ui,"Noto Sa
 </div></div></div>
   <div class="pv-hl" id="pv-hl"></div>
 </div>
+<div class="pv-head" style="position:static;border-top:1px solid #24302c;border-bottom:none;margin-top:12px">
+  <h1 style="font-size:15px">④ 局内浮窗（点战斗里那颗图标键打开）</h1>
+  <p>这一栏<b>只放元素配置与元素目录</b>（含它自己的「元素恢复默认」）；说明、总开关、局内入口设置都在上面那块固定设置页里 —— 两边不重复。真机上这扇窗是<b>半透明、可拖动</b>的（拖动标题栏；贴住战场，便于看元素位置）。</p>
+</div>
+<div class="pv-stage pv-stage--win">
+  <div class="sp-dja__win" data-dja-win="1" style="--sp-dja-alpha:0.9;position:absolute">
+    <div class="sp-dja__winbar"><span class="sp-dja__wintitle">DJ 整活</span><span class="sp-dja__winsub">局内浮窗 · 半透明 · 拖标题栏可移动</span><button type="button" class="sp-dja__winx">✕</button></div>
+    <div class="sp-dja__winbody"><div class="set-list sp-dja__float" id="pv-float-section"></div></div>
+  </div>
+</div>
 <div class="pv-head" style="position:static;border-top:1px solid #24302c;border-bottom:none;margin-top:8px">
   <p><b>当前配置（存档形状）</b>：<span id="pv-state" style="color:#7fd0ad;font-family:ui-monospace,Consolas,monospace;font-size:11px"></span></p>
   <p style="margin-top:6px">这就是写进 <code>sp.pref.djAll</code> 的内容：<code>nodes</code> 为空 = 每个元素都「关」；「全局」档不存数值（跟着全局走）；「独立」档只在真改过之后才落数值。</p>
 </div>
+<div id="sp-dja-tip" style="position:fixed;inset:0;z-index:9999;pointer-events:none"></div>
+<script>
+// ★③ 气泡：与真机 client/tips.js 同一套做法（body 级 fixed 层 + 事件委托），所以它**不会**被祖先的 overflow 裁掉
+(function () {
+  var layer = document.getElementById('sp-dja-tip');
+  var cur = null;
+  function place(t) {
+    if (!t || !t.isConnected) { hide(); return; }
+    var text = t.getAttribute('data-tip') || ''; if (!text) { hide(); return; }
+    layer.textContent = '';
+    var tip = document.createElement('div'); tip.className = 'sp-dja__tip'; tip.textContent = text;
+    tip.style.left = '-9999px'; layer.appendChild(tip);
+    var tb = tip.getBoundingClientRect(), rb = t.getBoundingClientRect();
+    var vw = innerWidth, vh = innerHeight;
+    var left = Math.max(8, Math.min(rb.left + rb.width / 2 - tb.width / 2, vw - tb.width - 8));
+    var top = rb.top - tb.height - 6;
+    if (top < 8) { var below = rb.bottom + 6; top = (below + tb.height + 8 <= vh) ? below : Math.max(8, vh - tb.height - 8); }
+    tip.style.left = Math.round(left) + 'px'; tip.style.top = Math.round(top) + 'px';
+  }
+  function hide() { cur = null; layer.textContent = ''; }
+  var find = function (e) { return e && e.closest ? e.closest('[data-tip]') : null; };
+  document.addEventListener('mouseover', function (e) { var t = find(e.target); if (t) { cur = t; place(t); } }, true);
+  document.addEventListener('mouseout', function (e) { var t = find(e.target); if (t && t === cur) hide(); }, true);
+  document.addEventListener('focusin', function (e) { var t = find(e.target); if (t) { cur = t; place(t); } }, true);
+  document.addEventListener('click', function (e) { var t = find(e.target); if (t) { cur = t; place(t); } else hide(); }, true);
+  setInterval(function () { if (cur) place(cur); }, 600);
+  window.__DJA_TIPS__ = { layer: function () { return !!layer; }, shown: function () { return layer.textContent ? layer.textContent : null; }, rect: function () { var t = layer.firstChild; if (!t) return null; var r = t.getBoundingClientRect(); return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height) }; } };
+})();
+</script>
 <script>
 /* ===== client/elements.js（去 import/export） ===== */
 // mods/cyanfish.dj-all/client/elements.js — **元素目录**：局内所有可见元素的唯一权威清单。
@@ -4005,7 +4088,7 @@ const ELEMENTS = Object.freeze([
     note: '三段式 header（左 / 中 / 右）。', stage: 'top', pick: '.gtop' },
   { id: 'top.left', name: '顶栏左区', layer: 'top', path: 'left', sel: '.gtop__left', src: 'vanilla', count: 1, rot: 'ok',
     note: '退出键 + 延迟/观战席 + 难度标识。', stage: 'top', pick: '.gtop__left' },
-  { id: 'top.exit', name: '离开 / 暂离按键', layer: 'top', path: 'left', sel: '.gtop__left .gtop__exit', src: 'vanilla', danger: true, count: 1, rot: 'ok',
+  { id: 'top.exit', name: '离开 / 暂离按键', layer: 'top', path: 'left', sel: '.gtop__left .gtop__exit', src: 'vanilla', count: 1, rot: 'ok',
     note: '官方 Button（danger/lg/square）挂的类；是一个要点的功能键 ⇒ 与 DOM 组同一套角度上限。',
     stage: 'top', pick: '.gtop__exit' },
   { id: 'top.ping', name: '延迟显示', layer: 'top', path: 'left', sel: '.gtop__left .ping', src: 'vanilla', count: 1, rot: 'ok',
@@ -4154,15 +4237,15 @@ const ELEMENTS = Object.freeze([
   // ============================ ⑦ 左下角功能键 ============================
   { id: 'corner.wrap', name: '左下角容器', layer: 'corner', path: '', sel: '.gm__corner', src: 'vanilla', danger: true, count: 1, rot: 'no',
     note: '四个（+Mod 追加）功能键的容器；转它 = 把一排键一起带走。', stage: 'corner', pick: '.gm__corner' },
-  { id: 'corner.emote', name: '表情开关键', layer: 'corner', path: 'keys', sel: '.gm__corner .ewheel__btn', src: 'vanilla', danger: true, count: 1, rot: 'ok',
+  { id: 'corner.emote', name: '表情开关键', layer: 'corner', path: 'keys', sel: '.gm__corner .ewheel__btn', src: 'vanilla', count: 1, rot: 'ok',
     note: '「交流」按钮；点开是表情面板（面板本身另算）。', stage: 'corner', pick: '.ewheel__btn' },
   { id: 'corner.gear', name: '设置按键', layer: 'corner', path: 'keys', sel: '.gm__corner .gm__gear', src: 'vanilla', danger: true, count: 1, rot: 'ok',
     note: '★ 服主点名的那个「左下设置按钮」；只对 `.gm__gear` 第一个匹配项。', stage: 'corner', pick: '.gm__gear' },
-  { id: 'corner.guide', name: '玩法说明按键', layer: 'corner', path: 'keys', sel: '.gm__corner .gm__guide', src: 'vanilla', danger: true, count: 1, rot: 'ok',
+  { id: 'corner.guide', name: '玩法说明按键', layer: 'corner', path: 'keys', sel: '.gm__corner .gm__guide', src: 'vanilla', count: 1, rot: 'ok',
     note: '与设置键同一个 `.gm__gear` 类，另有 `.gm__guide` 区分。', stage: 'corner', pick: '.gm__guide' },
-  { id: 'corner.fs', name: '全屏按键', layer: 'corner', path: 'keys', sel: '.gm__corner .gm__fs', src: 'vanilla', danger: true, count: 1, rot: 'ok',
+  { id: 'corner.fs', name: '全屏按键', layer: 'corner', path: 'keys', sel: '.gm__corner .gm__fs', src: 'vanilla', count: 1, rot: 'ok',
     note: 'FullscreenButton 挂的类；真正的样式在 `devices.css`（`.fsbtn`）。', stage: 'corner', pick: '.gm__fs' },
-  { id: 'corner.epanel', name: '表情面板', layer: 'corner', path: 'emote', sel: '.ewheel__panel', src: 'vanilla', danger: true, count: 1, rot: 'no',
+  { id: 'corner.epanel', name: '表情面板', layer: 'corner', path: 'emote', sel: '.ewheel__panel', src: 'vanilla', count: 1, rot: 'no',
     note: '展开的那块面板（分页 + 网格）；它是"要点的功能面"，只让它里面的条目转。', stage: 'corner', pick: '.ewheel__panel' },
   { id: 'corner.eitem', name: '表情条目（每个）', layer: 'corner', path: 'emote', sel: '.ewheel__panel .ewheel__item', src: 'vanilla', count: 'n', rot: 'ok',
     note: '★ 一屏多个、每个独立；`data-emote=<id>`。', stage: 'corner', pick: '.ewheel__item' },
@@ -4252,19 +4335,19 @@ const ELEMENTS = Object.freeze([
     note: '★ 一屏多个、每个独立（本局信息页的盟约图标块）。', stage: 'edrawer', pick: '.ibond' },
 
   // ============================ ⑬ 弹窗 ============================
-  { id: 'modal.box', name: '设置弹窗框', layer: 'modal', path: 'settings', sel: '.modal__box', src: 'vanilla', danger: true, count: 1, rot: 'no',
+  { id: 'modal.box', name: '设置弹窗框', layer: 'modal', path: 'settings', sel: '.modal__box', src: 'vanilla', count: 1, rot: 'no',
     note: '★ 默认不转：宿主给 `.modal__box` 自带入场动画（写着 transform）⇒ 我们再转就是抢 transform（dj-models 的 style.js 明确记过这条）。'
       + '这里的第一处匹配就是**设置弹窗**（战斗屏里唯一常驻的那个弹窗）。',
     stage: 'modal', pick: '.modal__box' },
   { id: 'modal.exit', name: '离开 / 暂离确认弹窗', layer: 'modal', path: 'exit', sel: '.modal__box--red', src: 'vanilla', count: 1, rot: 'no',
     note: '★ 默认不转：它也是居中铺满的整屏层 + 自带入场动画。', stage: 'modaldanger', pick: '.modal__box' },
-  { id: 'modal.settings', name: '设置弹窗', layer: 'modal', path: 'settings', sel: '.set-list', src: 'vanilla', danger: true, count: 1, rot: 'no',
+  { id: 'modal.settings', name: '设置弹窗', layer: 'modal', path: 'settings', sel: '.set-list', src: 'vanilla', count: 1, rot: 'no',
     note: '★ 默认不转：设置项本体（滑块 / 开关 / 输入框），转起来没法用。', stage: 'modal', pick: '.set-list' },
-  { id: 'modal.setrow', name: '设置行', layer: 'modal', path: 'settings', sel: '.set-row', src: 'vanilla', danger: true, count: 'n', rot: 'no',
+  { id: 'modal.setrow', name: '设置行', layer: 'modal', path: 'settings', sel: '.set-row', src: 'vanilla', count: 'n', rot: 'no',
     note: '★ 默认不转：一行 = 标签 + 控件 + 读数。', stage: 'modal', pick: '.set-row' },
-  { id: 'modal.settoggle', name: '设置开关', layer: 'modal', path: 'settings', sel: '.set-toggle', src: 'vanilla', danger: true, count: 'n', rot: 'no',
+  { id: 'modal.settoggle', name: '设置开关', layer: 'modal', path: 'settings', sel: '.set-toggle', src: 'vanilla', count: 'n', rot: 'no',
     note: '★ 默认不转：宿主现成的开关控件。', stage: 'modal', pick: '.set-toggle' },
-  { id: 'modal.setseg', name: '设置分段控件', layer: 'modal', path: 'settings', sel: '.set-seg', src: 'vanilla', danger: true, count: 'n', rot: 'no',
+  { id: 'modal.setseg', name: '设置分段控件', layer: 'modal', path: 'settings', sel: '.set-seg', src: 'vanilla', count: 'n', rot: 'no',
     note: '★ 默认不转：宿主现成的分段控件。', stage: 'modal', pick: '.set-seg' },
 
   // ============================ ⑭ 场内画布对象（PIXI） ============================
@@ -4299,7 +4382,7 @@ const ELEMENTS = Object.freeze([
     stage: 'canvas', pick: '[data-pixi="beam"]' },
 
   // ============================ ⑮ Mod 新增（局内） ============================
-  { id: 'mod.chat.tab', name: '聊天图标键（cyanfish.chat）', layer: 'mod', path: 'chat', sel: '.sp-chat__tab', src: 'cyanfish.chat', danger: true, count: 1, rot: 'no',
+  { id: 'mod.chat.tab', name: '聊天图标键（cyanfish.chat）', layer: 'mod', path: 'chat', sel: '.sp-chat__tab', src: 'cyanfish.chat', count: 1, rot: 'no',
     note: '右上角一枚方块键，摆在官方「生效效果」列的正上方。★ 默认**不转**：它是 Mod 的唯一入口，转起来可能点不到；' +
       '（dj-models 的「保护设置入口」兜底同此口径）。', stage: 'mod', pick: '.sp-chat__tab' },
   { id: 'mod.chat.dot', name: '聊天未读红点（cyanfish.chat）', layer: 'mod', path: 'chat', sel: '.sp-chat__dot', src: 'cyanfish.chat', count: 1, rot: 'flat',
@@ -4315,15 +4398,15 @@ const ELEMENTS = Object.freeze([
     note: '★ 默认不转：与聊天弹幕共用同一条通道，同样是**自己的飞行动画**。', stage: 'mod', pick: '.sp-bn--game' },
   { id: 'mod.banner.row', name: '横幅单行（cyanfish.banner）', layer: 'mod', path: 'banner', sel: '.sp-bn--game .sp-bn__row', src: 'cyanfish.banner', count: 'n', rot: 'flat',
     note: '★ 只宜平面内：一行公告文字（`is-warn` / `is-danger` 着色）。', stage: 'mod', pick: '.sp-bn__row' },
-  { id: 'mod.dc.gear', name: '调试控制台键（cyanfish.debug-console）', layer: 'mod', path: 'dc', sel: '.gm__corner .sp-dc__gear', src: 'cyanfish.debug-console', danger: true,
+  { id: 'mod.dc.gear', name: '调试控制台键（cyanfish.debug-console）', layer: 'mod', path: 'dc', sel: '.gm__corner .sp-dc__gear', src: 'cyanfish.debug-console',
     count: 1, rot: 'no',
     note: '左下角官方三键右侧那一格；只在单人 / 全 AI 局出现。★ 默认**不转**：它是唯一入口。', stage: 'mod', pick: '.sp-dc__gear' },
   { id: 'mod.dc.pane', name: '调试面板（cyanfish.debug-console）', layer: 'mod', path: 'dc', sel: '.sp-dc__pane', src: 'cyanfish.debug-console', count: 1, rot: 'no',
     note: '★ 默认不转：一整个表单面板。', stage: 'mod', pick: '.sp-dc__pane' },
-  { id: 'mod.ms.embed', name: '模组设置栏（cyanfish.mod-settings）', layer: 'mod', path: 'ms', sel: '.sp-ms__embed', src: 'cyanfish.mod-settings', danger: true, count: 1, rot: 'no',
+  { id: 'mod.ms.embed', name: '模组设置栏（cyanfish.mod-settings）', layer: 'mod', path: 'ms', sel: '.sp-ms__embed', src: 'cyanfish.mod-settings', count: 1, rot: 'no',
     note: '★ 默认不转：它渲染在**官方设置弹窗内**（宿主 UI_SLOTS.SETTINGS_SECTIONS），是一整块设置面板。',
     stage: 'modal', pick: '.sp-ms__embed' },
-  { id: 'mod.ms.nav', name: '模组设置分栏导航', layer: 'mod', path: 'ms', sel: '.sp-ms__nav', src: 'cyanfish.mod-settings', danger: true, count: 1, rot: 'no',
+  { id: 'mod.ms.nav', name: '模组设置分栏导航', layer: 'mod', path: 'ms', sel: '.sp-ms__nav', src: 'cyanfish.mod-settings', count: 1, rot: 'no',
     note: '★ 默认不转：一列可点的栏位标签。', stage: 'modal', pick: '.sp-ms__nav' },
 
   // ============================ ⑯ 附：局外（非战斗屏） ============================
@@ -4337,9 +4420,9 @@ const ELEMENTS = Object.freeze([
     note: '房间页 / 大厅顶栏那一枚在线人数徽章（插槽 `lobby.topbar`）。', stage: 'outgame', pick: '.sp-on' },
   { id: 'out.announce.list', name: '更新公告列表（cyanfish.announce）', layer: 'outgame', path: 'announce', sel: '.sp-an', src: 'cyanfish.announce', count: 1, rot: 'no',
     note: '公告栏（大厅 / 设置页各一份），一整块可读列表。', stage: 'outgame', pick: '.sp-an' },
-  { id: 'out.ms.gear', name: '模组设置入口键（cyanfish.mod-settings）', layer: 'outgame', path: 'ms', sel: '.sp-ms__gear', src: 'cyanfish.mod-settings', count: 1, rot: 'no',
+  { id: 'out.ms.gear', name: '模组设置入口键（cyanfish.mod-settings）', layer: 'outgame', path: 'ms', sel: '.sp-ms__gear', src: 'cyanfish.mod-settings', danger: true, count: 1, rot: 'no',
     note: '干员调配顶栏那一枚齿轮（插槽 `loadout.topbar`）。', stage: 'outgame', pick: '.sp-ms__gear' },
-  { id: 'out.sv.gear', name: '皮肤语音入口键（cyanfish.skinvoice）', layer: 'outgame', path: 'sv', sel: '.sp-sv__gear', src: 'cyanfish.skinvoice', count: 1, rot: 'no',
+  { id: 'out.sv.gear', name: '皮肤语音入口键（cyanfish.skinvoice）', layer: 'outgame', path: 'sv', sel: '.sp-sv__gear', src: 'cyanfish.skinvoice', danger: true, count: 1, rot: 'no',
     note: '干员调配顶栏那枚「皮肤与语音」键；★ 战斗内那枚浮动键已由该 Mod 自行删除。', stage: 'outgame', pick: '.sp-sv__gear' },
   { id: 'out.sv.fab', name: '皮肤语音浮键（cyanfish.skinvoice）', layer: 'outgame', path: 'sv', sel: '.sp-sv__fab--loadout', src: 'cyanfish.skinvoice', count: 1, rot: 'no',
     note: '调配页左上那枚浮动键（`--loadout` 变体）。', stage: 'outgame', pick: '.sp-sv__fab--loadout' },
@@ -4585,6 +4668,13 @@ const FPS = 60;
 /** 帧 → 秒（精确：帧 / 60）。 */
 const framesToSec = (n) => (Number.isFinite(n) ? n : 0) / FPS;
 
+/**
+ * ★★ ② 整个 Mod 功能的总闸（服主第 ② 条；**不含**局内入口那个开关 —— 那是 fab.on）。
+ * ★ **出厂 = 关**（服主 2026-10-14 定稿）：装上这个 Mod 之后，**在玩家自己打开总闸之前一个像素都不动**。
+ *   与「每个元素默认也都是关」叠加 ⇒ 双重保险（改了元素档位却忘了开总闸 ⇒ 什么都不发生，是预期行为）。
+ */
+const DEFAULT_ON = false;
+
 /** 三档模式 + 中文名（面板与预览页共用同一套字）。 */
 const MODES = Object.freeze(['off', 'global', 'own']);
 const MODE_LABEL = Object.freeze({ off: '关', global: '全局', own: '独立' });
@@ -4594,9 +4684,16 @@ const MODE_HINT = Object.freeze({
   own: '用**自己**那份数值（初值就是当前的全局数值）；改只影响这一个元素，不碰全局。',
 });
 
-/** 旋转模式（两种模式共用同一套参数）。 */
-const SPIN_MODES = Object.freeze(['axis', 'flat']);
-const SPIN_MODE_LABEL = Object.freeze({ axis: '绕竖直轴', flat: '平面内' });
+/**
+ * 旋转模式（★ 服主 2026-10-14 定稿：**三档**）。
+ *   `axis`   绕竖直轴 —— 宽度额外乘一个 `cos θ` 模拟转一圈（**允许为负 ⇒ 镜像**，即"转过侧面对着我们"）；
+ *   `squash` 仅压缩   —— **不乘 `cos θ`**（⇒ 「水平旋转速度」这一项不生效，面板里会给它置灰 + 说明）；
+ *   `flat`   平面内   —— 只绕元素**中心点**在屏幕平面里转（`rotate(θ)`），按「水平旋转速度」定一圈的周期。
+ */
+const SPIN_MODES = Object.freeze(['axis', 'squash', 'flat']);
+const SPIN_MODE_LABEL = Object.freeze({ axis: '绕竖直轴', squash: '仅压缩', flat: '平面内' });
+/** 不乘 `cos θ` 的模式（「水平旋转速度」对它们不生效）。 */
+const NO_SPIN_MODES = Object.freeze(['squash']);
 
 /**
  * 参数定义（**面板顺序 = 这里的顺序**）。
@@ -4607,9 +4704,10 @@ const SPIN_MODE_LABEL = Object.freeze({ axis: '绕竖直轴', flat: '平面内' 
  */
 const PARAMS = Object.freeze([
   { key: 'spinMode', label: '旋转模式', kind: 'seg', options: SPIN_MODES, optionLabels: SPIN_MODE_LABEL,
-    hint: '绕竖直轴：横向按转到侧面的程度压窄（平面图片表现「转过去」的方式）。平面内：像指针一样在屏幕平面里转整圈。' },
+    hint: '绕竖直轴：横向按转到侧面的程度压窄，转过侧面时左右镜像（平面图表现「转过去」的方式）。'
+      + '仅压缩：只做压扁与弹回、不做旋转（「水平旋转速度」不生效）。平面内：像指针一样绕元素中心在屏幕平面里转整圈。' },
   { key: 'spinPeriod', label: '水平旋转速度', kind: 'frames', range: [6, 600, 1], unit: 'frames', suffix: '/圈',
-    hint: '转一整圈要多少帧（60 帧 = 1 秒）。右侧给出秒数换算，想对齐音乐就按帧数微调。' },
+    hint: '转一整圈要多少帧（60 帧 = 1 秒）。右侧给出秒数换算，想对齐音乐就按帧数微调。★ 选「仅压缩」时这一项不生效。' },
   { key: 'squashPeriod', label: '压缩周期', kind: 'frames', range: [6, 600, 1], unit: 'frames', suffix: '/次',
     hint: '一次「压下去再弹回来」要多少帧，与旋转各走各的、互不干涉。' },
   { key: 'squashMinPct', label: '压缩强度', kind: 'pct', range: [25, 75, 1], unit: 'pct',
@@ -4632,6 +4730,24 @@ const DEFAULT_RND = Object.freeze({ on: false, loPct: 5, hiPct: 15 });
 const RND_MAX_PCT = 50;
 /** 随机偏移作用到的参数（明确排除两个周期）。 */
 const RND_KEYS = Object.freeze(['squashMinPct', 'widthMaxPct']);
+
+/**
+ * ★★ 1.0.0：随机要落到**元素实例**上，而不是"目录里的那一项"。
+ *
+ * 服主原话：「随机偏移的随机需要具体到某一个元素实例上，例如**干员 A 与干员 B**，甚至**场上两个同名的干员**。」
+ *
+ * 两个世界各有各的"实例"：
+ *   · **画布对象**（干员 / 敌人 / 召唤物 / 装置 / 特效…）的实例是**运行时的那个对象** ⇒
+ *     用 `view.uid`（服务端 `nextUid()` 发的**每件棋子唯一**的号；两个同名干员 uid 不同）当种子，**每个对象各算一份**。
+ *   · **DOM 元素**是纯 CSS 世界，没法在运行时给每个节点算一份随机（那要写内联样式 + 周期性重扫，
+ *     代价是打破"零痕迹"）⇒ 改用**位置桶**：给一个选择器生成 `:nth-child(1..N)` 的变体规则，
+ *     每个位置一份自己的随机值。**同为兄弟的那些实例**（队伍列 / 商店卡 / 角落四键…）就此各错各的。
+ *
+ * `INSTANCE_BUCKETS` = DOM 侧位置桶的个数（覆盖一屏内可能同时出现的同种实例；超出桶数的位置回落到基准那一份）。
+ */
+const INSTANCE_BUCKETS = 8;
+/** 位置桶的种子后缀（与"元素基准"的种子区分开，避免第 1 个位置刚好等于基准）。 */
+const bucketKey = (nodeId, k) => nodeId + '#' + k;
 
 /**
  * 局内入口（服主的第 ② 条）：「在战斗中新增可配置位置的独立入口（可在设置中关闭该局内入口显示）」。
@@ -4731,9 +4847,60 @@ function applyRandom(vals, nodeId, rnd) {
   return out;
 }
 
-/** 一个节点的档位（缺省 = 'off'）。 */
+/**
+ * ★ 节点 id 归一化（**容错**）：树节点的 id 有前缀（`E:` / `G:` / `L:`），而"元素 id"（如 `top.roundbox`）没有。
+ *   外部（E2E / 控制台 / 别的 Mod）很容易拿元素 id 直接来调 —— 那样 `cfg.nodes['top.roundbox']` 永远匹配不到
+ *   `compile()` 里查的 `E:top.roundbox`，于是**配置写进去了、效果却没出现**（本工序的 014 探针就踩了这个）。
+ *   ⇒ 这里统一补前缀：没有 `:` 的一律当元素 id 处理（`E:` 前缀）。
+ */
+function normId(id) {
+  const s = String(id || '').trim();
+  if (!s) return '';
+  return s.includes(':') ? s : 'E:' + s;
+}
+
+/**
+ * ★★ 压缩脉冲的形状（**服主 2026-10-14 定稿**，DOM 与画布两侧共用同一份实现）：
+ *
+ *   「在『绕竖直轴』模式下，元素在周期内**前 40%** 时间高度达到最低、宽度达到最大，
+ *     然后在**后 40%** 时间内回到原位，在**剩余的 20%** 时间内保持原状。由此产生节奏感。」
+ *
+ *   ⇒ 归一化相位 `u ∈ [0,1)` 上的深度 `s`（0 = 原状，1 = 压到最低）：
+ *        u ∈ [0, 0.4)       s = u / 0.4                （0 → 1，单调压到底）
+ *        u ∈ [0.4, 0.8)     s = 1 − (u−0.4) / 0.4      （1 → 0，单调弹回原位）
+ *        u ∈ [0.8, 1)       s = 0                      （**保持原状** —— 这 20% 就是"节奏感"的来源）
+ *   ★ 形状是**线性三角波 + 尾部静止**，不是余弦：余弦没有"保持原状"那一段，听不出节奏。
+ *   ★ 这条曲线只有四个折点（0 / 0.4 / 0.8 / 1），所以 CSS 那条 keyframes 也只需要四个停靠点 —— 精确且最省。
+ */
+const SQUASH_IN = 0.4;
+const SQUASH_OUT = 0.4;
+function squashProfile(u) {
+  let x = Number(u) || 0;
+  x -= Math.floor(x);                       // 折回 [0,1)
+  if (x < SQUASH_IN) return x / SQUASH_IN;
+  if (x < SQUASH_IN + SQUASH_OUT) return 1 - (x - SQUASH_IN) / SQUASH_OUT;
+  return 0;
+}
+
+/**
+ * ★★ 这个元素自己的随机初相位 `φ ∈ [0,1)`（服主 2026-10-14 定稿的第 ⑤ 条末段）：
+ *   「关于随机偏移，还需要给每个元素一个**随机的初相位**，使得其处于相同周期的不同位置，
+ *     否则会出现『开启了随机偏移但是所有元素仍然是都在压缩 / 都在回弹』。」
+ *
+ *   ★ 由「节点 id」确定性哈希 ⇒ 同一个元素永远同一个相位（重开面板 / 刷新都不跳）；
+ *   ★ **不是**一个新参数：它跟着「随机偏移」的开关走（`rnd.on === true` 才生效，否则全体 φ=0、完全同步）。
+ *   ★ 用途：DOM 侧把它变成 `animation-delay: −φ × 周期`（纯 CSS，零每帧开销）；
+ *     画布侧把它加进相位（`phase + φ × T`）。
+ */
+function phaseOf(cfg, nodeId) {
+  const r = cleanRnd(cfg && cfg.rnd);
+  if (!r.on) return 0;
+  return hash01(nodeId, 'phase');
+}
+
+/** 一个节点的档位（缺省 = 'off'）。★ 参数可以是元素 id（自动补 `E:`）。 */
 function modeOf(cfg, id) {
-  const n = cfg && cfg.nodes ? cfg.nodes[id] : null;
+  const n = cfg && cfg.nodes ? cfg.nodes[normId(id)] : null;
   return n && MODES.includes(n.m) ? n.m : 'off';
 }
 
@@ -4746,7 +4913,7 @@ function valuesOf(cfg, id) {
   const g = cleanValues(cfg && cfg.glob);
   const m = modeOf(cfg, id);
   if (m !== 'own') return g;
-  const own = cfg.nodes[id] && cfg.nodes[id].v;
+  const own = cfg.nodes[normId(id)] && cfg.nodes[normId(id)].v;
   return own ? cleanValues(own) : g;      // ★ 「独立」档默认显示当前全局数值 = 这里回落
 }
 
@@ -4765,12 +4932,14 @@ function sanitize(raw) {
   const o = raw && typeof raw === 'object' ? raw : {};
   const nodes = {};
   const src = o.nodes && typeof o.nodes === 'object' ? o.nodes : {};
-  for (const id of Object.keys(src)) {
-    if (typeof id !== 'string' || !id) continue;
-    const n = cleanNode(src[id]);
+  for (const rawId of Object.keys(src)) {
+    const id = normId(rawId);              // ★ 裸元素 id 也接受（归一化到 `E:` 前缀），见 normId 的注释
+    if (!id) continue;
+    const n = cleanNode(src[rawId]);
     if (n) nodes[id] = n;
   }
-  return { v: PREF_V, glob: cleanValues(o.glob), rnd: cleanRnd(o.rnd), fab: cleanFab(o.fab), nodes };
+  // ★ 总闸：**只有显式 true 才算开**（缺省 = 关）⇒ 出厂与老存档升级后都是「全部停手」，要玩家自己打开
+  return { v: PREF_V, on: o.on === true, glob: cleanValues(o.glob), rnd: cleanRnd(o.rnd), fab: cleanFab(o.fab), nodes };
 }
 
 /** 读一份配置；坏 JSON / 没有 localStorage ⇒ 默认值。★ 多种外壳都认（只看有没有 `cfg` 字段）。 */
@@ -4830,6 +4999,7 @@ function createStore({ storage = safeStorage(), debounceMs = 250, onError = null
     set(patch) {
       const p = patch && typeof patch === 'object' ? patch : {};
       const next = sanitize({
+        on: p.on === undefined ? cfg.on : p.on,
         glob: p.glob ? { ...cfg.glob, ...p.glob } : cfg.glob,
         rnd: p.rnd ? { ...cfg.rnd, ...p.rnd } : cfg.rnd,
         fab: p.fab ? { ...cfg.fab, ...p.fab } : cfg.fab,
@@ -4847,8 +5017,9 @@ function createStore({ storage = safeStorage(), debounceMs = 250, onError = null
     /** 改全局数值里的某几个键（」全局「档的节点与所有回落都用它）。 */
     setGlobal(patch) { return this.set({ glob: patch }); },
     /** 改某个节点的档位；切到 'own' 时**不写数值** ⇒ 界面自然显示"当前全局数值"。 */
-    setMode(id, mode) {
-      if (typeof id !== 'string' || !id) return cfg;
+    setMode(rawId, mode) {
+      const id = normId(rawId);
+      if (!id) return cfg;
       const m = MODES.includes(mode) ? mode : 'off';
       const nodes = { ...cfg.nodes };
       if (m === 'off' || m === 'global') nodes[id] = { m };
@@ -4856,21 +5027,33 @@ function createStore({ storage = safeStorage(), debounceMs = 250, onError = null
       return this.set({ nodes });
     },
     /** 改某个节点**自己那份**数值（只对 'own' 档有意义）。 */
-    setOwnValues(id, patch) {
-      if (typeof id !== 'string' || !id) return cfg;
+    setOwnValues(rawId, patch) {
+      const id = normId(rawId);
+      if (!id) return cfg;
       if (modeOf(cfg, id) !== 'own') return cfg;
       const cur = valuesOf(cfg, id);
       const nodes = { ...cfg.nodes };
       nodes[id] = { m: 'own', v: cleanValues({ ...cur, ...(patch && typeof patch === 'object' ? patch : {}) }) };
       return this.set({ nodes });
     },
+    /** ★② 改总闸（整个 Mod 功能的总开关；不影响局内入口 `fab.on`）。 */
+    setOn(v) { return this.set({ on: v !== false }); },
+    /** ★④ 只把**元素相关**的配置恢复出厂（清 nodes + 全局数值回出厂 + 随机偏移回出厂），不动局内入口。 */
+    resetElements() {
+      cfg = sanitize({ on: cfg.on, fab: cfg.fab });
+      emit();
+      if (debounceMs > 0) { if (timer) clearTimeout(timer); timer = setTimeout(writeNow, debounceMs); if (typeof timer === 'object' && timer && typeof timer.unref === 'function') timer.unref(); }
+      else writeNow();
+      return cfg;
+    },
     /** 改「随机偏移」（开关 / 幅度范围）。★ 对全局与独立两档都生效。 */
     setRnd(patch) { return this.set({ rnd: { ...cfg.rnd, ...(patch && typeof patch === 'object' ? patch : {}) } }); },
     /** 改「局内入口」（显示开关 / 位置 / 浮窗不透明度）。 */
     setFab(patch) { return this.set({ fab: { ...cfg.fab, ...(patch && typeof patch === 'object' ? patch : {}) } }); },
     /** 把某个节点恢复成出厂（= 关） */
-    clearNode(id) {
-      if (typeof id !== 'string' || !id) return cfg;
+    clearNode(rawId) {
+      const id = normId(rawId);
+      if (!id) return cfg;
       const nodes = { ...cfg.nodes };
       delete nodes[id];
       return this.set({ nodes });
@@ -4899,27 +5082,51 @@ function leavesOf(n) {
   return out;
 }
 
-/** 一组选择器去重后拼成并集。 */
-function joinSelUnion(list) {
-  const seen = new Set();
+/**
+ * 这个元素会不会**在同一屏里重复出现**（`count: 'n'` 或 > 1）⇒ 需要"位置桶"变体。
+ * ★ 依据是元素表里的 `count`（`'n'` = 一屏多个；数字 = 同时存在几个），不猜。
+ */
+function repeatOf(el) {
+  const c = el && el.count;
+  if (c === 'n') return true;
+  return typeof c === 'number' && c > 1;
+}
+
+/**
+ * 给一个会重复的 DOM 元素算 N 份"位置桶"随机值（`:nth-child(k)` 用）。
+ * @returns {Array<{m:number, w:number, phi:number}>} 长度 = INSTANCE_BUCKETS，下标 0 对应 `:nth-child(1)`
+ */
+function bucketVariants(baseVals, nodeId, rnd) {
   const out = [];
-  for (const s of list) {
-    const t = String(s || '').trim();
-    if (!t || seen.has(t)) continue;
-    seen.add(t);
-    out.push(t);
+  for (let k = 1; k <= INSTANCE_BUCKETS; k++) {
+    const key = bucketKey(nodeId, k);
+    const v = applyRandom(baseVals, key, rnd);
+    out.push({ m: v.squashMinPct, w: v.widthMaxPct, phi: phaseOf({ rnd }, key) });
   }
-  return out.join(', ');
+  return out;
 }
 
 /**
  * 把配置**编译**成引擎要的东西：一串"作用项"。
  *
- *   一条作用项 = `{ id, kind, sel, global, pixi, mode, vals, danger }`
- *   · 只有 `mode !== 'off'` 的节点才会出现；
+ *   一条作用项 = `{ id, kind, mode, vals, phase, danger, sel, global, pixi }`
+ *   · 只有"这条路线上有档位不是 off"的叶子才会出现；
  *   · **DOM 元素**：`sel` 非空、`global` 标它是不是"战斗屏之外"（只有 `hint.toast`）；
- *     ★ 一个组/层节点若同时含"屏内"与"屏外"元素 ⇒ 会拆成**两条**（同一个 id、两种作用域），否则前缀会错一个；
  *   · **画布对象**：`sel === ''`、`pixi` 非空（= 引擎分组键），交给 PIXI 侧引擎。
+ *
+ * ★★ 0.6.0 起改为**逐叶子**产出（服主 2026-10-14 的第 ⑤ 条末段：「还需要给每个元素一个随机的初相位，
+ *    使得其处于相同周期的不同位置，否则会出现『开启了随机偏移但是所有元素仍然是都在压缩 / 都在回弹』」）。
+ *    旧写法把"一个节点底下的所有叶子"拼成一个并集选择器、共用一份数值与**同一个相位** ⇒
+ *    玩家给一整层（或一整组）开效果时，那一层的元素**完全同步**地一起压、一起弹 —— 正是服主看到的现场。
+ *    现在每个叶子各出一条：相位 = 那个元素自己的哈希（`phaseOf`，仍跟着「随机偏移」开关走），
+ *    随机偏移的幅度也逐元素算（`applyRandom(…, 叶子 id, …)`）。⇒ 一整层一起开也天然错落。
+ *
+ * ★ 档位与数值**沿树向下继承**（最近的祖先说了算），语义与"选一整组 = 这一组里的元素一起用同一个档位"一致：
+ *   · 叶子自己设了档位 ⇒ 用自己的（`valuesOf(cfg, 叶子 id)`）；
+ *   · 只有祖先设了档位 ⇒ 用祖先那一份（`global` 档 = 全局数值；`own` 档 = 祖先自己那份数值）；
+ *   · 一条路线上谁都没开 ⇒ 这个叶子**不产出**（零残留）。
+ * ★ `kind` 取**"真正下这个档位的那个节点"的 kind** —— 画布侧的去重规则（更具体的节点优先，见 engine.js）
+ *   依赖它，所以不能让"层给的档位"看起来像"叶子自己设的"。
  *
  * ★ 这里**不查 DOM**，纯数据 —— 便于单测，也保证"设置页看到的就是引擎拿到的"。
  * @param {any} cfg
@@ -4927,25 +5134,50 @@ function joinSelUnion(list) {
  */
 function compile(cfg, tree) {
   const out = [];
-  const walk = (ns) => {
+  // ★★ ② 总闸关掉 ⇒ 直接不产出任何作用项（引擎两侧都会因此停手、并把已经写过的还回去）
+  //    出厂 on === false（见 DEFAULT_ON）⇒ 装上 Mod 后必须先去设置里把总闸打开，元素才会动。
+  if (!cfg || cfg.on !== true) return out;
+  const rnd = cfg && cfg.rnd;
+  /**
+   * @param {Array<any>} ns 同级节点
+   * @param {null|{mode:string, vals:any, danger:boolean, srcKind:string}} inh 从祖先继承下来的档位
+   */
+  const walk = (ns, inh) => {
     for (const n of ns) {
       const m = modeOf(cfg, n.id);
-      if (m !== 'off') {
-        // ★ 随机偏移在这里生效：它对「全局」与「独立」两档一视同仁（是整份配置的性质，不挂在档位上）
-        const vals = applyRandom(valuesOf(cfg, n.id), n.id, cfg && cfg.rnd);
-        const base = { id: n.id, kind: n.kind, mode: m, vals, danger: n.danger === true };
-        const leaves = leavesOf(n);
-        const scoped = joinSelUnion(leaves.filter((l) => !l.el.global).map((l) => l.el.sel));
-        const glob = joinSelUnion(leaves.filter((l) => l.el.global).map((l) => l.el.sel));
-        if (scoped) out.push({ ...base, sel: scoped, global: false, pixi: '' });
-        if (glob) out.push({ ...base, sel: glob, global: true, pixi: '' });
-        // 画布对象：只可能是叶子（`pixi.*`），且它们没有 DOM 选择器
-        for (const l of leaves) if (l.el.pixi) out.push({ ...base, sel: '', global: false, pixi: l.el.pixi });
+      // 本节点自己的档位（'off' ⇒ 不改继承，让祖先的继续生效）。
+      // ★ 这里**不做**随机偏移 —— 随机必须逐元素算（见下面 emit 处），否则一整层的随机幅度是一样的。
+      const cur = m !== 'off'
+        ? { mode: m, vals: valuesOf(cfg, n.id), danger: n.danger === true, srcKind: n.kind }
+        : inh;
+      // ★★ 组 / 层：**无条件下探**，哪怕自己是「关」。
+      //    这里曾经写成"先 `if (!cur) continue` 再判叶子"⇒ 只要某一层/组自己是「关」，**整棵子树都被跳掉**
+      //    ⇒ **单独给一个元素设档位完全不生效**（0.6.0 的真机事故：服主"刷新后所有动作都不生效"、
+      //    而两个探针恰好都用整层 `L:top` 在测 ⇒ 一路假绿）。判据必须留在**叶子**那一支里。
+      if (n.kind !== 'leaf') {
+        if (n.children) walk(n.children, cur);
+        continue;
       }
-      if (n.children) walk(n.children);
+      if (!cur) continue;                            // 叶子：自己与祖先都没开 ⇒ 不产出
+      // ★★ 逐实例落地的两个"随机"：**幅度**（applyRandom，作用到压缩强度/横向补偿）与**初相位**（phaseOf）。
+      //    画布对象在运行时按 `view.uid` 逐对象算（见 engine-pixi.js 的 instanceFactors）；
+      //    DOM 侧在这里按"基准 + 位置桶"预先把值算好（engine-dom.js 只负责排版，保持纯函数）。
+      const el = n.el;
+      if (!el) continue;
+      const danger = n.danger === true || cur.danger === true;
+      if (el.sel) {
+        out.push({ id: n.id, kind: 'leaf', mode: cur.mode, vals: applyRandom(cur.vals, n.id, rnd),
+          phase: phaseOf(cfg, n.id), danger, sel: el.sel, global: !!el.global, pixi: '',
+          // ★ 会重复出现的那种元素（`count: 'n'` / >1）⇒ 附上"位置桶"变体，让每个实例各错各的
+          buckets: repeatOf(el) ? bucketVariants(cur.vals, n.id, rnd) : null });
+      }
+      if (el.pixi) {
+        out.push({ id: n.id, kind: cur.srcKind, mode: cur.mode, vals: applyRandom(cur.vals, n.id, rnd),
+          phase: phaseOf(cfg, n.id), danger, sel: '', global: false, pixi: el.pixi });
+      }
     }
   };
-  walk(tree || []);
+  walk(tree || [], null);
   return out;
 }
 
@@ -4998,21 +5230,32 @@ const TEXTS = Object.freeze({
   globalNote: '你现在改的是全局数值：所有档位为「全局」的元素会立刻跟着变。',
   ownNote: '你现在改的是这个元素自己的数值，不影响别的元素与全局。',
   dangerTitle: '⚠ 危险元素',
-  dangerText: '这是设置入口（或包含设置入口的那一整块）：让它转动可能让你点不到设置、改不回来。'
+  // ★★ 服主 2026-10-14 收窄口径：「危险标记仅需要包含【战斗屏骨架】+【左下角容器 → 四个功能键 → 设置按键】
+  //    + 附：局外及其父级，其余元素修改都不会导致点不到设置。」
+  //    ⇒ 现在带 ⚠ 的**只有 6 个叶子**：shell.screen（战斗屏根）· shell.hud（HUD 层，它是 .gm__corner 的父容器）·
+  //       corner.wrap（左下角容器）· corner.gear（设置按键）· out.ms.gear / out.sv.gear（局外两个入口键）；
+  //       组/层上的 ⚠ 由 elements.js 自动向上传播得到（G:corner/keys · L:corner · L:shell · L:outgame）。
+  //    所以这三句文案只说"它会连累左下角设置键"，不再泛泛地说"设置入口那一整块"。
+  dangerText: '它会让左下角的「设置键」跟着转（或者它自己就是那枚键）—— 一旦点不到设置就改不回来了。'
     + '真要开的话，建议把「水平旋转速度」调慢、把「压缩强度」调大（压得轻一点）。',
   dangerConfirmTitle: '确定要给「{name}」开启效果吗？',
-  dangerConfirmText: '它是设置入口（或包含设置入口的整体）。转起来之后如果点不到设置，'
-    + '可以在浏览器控制台执行 __SP_DJALL__.reset() 一键关掉全部效果。确定要开吗？',
+  dangerConfirmText: '它会让左下角的「设置键」跟着转（或者它自己就是那枚键）。'
+    + '如果转起来后点不到设置：直接刷新页面即可（总闸与各元素的档位都存在本机，不会丢）；'
+    + '也可以在浏览器控制台执行 __SP_DJALL__.reset() 一键关掉全部效果。确定要开吗？',
   dangerConfirmOk: '仍然开启',
   dangerConfirmCancel: '取消',
   // ---- ④ 随机偏移 ----
   rndGroup: '随机偏移',
-  rndHint: '给每个元素的「压缩强度 / 横向补偿」各自叠一个固定的随机量，让整个画面看起来错落一些。'
+  rndHint: '给每个**实例**的「压缩强度 / 横向补偿」各自叠一个固定的随机量，并给每个实例一个**自己的初相位**'
+    + '（错开成"这个正在压、那个正在弹"），让整个画面看起来错落一些。'
+    + '★ 落到的是**实例**而不是目录里的那一项：干员 A 与干员 B 各不相同，**场上两个同名干员也各不相同**；'
+    + '界面上重复出现的同类元素（队伍列 / 商店卡 / 角落四键…）也各错各的。'
     + '两个周期不参与 —— 周期是你用来对齐音乐的量，随机化没有意义。',
   rndOn: '开启随机偏移',
   rndRange: '偏移幅度',
-  rndNote: '幅度是相对值：15% 表示这个参数最多上下浮动 15%。每个元素的偏移由元素本身决定（算出来就不会变），'
-    + '所以重开面板 / 刷新页面都不会跳；只有改这里的范围才会整体重算。',
+  rndNote: '幅度是相对值：15% 表示这个参数最多上下浮动 15%。每个实例的偏移由"它自己"决定'
+    + '（算出来就不会变，重开面板 / 刷新页面都不会跳）；只有改这里的范围才会整体重算。',
+  rndPerInstance: '逐实例',
   // ---- ② 局内入口 ----
   fabGroup: '局内',
   fabHint: '战斗里那颗图标键：拖动它就能改位置；点一下会打开这个 Mod 的半透明浮窗，方便一边调一边看战场。',
@@ -5026,7 +5269,19 @@ const TEXTS = Object.freeze({
   hlNoMatch: '现在不在对局里 —— 位置高亮要进对局才看得到。',
   hlPixi: '这一选里包含画布对象（单位 / 血条 / 特效…），它们没有 DOM 位置，标不出外框。',
   hlOff: '位置高亮已关闭（在「局内」那一栏里打开）。',
+  // ---- ② 总闸 ----
+  onLabel: '整个 Mod 的总开关',
+  onHint: '关掉它：所有元素的旋转与压缩立刻停、已经注入的样式被摘掉（元素各自的档位都留着，下次打开就恢复）。'
+    + '它不管局内入口的显示 —— 那是「局内」那一栏的事。',
+  onOffNote: '总开关出厂是关的：所有元素效果都不会生效（打开之后，各元素再按自己的档位走）。',
   resetLabel: '全部恢复默认',
+  resetElementsLabel: '元素恢复默认',
+  resetElementsHint: '把每个元素都变回「关」、全局数值与随机偏移回出厂值。不影响局内入口的位置与显示。',
+  // ---- ④ 浮窗 / 固定页的分工 ----
+  scopeFixedTitle: '设置（这个 Mod 的全局项）',
+  scopeFloatNote: '元素的档位与数值在**局内入口的浮窗**里配（点战斗里那颗图标键）——那一栏只放元素配置，' 
+    + '这一栏只放说明、总开关与局内入口的设置，两边不重复。',
+  editInFloat: '元素配置在局内浮窗里',
   resetHint: '把每个元素都变回「关」、全局数值回出厂值（所有东西立刻回到原位）。',
   footer: '档位：关 / 全局 / 独立 · 改完立刻生效 · 关掉的元素零残留',
 });
@@ -5080,13 +5335,17 @@ function headModel(cfg, id, tree) {
   const off = mode === 'off';
   const vals = valuesOf(cfg, id);
   const pathLabel = pathOf(node);
+  // ★★ 「仅压缩」模式：「水平旋转速度」这一项**不生效**（不乘 cos θ、也没有旋转动画）
+  //    ⇒ 面板里给它置灰 + 读数后缀写明，而不是让它看起来还能调（避免「调了没反应」的假象）。
+  const noSpinMode = vals.spinMode === 'squash';
   const params = PARAMS.map((p) => {
+    const dead = noSpinMode && p.key === 'spinPeriod';
     const built = {
       key: p.key, label: p.label, kind: p.kind, unit: p.unit || '',
       hint: p.hint || '',
-      disabled: off,                          // ★ 「关」档：不可输入/不可修改
+      disabled: off || dead,                          // ★ 「关」档：不可输入/不可修改
       value: p.kind === 'seg' ? vals[p.key] : (off ? null : vals[p.key]),
-      text: off ? '' : paramText(p, vals[p.key]),   // ★ 「关」档：显示为空
+      text: off ? '' : (dead ? paramText(p, vals[p.key]) + '（仅压缩模式下不生效）' : paramText(p, vals[p.key])),   // ★ 「关」档：显示为空
     };
     if (p.kind === 'seg') { built.options = p.options; built.optionLabels = p.optionLabels; }
     if (p.range) { built.min = p.range[0]; built.max = p.range[1]; built.step = p.range[2]; }
@@ -5105,7 +5364,8 @@ function headModel(cfg, id, tree) {
     mode,
     modes,
     params,
-    note: mode === 'global' ? TEXTS.globalNote : mode === 'own' ? TEXTS.ownNote : TEXTS.paramDisabled,
+    note: (mode === 'global' ? TEXTS.globalNote : mode === 'own' ? TEXTS.ownNote : TEXTS.paramDisabled)
+      + (noSpinMode ? '　★ 当前是「仅压缩」：只做压扁与弹回、不做旋转 ——「水平旋转速度」不参与。' : ''),
     modeHint: TEXTS.modeHint[mode],
     // 给"新切到独立档"用的：当前全局数值（面板据此解释"初值就是它"）
     global: cfg.glob,
@@ -5179,6 +5439,12 @@ function fabModel(cfg) {
   };
 }
 
+/** ★② 总闸那一行的模型。 */
+function onModel(cfg) {
+  const on = !!(cfg && cfg.on === true);          // ★ 缺省 = 关（与 config.sanitize 同一口径）
+  return { on, text: on ? '开（按各元素的档位走）' : '关（全部停手 · 出厂状态）' };
+}
+
 /** 三档的语义说明（面板在档位旁显示）。 */
 function modeHint(mode) { return MODE_HINT[mode] || ''; }
 
@@ -5189,294 +5455,191 @@ window.DJA = { ELEMENTS, LAYERS, TREE, TREE_BY_ID, SUBGROUP_NAMES, subgroupName,
   PREF_KEY, PREF_V, MODES, MODE_LABEL, MODE_HINT, PARAMS, DEFAULT_GLOBAL, FPS, framesToSec,
   RND_KEYS, RND_MAX_PCT, DEFAULT_RND, DEFAULT_FAB, cleanRnd, cleanFab, hash01, applyRandom, leavesOf,
   cleanValues, modeOf, valuesOf, sanitize, compile,
-  TEXTS, annotate, headModel, findNode, nodeName, pathOf, paramText, framesText, modeHint, rndModel, fabModel };
+  TEXTS, annotate, headModel, findNode, nodeName, pathOf, paramText, framesText, modeHint, rndModel, fabModel, onModel };
 </script>
 <script>
+// mods/cyanfish.dj-all/tools/preview-renderer.js —— 设置页预览的**纯 DOM 渲染器**（经典脚本，由生成器整体内联）。
+//
+// ★ 为什么单独一个文件：原来的写法是把渲染器塞进生成器里的"单引号字符串数组"，改一行就要动几十处引号，
+//   本轮（0.4.0）它连续踩了两次语法坑。改成独立文件 + 生成器原样内联 ⇒ 可以用正常 JS 写。
+//
+// ★ 它必须与 client/section.js（真机上的 htm+Preact 渲染器）**逐条对齐**：类名、data-*、文案、交互语义。
+//   两边读的是**同一份** `client/panels.js` 算出来的描述（`window.DJA` 命名空间），所以"哪些行 / 什么控件 /
+//   什么值 / 可不可改 / 什么文案"不会漂；只有渲染器不同（DOM vs Preact）。
+//
+// 两种摆放（与真机一致，服主第 ④ 条）：
+//   scope='full'     → 固定设置页：
+//        说明 · 运行读数 · ②整个 Mod 的总开关 · 局内（入口显示 / 位置 / 浮窗不透明度 / 位置高亮）· 恢复出厂
+//   scope='elements' → 局内浮窗：
+//        配置（选中元素的三档 + 五参数 + ⚠）· 随机偏移 · 元素目录 · 元素恢复默认
 (function () {
   var D = window.DJA;
   var TEXTS = D.TEXTS;
-  var cfg = D.sanitize(null);                 // ★ 预览从**出厂状态**开始：默认全关、全局数值是默认值
+  var VAL = 'white-space:nowrap;width:auto;text-align:right';
+  var cfg = D.sanitize(null);          // ★ 预览从出厂状态开始：默认全关、总闸开、全局数值是默认值
   var sel = null;
-  var exp = { "L:top": true, "L:corner": true, "L:mod": true };
-  var root = document.getElementById("pv-section");
 
-  function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
-  function hint(text) { var s = el("span", "sp-dja__info", "?"); s.setAttribute("role", "img"); s.tabIndex = 0; s.setAttribute("aria-label", text); s.setAttribute("data-tip", text); return s; }
+  function hint(text) {
+    var s = el('span', 'sp-dja__info', '?');
+    s.setAttribute('role', 'img'); s.tabIndex = 0; s.setAttribute('aria-label', text); s.setAttribute('data-tip', text);
+    return s;
+  }
+  function row(attr) { var r = el('div', 'set-row'); if (attr) r.setAttribute('data-dja-' + attr, '1'); return r; }
+  function label(text, tip) { var l = el('span', 'set-row__label', text); if (tip) l.appendChild(hint(tip)); return l; }
+  function toggleRow(attr, text, tip, isOn, onClick) {
+    var r = row(attr); r.appendChild(label(text, tip));
+    var w = el('div', 'sp-dja__side-by');
+    var b = el('button', 'set-toggle' + (isOn ? ' is-on' : '')); b.type = 'button'; b.setAttribute('role', 'switch');
+    b.setAttribute('aria-checked', isOn ? 'true' : 'false');
+    b.appendChild(el('i', '')); b.appendChild(el('span', '', isOn ? '开' : '关'));
+    b.onclick = onClick; w.appendChild(b); r.appendChild(w); return r;
+  }
+  function sliderRow(attr, text, key, min, max, v, disabled, onInput) {
+    var lab = el('label', 'set-row'); lab.setAttribute('data-dja-' + attr, key);
+    lab.appendChild(el('span', 'set-row__label', text));
+    var i = el('input', 'set-range sp-dja__range'); i.type = 'range'; i.min = min; i.max = max; i.step = 1;
+    i.disabled = !!disabled; i.value = v;
+    i.style.setProperty('--pct', Math.round(((v - min) / (max - min)) * 100) + '%');
+    if (!disabled) i.oninput = function () { onInput(Number(i.value)); };
+    lab.appendChild(i);
+    var val = el('span', 'set-row__val num', v + '%'); val.setAttribute('data-dja-' + attr + '-val', key); val.style.cssText = VAL;
+    lab.appendChild(val); return lab;
+  }
 
-  /** 提交一个"和面板一样"的改动（预览页没有引擎，只改配置并重画）。 */
+  // ---- 配置写入（与真机 store 同一套语义；这里只改本地 cfg 再重画）------------------------------------
+  function patch(p) {
+    cfg = D.sanitize({
+      on: p.on === undefined ? cfg.on : p.on,
+      glob: p.glob ? Object.assign({}, cfg.glob, p.glob) : cfg.glob,
+      rnd: p.rnd ? Object.assign({}, cfg.rnd, p.rnd) : cfg.rnd,
+      fab: p.fab ? Object.assign({}, cfg.fab, p.fab) : cfg.fab,
+      nodes: p.nodes === undefined ? cfg.nodes : p.nodes,
+    });
+    drawAll();
+  }
   function setMode(id, m) {
     var node = D.findNode(D.TREE, id);
-    var wasOff = D.modeOf(cfg, id) === "off";
-    if (wasOff && m !== "off" && node && node.danger === true) {
-      confirmDanger(node, function (ok) { if (ok) { cfg = applyMode(id, m); draw(); } });
+    var wasOff = D.modeOf(cfg, id) === 'off';
+    if (wasOff && m !== 'off' && node && node.danger === true) {
+      confirmDanger(node, function (ok) { if (ok) { var n = Object.assign({}, cfg.nodes); n[id] = (m === 'own') ? { m: 'own' } : { m: m }; patch({ nodes: n }); } });
       return;
     }
-    cfg = applyMode(id, m); draw();
-  }
-  function applyMode(id, m) {
-    var nodes = Object.assign({}, cfg.nodes);
-    nodes[id] = (m === "own") ? { m: "own" } : { m: m };
-    // ★ 必须把 rnd / fab 一起带上：sanitize 对缺失的块会用出厂值补齐 ⇒ 漏了就会把随机偏移悄悄关掉
-    return D.sanitize({ glob: cfg.glob, rnd: cfg.rnd, fab: cfg.fab, nodes: nodes });
+    var n2 = Object.assign({}, cfg.nodes); n2[id] = (m === 'own') ? { m: 'own' } : { m: m }; patch({ nodes: n2 });
   }
   function setParam(key, v) {
     if (!sel) return;
     var m = D.modeOf(cfg, sel);
-    if (m === "global") cfg = D.sanitize({ glob: Object.assign({}, cfg.glob, kv(key, v)), rnd: cfg.rnd, fab: cfg.fab, nodes: cfg.nodes });
-    else if (m === "own") {
-      var cur = D.valuesOf(cfg, sel);
-      var nodes = Object.assign({}, cfg.nodes);
-      nodes[sel] = { m: "own", v: D.cleanValues(Object.assign({}, cur, kv(key, v))) };
-      cfg = D.sanitize({ glob: cfg.glob, rnd: cfg.rnd, fab: cfg.fab, nodes: nodes });
+    if (m === 'global') { var g = {}; g[key] = v; patch({ glob: g }); }
+    else if (m === 'own') {
+      var cur = D.valuesOf(cfg, sel); var own = Object.assign({}, cur); own[key] = v;
+      var n = Object.assign({}, cfg.nodes); n[sel] = { m: 'own', v: D.cleanValues(own) }; patch({ nodes: n });
     }
-    draw();
   }
   function kv(k, v) { var o = {}; o[k] = v; return o; }
 
-  /** ★ 二次确认（复刻真机 confirmDialog 的文案与按钮；真机上由 api.ui.confirmDialog 承担）。 */
+  // ---- ★⑦ 二次确认（复刻真机 confirmDialog 的文案与按钮）--------------------------------------------
   function confirmDanger(node, cb) {
-    var wrap = el("div", "pv-confirm");
-    var box = el("div", "pv-confirm__box brackets");
-    var name = node.kind === "leaf" ? node.el.name : node.name;
-    box.appendChild(el("h3", "pv-confirm__t", TEXTS.dangerConfirmTitle.replace("{name}", name)));
-    box.appendChild(el("p", "pv-confirm__x", TEXTS.dangerConfirmText));
-    var acts = el("div", "pv-confirm__acts");
-    var cancel = el("button", "btn btn--secondary btn--md"); cancel.appendChild(el("span", "btn__label", TEXTS.dangerConfirmCancel));
-    var ok = el("button", "btn btn--danger btn--md"); ok.appendChild(el("span", "btn__label", TEXTS.dangerConfirmOk));
+    var wrap = el('div', 'pv-confirm');
+    var box = el('div', 'pv-confirm__box brackets');
+    var name = node.kind === 'leaf' ? node.el.name : node.name;
+    box.appendChild(el('h3', 'pv-confirm__t', TEXTS.dangerConfirmTitle.replace('{name}', name)));
+    box.appendChild(el('p', 'pv-confirm__x', TEXTS.dangerConfirmText));
+    var acts = el('div', 'pv-confirm__acts');
+    var cancel = el('button', 'btn btn--secondary btn--md'); cancel.appendChild(el('span', 'btn__label', TEXTS.dangerConfirmCancel));
+    var ok = el('button', 'btn btn--danger btn--md'); ok.appendChild(el('span', 'btn__label', TEXTS.dangerConfirmOk));
     cancel.onclick = function () { wrap.remove(); cb(false); };
     ok.onclick = function () { wrap.remove(); cb(true); };
     acts.appendChild(cancel); acts.appendChild(ok); box.appendChild(acts); wrap.appendChild(box);
-    document.getElementById("pv-stage").appendChild(wrap);
+    (document.getElementById('pv-stage') || document.body).appendChild(wrap);
   }
 
-  // ---- 一行参数（三类控件；与 section.js 的 ParamRow 一一对应）----
+  // ---- 一行参数 ------------------------------------------------------------------------------------
   function paramRow(p) {
-    if (p.kind === "seg") {
-      var row = el("div", "set-row"); row.setAttribute("data-dja-key", p.key);
-      var lb = el("span", "set-row__label", p.label); lb.appendChild(hint(p.hint)); row.appendChild(lb);
-      var seg = el("div", "set-seg"); seg.setAttribute("role", "radiogroup");
+    if (p.kind === 'seg') {
+      var r = row('key'); r.setAttribute('data-dja-key', p.key);
+      r.appendChild(label(p.label, p.hint));
+      var seg = el('div', 'set-seg'); seg.setAttribute('role', 'radiogroup');
       (p.options || []).forEach(function (o) {
-        var b = el("button", p.value === o ? "is-on" : "", (p.optionLabels || {})[o] || o);
-        b.type = "button"; b.setAttribute("role", "radio"); b.setAttribute("aria-checked", p.value === o ? "true" : "false");
+        var b = el('button', p.value === o ? 'is-on' : '', (p.optionLabels || {})[o] || o);
+        b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', p.value === o ? 'true' : 'false');
         if (p.disabled) b.disabled = true; else b.onclick = function () { setParam(p.key, o); };
         seg.appendChild(b);
       });
-      row.appendChild(seg); return row;
+      r.appendChild(seg); return r;
     }
-    var lab = el("label", "set-row"); lab.setAttribute("data-dja-key", p.key);
-    var l2 = el("span", "set-row__label", p.label); l2.appendChild(hint(p.hint)); lab.appendChild(l2);
-    if (p.kind === "frames") {
-      var wrap = el("span", "sp-dja__numwrap");
-      var inp = el("input", "sp-dja__num"); inp.type = "number"; inp.inputMode = "numeric";
+    var lab = el('label', 'set-row'); lab.setAttribute('data-dja-key', p.key);
+    lab.appendChild(label(p.label, p.hint));
+    if (p.kind === 'frames') {
+      var wrap = el('span', 'sp-dja__numwrap');
+      var inp = el('input', 'sp-dja__num'); inp.type = 'number'; inp.inputMode = 'numeric';
       inp.min = p.min; inp.max = p.max; inp.step = p.step; inp.disabled = !!p.disabled;
       if (!p.disabled) inp.value = p.value;
       inp.oninput = function () { var v = Number(inp.value); if (Number.isFinite(v)) setParam(p.key, Math.round(v)); };
-      wrap.appendChild(inp); wrap.appendChild(el("span", "sp-dja__unit", "帧")); lab.appendChild(wrap);
+      wrap.appendChild(inp); wrap.appendChild(el('span', 'sp-dja__unit', '帧')); lab.appendChild(wrap);
     } else {
-      var r = el("input", "set-range sp-dja__range"); r.type = "range";
-      r.min = p.min; r.max = p.max; r.step = p.step; r.disabled = !!p.disabled;
-      r.value = p.disabled ? p.min : p.value;
-      r.style.setProperty("--pct", (p.max === p.min ? 0 : Math.round(((p.value - p.min) / (p.max - p.min)) * 100)) + "%");
-      if (!p.disabled) r.oninput = function () { setParam(p.key, Number(r.value)); };
-      lab.appendChild(r);
+      var i2 = el('input', 'set-range sp-dja__range'); i2.type = 'range';
+      i2.min = p.min; i2.max = p.max; i2.step = p.step; i2.disabled = !!p.disabled;
+      i2.value = p.disabled ? p.min : p.value;
+      i2.style.setProperty('--pct', (p.max === p.min ? 0 : Math.round(((p.value - p.min) / (p.max - p.min)) * 100)) + '%');
+      if (!p.disabled) i2.oninput = function () { setParam(p.key, Number(i2.value)); };
+      lab.appendChild(i2);
     }
-    var val = el("span", "set-row__val num", p.text); val.style.cssText = "white-space:nowrap;width:auto;text-align:right";
-    val.setAttribute("data-dja-val", p.key); lab.appendChild(val); return lab;
+    var val = el('span', 'set-row__val num', p.text); val.style.cssText = VAL;
+    val.setAttribute('data-dja-val', p.key); lab.appendChild(val); return lab;
   }
 
-  // ---- 目录树（与 section.js 的 TreeRows 一一对应）----
-  function treeRows(list) {
+  // ---- ★⑤ 目录树：<details> **不受控**（创建时只设一次 open）⇒ 重画时才恢复展开态，点击不触发重画 ----------
+  function treeRows(list, openMap) {
     var frag = document.createDocumentFragment();
     list.forEach(function (r) {
       if (r.children) {
-        var d = el("details", "sp-dja__node"); d.open = !!exp[r.id];
-        var sm = el("summary", r.selected ? "is-sel" : "");
-        sm.appendChild(el("span", "sp-dja__caret", "▸"));
-        sm.appendChild(el("span", "sp-dja__leafname", r.name));
-        if (r.danger) { var w = el("span", "sp-dja__danger", "⚠"); w.title = "危险元素：转起来可能点不到设置"; sm.appendChild(w); }
-        sm.appendChild(el("span", "sp-dja__count", String(r.count)));
-        sm.appendChild(el("span", "sp-dja__badge is-" + r.mode, r.modeLabel));
-        sm.onclick = function (e) { e.preventDefault(); exp[r.id] = !exp[r.id]; sel = r.id; draw(); };
+        var d = el('details', 'sp-dja__node');
+        if (openMap[r.id]) d.open = true;                    // ★ 只在创建时定一次；用户点开的由浏览器自己记
+        var sm = el('summary', r.selected ? 'is-sel' : '');
+        sm.appendChild(el('span', 'sp-dja__caret', '▸'));
+        sm.appendChild(el('span', 'sp-dja__leafname', r.name));
+        if (r.danger) { var w = el('span', 'sp-dja__danger', '⚠'); w.title = '危险元素：转起来可能点不到设置'; sm.appendChild(w); }
+        sm.appendChild(el('span', 'sp-dja__count', String(r.count)));
+        sm.appendChild(el('span', 'sp-dja__badge is-' + r.mode, r.modeLabel));
+        sm.onclick = function () { if (r.kind !== 'leaf') sel = r.id; markScroll(); };   // ★ 不 preventDefault、不重画
         d.appendChild(sm);
-        var kids = el("div", "sp-dja__kids"); kids.appendChild(treeRows(r.children)); d.appendChild(kids);
+        var kids = el('div', 'sp-dja__kids'); kids.appendChild(treeRows(r.children, openMap)); d.appendChild(kids);
         frag.appendChild(d);
       } else {
-        var lf = el("div", "sp-dja__leaf" + (r.selected ? " is-sel" : "") + (r.unavailable ? " is-un" : ""));
-        lf.setAttribute("data-dja-leaf", r.id);
+        var lf = el('div', 'sp-dja__leaf' + (r.selected ? ' is-sel' : '') + (r.unavailable ? ' is-un' : ''));
+        lf.setAttribute('data-dja-leaf', r.id);
         lf.title = r.unavailable || r.sub;
-        lf.appendChild(el("span", "sp-dja__leafname", r.name));
-        if (r.danger) { var w2 = el("span", "sp-dja__danger", "⚠"); w2.title = "危险元素：转起来可能点不到设置"; lf.appendChild(w2); }
-        lf.appendChild(el("span", "sp-dja__id", r.sub));
-        lf.appendChild(el("span", "sp-dja__badge is-" + r.mode, r.modeLabel));
-        lf.onclick = function () { sel = r.id; draw(); };
+        lf.appendChild(el('span', 'sp-dja__leafname', r.name));
+        if (r.danger) { var w2 = el('span', 'sp-dja__danger', '⚠'); w2.title = '危险元素：转起来可能点不到设置'; lf.appendChild(w2); }
+        lf.appendChild(el('span', 'sp-dja__id', r.sub));
+        lf.appendChild(el('span', 'sp-dja__badge is-' + r.mode, r.modeLabel));
+        lf.onclick = function () { sel = r.id; markScroll(); drawAll(); };               // 选元素要重画（头部信息变了）
         frag.appendChild(lf);
       }
     });
     return frag;
   }
 
-  function section(label, children) {
-    var s = el("div", "sp-dja__sec"); s.setAttribute("data-dja-group", label);
-    s.appendChild(el("span", "sp-dja__h", label));
-    (children || []).forEach(function (c) { s.appendChild(c); });
+  function section(title, kids, attrs) {
+    var s = el('div', 'sp-dja__sec');
+    if (attrs) Object.keys(attrs).forEach(function (k) { s.setAttribute(k, attrs[k]); });
+    s.appendChild(el('span', 'sp-dja__h', title));
+    (kids || []).forEach(function (c) { if (c) s.appendChild(c); });
     return s;
   }
 
-  function draw() {
-    var head = D.headModel(cfg, sel, D.TREE);
-    var rows = D.annotate(D.TREE, cfg, sel, null);
-    root.textContent = "";
-    // ---- 说明 + 运行读数 ----
-    var r1 = el("div", "set-row"); r1.appendChild(el("span", "set-row__label", "说明"));
-    r1.appendChild(el("span", "sp-dja__mode-note", TEXTS.intro)); root.appendChild(section("DJ 整活（逐元素）", [r1, mockReadout()]));
-    // ---- 配置区 ----
-    var sec2 = [];
-    if (head.empty) {
-      var em = el("div", "sp-dja__empty"); em.innerHTML = "<b>" + esc(TEXTS.emptyTitle) + "</b><br />" + esc(TEXTS.emptyHint);
-      sec2.push(em);
-    } else {
-      var nrow = el("div", "set-row"); nrow.setAttribute("data-dja-head", "1");
-      nrow.setAttribute("data-dja-head-id", head.id); nrow.setAttribute("data-dja-head-name", head.name);
-      var nl = el("span", "set-row__label", head.name); nl.appendChild(hint(head.modeHint)); nrow.appendChild(nl);
-      var side = el("div", "sp-dja__side-by");
-      side.appendChild(el("span", "sp-dja__id", head.id)); side.appendChild(el("span", "sp-dja__count", head.pathLabel));
-      nrow.appendChild(side); sec2.push(nrow);
-      var mrow = el("div", "set-row"); mrow.setAttribute("data-dja-mode", "1");
-      mrow.appendChild(el("span", "set-row__label", "档位"));
-      var seg = el("div", "set-seg"); seg.setAttribute("role", "radiogroup");
-      head.modes.forEach(function (m) {
-        var b = el("button", m.on ? "is-on" : "", m.label); b.type = "button"; b.setAttribute("role", "radio");
-        b.setAttribute("data-dja-mode-opt", m.id); b.setAttribute("aria-checked", m.on ? "true" : "false");
-        b.onclick = function () { setMode(head.id, m.id); }; seg.appendChild(b);
-      });
-      mrow.appendChild(seg); sec2.push(mrow);
-      if (head.danger) {
-        var warn = el("div", "sp-dja__warn"); warn.setAttribute("data-dja-warn", "1");
-        warn.appendChild(el("b", "", "⚠ 危险元素")); warn.appendChild(el("span", "", head.dangerText)); sec2.push(warn);
-      }
-      head.params.forEach(function (p) { sec2.push(paramRow(p)); });
-    }
-    root.appendChild(section("配置（选中的元素）", sec2));
-    // ---- 目录树 ----
-    // ---- ④ 随机偏移（可展开）----
-    root.appendChild(rndGroup());
-    // ---- ② 局内（入口 + 高亮）----
-    root.appendChild(fabGroup());
-    var tw = el("div", "sp-dja__tree"); tw.setAttribute("data-dja-tree", "1"); tw.appendChild(treeRows(rows));
-    var brow = el("div", "set-row"); brow.appendChild(el("span", "set-row__label", "批量"));
-    var bwrap = el("div", "sp-dja__side-by");
-    var rb = el("button", "btn btn--secondary btn--sm"); rb.appendChild(el("span", "btn__label", TEXTS.resetLabel));
-    rb.onclick = function () { cfg = D.sanitize(null); sel = null; draw(); };
-    bwrap.appendChild(rb); brow.appendChild(bwrap);
-    root.appendChild(section("元素目录（按层级展开）", [tw, brow]));
-    root.appendChild(el("p", "sp-dja__ver", "cyanfish.dj-all · v0.3.0 · " + TEXTS.footer));
-    hlDraw();   // ★③ 选中元素 ⇒ 在预览舞台里给它套黄框（真机上是画在战斗画面上）
-    paintStatus();
-  }
+  // ---- ★① 战况读数 + ③ 黄框（与真机同源的两条逻辑）--------------------------------------------------
+  var scrollMemo = {};
+  function markScroll() { var t = document.getElementById('pv-tree'); if (t) scrollMemo.tree = t.scrollTop; }
+  function restoreScroll() { var t = document.getElementById('pv-tree'); if (t && scrollMemo.tree) t.scrollTop = scrollMemo.tree; }
 
-  /** 运行读数（预览页没有真引擎 ⇒ 用配置复算，并明确标注）。 */
-  function toggle(cls, on, label) {
-    var b = el("button", (cls ? cls + " " : "") + "set-toggle" + (on ? " is-on" : ""));
-    b.type = "button"; b.setAttribute("role", "switch"); b.setAttribute("aria-checked", on ? "true" : "false");
-    b.appendChild(el("i", "")); b.appendChild(el("span", "", label || (on ? "开" : "关"))); return b;
-  }
-  function slider(attr, min, max, v, dis, cb) {
-    var i = el("input", "set-range sp-dja__range"); i.type = "range"; i.min = min; i.max = max; i.step = 1;
-    i.disabled = !!dis; i.value = v; i.setAttribute("data-" + attr, "1");
-    i.style.setProperty("--pct", Math.round(((v - min) / (max - min)) * 100) + "%");
-    if (!dis) i.oninput = function () { cb(Number(i.value)); };
-    return i;
-  }
-
-  // ★④ 随机偏移那一组（与 section.js 逐条对齐：开关 + 两个幅度滑块 + 作用范围读数）
-  function rndGroup() {
-    var r = D.rndModel(cfg);
-    var box = el("details", "sp-dja__node"); box.setAttribute("data-dja-rnd", "1"); box.open = !!r.on;
-    var sm = el("summary", "");
-    sm.appendChild(el("span", "sp-dja__caret", "▸"));
-    sm.appendChild(el("span", "sp-dja__leafname", TEXTS.rndGroup)); sm.appendChild(hint(TEXTS.rndHint));
-    var bd = el("span", "sp-dja__badge " + (r.on ? "is-own" : "is-off"), r.text); bd.setAttribute("data-dja-rnd-badge", "1");
-    sm.appendChild(bd); box.appendChild(sm);
-    var kids = el("div", "sp-dja__kids");
-    var row0 = el("div", "set-row"); row0.setAttribute("data-dja-rnd-on", "1");
-    row0.appendChild(el("span", "set-row__label", TEXTS.rndOn));
-    var w0 = el("div", "sp-dja__side-by");
-    w0.appendChild(toggle("", r.on, r.on ? "开" : "关"));
-    w0.firstChild.onclick = function () { setRnd({ on: !r.on }); };
-    row0.appendChild(w0); kids.appendChild(row0);
-    var lab1 = el("label", "set-row"); lab1.setAttribute("data-dja-rnd-key", "loPct");
-    lab1.appendChild(el("span", "set-row__label", "最小幅度"));
-    lab1.appendChild(slider("dja-rnd-lo", r.min, r.max, r.loPct, !r.on, function (v) { setRnd({ loPct: v }); }));
-    var v1 = el("span", "set-row__val num", r.loPct + "%"); v1.setAttribute("data-dja-rnd-val", "loPct"); v1.style.cssText = VAL;
-    lab1.appendChild(v1); kids.appendChild(lab1);
-    var lab2 = el("label", "set-row"); lab2.setAttribute("data-dja-rnd-key", "hiPct");
-    lab2.appendChild(el("span", "set-row__label", "最大幅度"));
-    lab2.appendChild(slider("dja-rnd-hi", r.min, r.max, r.hiPct, !r.on, function (v) { setRnd({ hiPct: v }); }));
-    var v2 = el("span", "set-row__val num", r.hiPct + "%"); v2.setAttribute("data-dja-rnd-val", "hiPct"); v2.style.cssText = VAL;
-    lab2.appendChild(v2); kids.appendChild(lab2);
-    var row3 = el("div", "set-row"); row3.setAttribute("data-dja-ro", "");
-    row3.appendChild(el("span", "set-row__label", "作用范围"));
-    var ro3 = el("span", "sp-dja__ro", r.affects + " · " + TEXTS.rndNote); ro3.setAttribute("data-dja-ro", "rnd");
-    row3.appendChild(ro3); kids.appendChild(row3);
-    box.appendChild(kids); return box;
-  }
-
-  // ★② 局内那一组（入口开关 / 位置 / 不透明度 / 高亮开关 / 高亮读数）
-  function fabGroup() {
-    var f = D.fabModel(cfg);
-    var body = [];
-    var row0 = el("div", "set-row"); row0.setAttribute("data-dja-fab-on", "1");
-    var l0 = el("span", "set-row__label", TEXTS.fabOn); l0.appendChild(hint(TEXTS.fabHint)); row0.appendChild(l0);
-    var w0 = el("div", "sp-dja__side-by");
-    var tg = toggle("", f.on, f.on ? "开" : "关"); tg.onclick = function () { setFab({ on: !f.on }); }; w0.appendChild(tg);
-    row0.appendChild(w0); body.push(row0);
-    var row1 = el("div", "set-row");
-    row1.appendChild(el("span", "set-row__label", TEXTS.fabPos));
-    var w1 = el("div", "sp-dja__side-by");
-    var pos = el("span", "sp-dja__id", f.posText); pos.setAttribute("data-dja-fab-pos", "1"); w1.appendChild(pos);
-    var rb = el("button", "btn btn--secondary btn--sm"); rb.type = "button";
-    var rl = el("span", "btn__label", TEXTS.fabReset); rb.appendChild(rl);
-    rb.onclick = function () { setFab({ x: 0.952, y: 0.66 }); }; w1.appendChild(rb);
-    row1.appendChild(w1); body.push(row1);
-    var lab2 = el("label", "set-row"); lab2.setAttribute("data-dja-fab-alpha", "1");
-    lab2.appendChild(el("span", "set-row__label", TEXTS.fabAlpha));
-    lab2.appendChild(slider("dja-fab-alpha", 35, 100, f.alphaPct, false, function (v) { setFab({ alpha: v / 100 }); }));
-    var av = el("span", "set-row__val num", f.alphaPct + "%"); av.setAttribute("data-dja-fab-alpha-val", "1"); av.style.cssText = VAL;
-    lab2.appendChild(av); body.push(lab2);
-    var row3 = el("div", "set-row"); row3.setAttribute("data-dja-hl-on", "1");
-    var l3 = el("span", "set-row__label", TEXTS.hlOn); l3.appendChild(hint(TEXTS.hlHint)); row3.appendChild(l3);
-    var w3 = el("div", "sp-dja__side-by");
-    var tg3 = toggle("", f.hl, f.hl ? "开" : "关"); tg3.onclick = function () { setFab({ hl: !f.hl }); }; w3.appendChild(tg3);
-    row3.appendChild(w3); body.push(row3);
-    var row4 = el("div", "set-row"); row4.setAttribute("data-dja-ro", "");
-    row4.appendChild(el("span", "set-row__label", "位置高亮"));
-    var rt = el("span", "sp-dja__ro", hlText()); rt.setAttribute("data-dja-ro", "hl"); row4.appendChild(rt); body.push(row4);
-    return section("局内", body);
-  }
-
-  var VAL = "white-space:nowrap;width:auto;text-align:right";
-  function setRnd(patch) { cfg = D.sanitize({ glob: cfg.glob, rnd: Object.assign({}, cfg.rnd, patch), fab: cfg.fab, nodes: cfg.nodes }); draw(); }
-  function setFab(patch) { cfg = D.sanitize({ glob: cfg.glob, rnd: cfg.rnd, fab: Object.assign({}, cfg.fab, patch), nodes: cfg.nodes }); draw(); }
-  /** ③ 高亮读数（与 section.js 同一套判断，不许假装标了）。 */
-  function hlText() {
-    var f = D.fabModel(cfg);
-    if (!f.hl) return TEXTS.hlOff;
-    if (!sel) return "在目录里点一个元素就会标出来。";
-    var n = hlCount();
-    if (n.pixi > 0 && n.boxes === 0) return TEXTS.hlPixi;
-    if (n.boxes > 0) return "已在画面上标出 " + n.boxes + " 个位置";
-    if (n.miss > 0) return "这块预览画面里没有它（预览只搭了战斗屏骨架那一层，真机上是完整画面）。";
-    return "没找到它在画面上的位置（这个元素此刻不在场）。";
-  }
-
-  /** 取一个树节点的全部后代叶子（叶子带 .el）。 */
   function leavesOfNode(node) {
     var out = [];
     (function w(n) { if (!n) return; if (n.kind === 'leaf') { out.push(n); return; } (n.children || []).forEach(w); })(node);
     return out;
   }
-  /** ③ 在预览舞台里画黄框；返回计数（给读数用）。 */
   function hlDraw() {
     var layer = document.getElementById('pv-hl');
     var stage = document.getElementById('pv-battle') || document.getElementById('pv-stage');
@@ -5501,49 +5664,196 @@ window.DJA = { ELEMENTS, LAYERS, TREE, TREE_BY_ID, SUBGROUP_NAMES, subgroupName,
         var r = els[i].getBoundingClientRect();
         if (r.width <= 0.5 && r.height <= 0.5) continue;
         var d = document.createElement('i');
-        d.style.left = Math.round(r.left - sb.left) + 'px';
-        d.style.top = Math.round(r.top - sb.top) + 'px';
-        d.style.width = Math.round(r.width) + 'px';
-        d.style.height = Math.round(r.height) + 'px';
-        if (!seen[e.id]) { seen[e.id] = 1; var t = document.createElement('b'); t.textContent = e.id; d.appendChild(t); }
+        d.style.left = Math.round(r.left - sb.left) + 'px'; d.style.top = Math.round(r.top - sb.top) + 'px';
+        d.style.width = Math.round(r.width) + 'px'; d.style.height = Math.round(r.height) + 'px';
+        if (!seen[e.id]) { seen[e.id] = 1; var t = el('b', '', e.id); d.appendChild(t); }
         layer.appendChild(d); res.boxes++;
       }
     });
     return res;
   }
   function hlCount() { return hlDraw(); }
+  function hlText() {
+    var f = D.fabModel(cfg);
+    if (!f.hl) return TEXTS.hlOff;
+    if (!sel) return '在目录里点一个元素就会标出来。';
+    var n = hlCount();
+    if (n.pixi > 0 && n.boxes === 0) return TEXTS.hlPixi;
+    if (n.boxes > 0) return '已在画面上标出 ' + n.boxes + ' 个位置';
+    if (n.miss > 0) return '这块预览画面里没有它（预览只搭了战斗屏骨架那一层，真机上是完整画面）。';
+    return '没找到它在画面上的位置（这个元素此刻不在场）。';
+  }
   function mockReadout() {
-    var row = el("div", "set-row"); row.setAttribute("data-dja-ro", "");
-    var lb = el("span", "set-row__label", "运行读数"); lb.appendChild(hint(TEXTS.footer)); row.appendChild(lb);
     var items = D.compile(cfg, D.TREE);
     var dom = items.filter(function (i) { return i.sel; });
     var grp = items.filter(function (i) { return i.pixi; });
-    var ro = el("span", "sp-dja__ro", "预览页没有真引擎：按配置复算 ⇒ 生效 " + items.length + " 项（DOM " + dom.length
-      + " · 画布 " + grp.length + "）。真机上这里是引擎实测读数（注入 KB / 帧耗时 / 画布帧回调）。");
-    ro.setAttribute("data-dja-ro", "run"); row.appendChild(ro); return row;
+    var r = row('ro'); r.appendChild(label('运行读数', TEXTS.footer));
+    var ro = el('span', 'sp-dja__ro', '预览页没有真引擎：按配置复算 ⇒ 生效 ' + items.length + ' 项（DOM ' + dom.length
+      + ' · 画布 ' + grp.length + '）。真机上这里是引擎实测读数（注入 KB / 帧耗时 / 画布帧回调）。');
+    ro.setAttribute('data-dja-ro', 'run'); r.appendChild(ro); return r;
   }
 
-  function paintStatus() {
-    var box = document.getElementById("pv-state");
-    if (!box) return;
-    box.textContent = "当前配置：" + JSON.stringify({ glob: cfg.glob, rnd: cfg.rnd, fab: cfg.fab, nodes: cfg.nodes });
+  // ---- 两种摆放 ------------------------------------------------------------------------------------
+  function renderFull(root) {
+    var on = D.onModel(cfg); var fab = D.fabModel(cfg);
+    var h = D.headModel(cfg, sel, D.TREE);
+    root.textContent = '';
+    var note = el('div', 'set-row'); note.appendChild(el('span', 'set-row__label', '这个 Mod 做什么'));
+    note.appendChild(el('span', 'sp-dja__mode-note', TEXTS.intro));
+    var warn = on.on ? null : (function () { var w = el('div', 'sp-dja__warn'); w.setAttribute('data-dja-on-warn', '1'); w.appendChild(el('b', '', '总开关是关的')); w.appendChild(el('span', '', TEXTS.onOffNote)); return w; })();
+    root.appendChild(section('说明', [note, warn, mockReadout()], { 'data-dja-group': '说明' }));
+
+    root.appendChild(section('总开关', [
+      toggleRow('on', TEXTS.onLabel, TEXTS.onHint, on.on, function () { patch({ on: !on.on }); }),
+      (function () { var r = row('ro'); r.appendChild(el('span', 'set-row__label', '当前')); var ro = el('span', 'sp-dja__ro', on.text); ro.setAttribute('data-dja-ro', 'on'); r.appendChild(ro); return r; })(),
+    ], { 'data-dja-group': '总开关' }));
+
+    root.appendChild(section('局内', [
+      toggleRow('fab-on', TEXTS.fabOn, TEXTS.fabHint, fab.on, function () { patch({ fab: { on: !fab.on } }); }),
+      (function () {
+        var r = el('div', 'set-row'); r.appendChild(el('span', 'set-row__label', TEXTS.fabPos));
+        var w = el('div', 'sp-dja__side-by');
+        var pos = el('span', 'sp-dja__id', fab.posText); pos.setAttribute('data-dja-fab-pos', '1'); w.appendChild(pos);
+        var rb = el('button', 'btn btn--secondary btn--sm'); rb.type = 'button';
+        var rl = el('span', 'btn__label', TEXTS.fabReset); rb.appendChild(rl);
+        rb.onclick = function () { patch({ fab: { x: 0.952, y: 0.66 } }); }; w.appendChild(rb);
+        r.appendChild(w); return r;
+      })(),
+      sliderRow('fab-alpha', TEXTS.fabAlpha, '1', 35, 100, fab.alphaPct, false, function (v) { patch({ fab: { alpha: v / 100 } }); }),
+      toggleRow('hl-on', TEXTS.hlOn, TEXTS.hlHint, fab.hl, function () { patch({ fab: { hl: !fab.hl } }); }),
+      (function () { var r = row('ro'); r.appendChild(el('span', 'set-row__label', '位置高亮')); var ro = el('span', 'sp-dja__ro', hlText()); ro.setAttribute('data-dja-ro', 'hl'); r.appendChild(ro); return r; })(),
+      (function () { var r = row('ro'); r.appendChild(el('span', 'set-row__label', '元素配置在哪')); var ro = el('span', 'sp-dja__ro', TEXTS.scopeFloatNote); ro.setAttribute('data-dja-ro', 'where'); r.appendChild(ro); return r; })(),
+    ], { 'data-dja-group': '局内' }));
+
+    root.appendChild(section('恢复出厂', [
+      (function () {
+        var r = el('div', 'set-row'); r.appendChild(label('全部', TEXTS.resetHint));
+        var w = el('div', 'sp-dja__side-by');
+        var b = el('button', 'btn btn--secondary btn--sm'); b.type = 'button'; b.appendChild(el('span', 'btn__label', TEXTS.resetLabel));
+        b.onclick = function () { cfg = D.sanitize(null); sel = null; drawAll(); }; w.appendChild(b);
+        r.appendChild(w); return r;
+      })(),
+    ], { 'data-dja-group': '恢复出厂' }));
   }
 
-  draw();
+  function renderElements(root) {
+    var h = D.headModel(cfg, sel, D.TREE);
+    var on = D.onModel(cfg); var rnd = D.rndModel(cfg);
+    root.textContent = '';
+    // ---- 配置（选中的元素）----
+    var kids = [];
+    if (h.empty) {
+      var em = el('div', 'sp-dja__empty'); em.innerHTML = '<b>' + esc(TEXTS.emptyTitle) + '</b><br />' + esc(TEXTS.emptyHint);
+      kids.push(em);
+    } else {
+      var nrow = el('div', 'set-row'); nrow.setAttribute('data-dja-head', '1');
+      nrow.setAttribute('data-dja-head-id', h.id); nrow.setAttribute('data-dja-head-name', h.name);
+      nrow.appendChild(label(h.name, h.modeHint));
+      var side = el('div', 'sp-dja__side-by');
+      side.appendChild(el('span', 'sp-dja__id', h.id)); side.appendChild(el('span', 'sp-dja__count', h.pathLabel));
+      nrow.appendChild(side); kids.push(nrow);
+      var mrow = el('div', 'set-row'); mrow.setAttribute('data-dja-mode', '1');
+      mrow.appendChild(el('span', 'set-row__label', '档位'));
+      var seg = el('div', 'set-seg'); seg.setAttribute('role', 'radiogroup');
+      h.modes.forEach(function (m) {
+        var b = el('button', m.on ? 'is-on' : '', m.label); b.type = 'button'; b.setAttribute('role', 'radio');
+        b.setAttribute('data-dja-mode-opt', m.id); b.setAttribute('aria-checked', m.on ? 'true' : 'false');
+        b.onclick = function () { setMode(h.id, m.id); }; seg.appendChild(b);
+      });
+      mrow.appendChild(seg); kids.push(mrow);
+      if (h.danger) {
+        var w = el('div', 'sp-dja__warn'); w.setAttribute('data-dja-warn', '1');
+        w.appendChild(el('b', '', '⚠ 危险元素')); w.appendChild(el('span', '', h.dangerText)); kids.push(w);
+      }
+      h.params.forEach(function (p) { kids.push(paramRow(p)); });
+    }
+    root.appendChild(section('配置（选中的元素）', kids, { 'data-dja-group': '配置（选中的元素）' }));
+
+    // ---- 随机偏移（可展开）----
+    var rbox = el('details', 'sp-dja__node'); rbox.setAttribute('data-dja-rnd', '1'); if (rnd.on) rbox.open = true;
+    var rsm = el('summary', '');
+    rsm.appendChild(el('span', 'sp-dja__caret', '▸'));
+    rsm.appendChild(el('span', 'sp-dja__leafname', TEXTS.rndGroup)); rsm.appendChild(hint(TEXTS.rndHint));
+    var rbadge = el('span', 'sp-dja__badge ' + (rnd.on ? 'is-own' : 'is-off'), rnd.text);
+    rbadge.setAttribute('data-dja-rnd-badge', '1'); rsm.appendChild(rbadge); rbox.appendChild(rsm);
+    var rkids = el('div', 'sp-dja__kids');
+    rkids.appendChild(toggleRow('rnd-on', TEXTS.rndOn, '', rnd.on, function () { patch({ rnd: { on: !rnd.on } }); }));
+    rkids.appendChild(sliderRow('rnd-key', '最小幅度', 'loPct', rnd.min, rnd.max, rnd.loPct, !rnd.on, function (v) { patch({ rnd: { loPct: v } }); }));
+    rkids.appendChild(sliderRow('rnd-key', '最大幅度', 'hiPct', rnd.min, rnd.max, rnd.hiPct, !rnd.on, function (v) { patch({ rnd: { hiPct: v } }); }));
+    var rro = row('ro'); rro.appendChild(el('span', 'set-row__label', '作用范围'));
+    var rroT = el('span', 'sp-dja__ro', rnd.affects + ' · ' + TEXTS.rndNote); rroT.setAttribute('data-dja-ro', 'rnd'); rro.appendChild(rroT);
+    rkids.appendChild(rro); rbox.appendChild(rkids); root.appendChild(rbox);
+
+    // ---- 元素目录 ----
+    var openMap = scrollMemo.open || { 'L:top': true, 'L:corner': true, 'L:mod': true };
+    var tw = el('div', 'sp-dja__tree'); tw.id = 'pv-tree'; tw.setAttribute('data-dja-tree', '1');
+    tw.appendChild(treeRows(D.annotate(D.TREE, cfg, sel, null), openMap));
+    var dkids = [];
+    if (!on.on) { var w2 = el('div', 'sp-dja__warn'); w2.setAttribute('data-dja-on-warn', '1'); w2.appendChild(el('b', '', '总开关是关的')); w2.appendChild(el('span', '', TEXTS.onOffNote)); dkids.push(w2); }
+    dkids.push(tw);
+    var brow = el('div', 'set-row'); brow.appendChild(label(TEXTS.resetElementsLabel, TEXTS.resetElementsHint));
+    var bw = el('div', 'sp-dja__side-by');
+    var rb = el('button', 'btn btn--secondary btn--sm'); rb.type = 'button'; rb.appendChild(el('span', 'btn__label', TEXTS.resetElementsLabel));
+    rb.onclick = function () { cfg = D.sanitize({ on: cfg.on, fab: cfg.fab }); sel = null; drawAll(); };
+    bw.appendChild(rb); brow.appendChild(bw); dkids.push(brow);
+    root.appendChild(section('元素目录（按层级展开）', dkids, { 'data-dja-group': '元素目录' }));
+  }
+
+  function drawAll() {
+    // ★⑤ 记住目录里"哪些 details 是开着的" + 滚动位置，重画后恢复（否则一点开就被顶回顶部）
+    var openMap = {};
+    var t0 = document.getElementById('pv-tree');
+    if (t0) {
+      var sc = t0.scrollTop;
+      [].forEach.call(t0.querySelectorAll('details'), function (d) {
+        var sum = d.querySelector('summary .sp-dja__leafname');
+        if (d.open && sum) openMap['N:' + sum.textContent] = true;
+      });
+      scrollMemo.tree = sc;
+    }
+    scrollMemo.open = scrollMemo.open || {};
+    // 用"名字 → id"重新映射（annotate 的顺序稳定，直接用索引也行：这里用名字前缀匹配）
+    var rowsAll = D.annotate(D.TREE, cfg, sel, null);
+    scrollMemo.open = {};
+    (function map(list) {
+      list.forEach(function (r) {
+        if (r.children) { if (openMap['N:' + r.name]) scrollMemo.open[r.id] = true; map(r.children); }
+      });
+    })(rowsAll);
+
+    var full = document.getElementById('pv-section');
+    var floatSec = document.getElementById('pv-float-section');
+    if (full) renderFull(full);
+    if (floatSec) renderElements(floatSec);
+    hlDraw();
+    restoreScroll();
+    var box = document.getElementById('pv-state');
+    if (box) box.textContent = '当前配置：' + JSON.stringify({ on: cfg.on, glob: cfg.glob, rnd: cfg.rnd, fab: cfg.fab, nodes: cfg.nodes });
+  }
+
+  drawAll();
+
   window.__DJA_PREVIEW__ = {
     cfg: function () { return JSON.parse(JSON.stringify(cfg)); },
     sel: function () { return sel; },
-    pick: function (id) { sel = id; draw(); return sel; },
-    setMode: function (id, m) { cfg = applyMode(id, m); draw(); return D.modeOf(cfg, id); },
+    pick: function (id) { sel = id; drawAll(); return sel; },
+    setMode: function (id, m) { setMode(id, m); return D.modeOf(cfg, id); },
     setParam: setParam,
-    reset: function () { cfg = D.sanitize(null); sel = null; draw(); },
+    setOn: function (v) { patch({ on: !!v }); return cfg.on; },
+    reset: function () { cfg = D.sanitize(null); sel = null; drawAll(); },
+    resetElements: function () { cfg = D.sanitize({ on: cfg.on, fab: cfg.fab }); sel = null; drawAll(); },
+    on: function () { return D.onModel(cfg); },
     rnd: function () { return D.rndModel(cfg); },
     fab: function () { return D.fabModel(cfg); },
-    setRnd: setRnd, setFab: setFab,
     hl: function () { return hlDraw(); },
-    treeLeaves: function () { var n = 0; (function w(l) { l.forEach(function (r) { r.children ? w(r.children) : n++; }); })(D.annotate(D.TREE, cfg, null, null)); return n; },
+    treeLeaves: function () {
+      var n = 0;
+      (function w(l) { l.forEach(function (r) { r.children ? w(r.children) : n++; }); })(D.annotate(D.TREE, cfg, null, null));
+      return n;
+    },
   };
 })();
+
 </script>
 </body>
 </html>

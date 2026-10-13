@@ -22,7 +22,13 @@ import { DjAllSection } from './section.js';
 
 /** 按钮 id（验收判据）。 */
 export const FAB_ID = 'sp-dja-fab';
-/** 浮窗根 id。 */
+/**
+ * 浮窗宿主容器的 id。
+ * ★ 本文件是它的**唯一所有者**（0.5.0 起就是这个写法）。0.6.0 一度把它挪到 `style.js` 再 import，
+ *   已改回：**"给已有模块新增 named export、再由新文件 import"是个会整包炸掉的耦合**（混载新老版本时
+ *   `SyntaxError: does not provide an export named` ⇒ 连 `setup()` 都跑不到）——详见 confirm.js 的 setWinAside 注释。
+ *   确认层现在靠 `data-dja-win` 反查父容器，不需要这个常量。
+ */
 export const WIN_HOST_ID = 'sp-dja-win';
 /**
  * 图标文件名（换图标就改这里 + 把文件放进 assets/）。
@@ -59,6 +65,7 @@ export function createFab({ api, store, tree, engine, version, highlighter = nul
   let btn = null;
   let host = null;                 // 浮窗的挂载根
   let winApi = null;               // 当前浮窗句柄
+  let tick = 0;                     // 浮窗开着时的心跳（只为了让标题栏的存活读数跟着"进/出对局"变）
   let preact = null;
   let preactTried = false;
   let offSub = null;
@@ -163,19 +170,47 @@ export function createFab({ api, store, tree, engine, version, highlighter = nul
     return preact;
   }
 
+  /** 浮动窗标题栏右侧的**存活读数**（服主 2026-10-14：「刷新后所有动作都不生效」时无从判断）。
+   *  一眼分清三种"没动"：总闸关 / 不在对局 / 真的在跑多少项。 */
+  function statusText() {
+    try {
+      const on = store.get().on === true;
+      const st = engine && typeof engine.stats === 'function' ? engine.stats() : null;
+      const n = st ? st.items : 0;
+      const inMatch = !!(doc && doc.querySelector && doc.querySelector('#app .screen.gm'));
+      if (!on) return '总闸关 · 去设置里打开';
+      if (!n) return '本元素都没开';
+      const fb = st && st.pixi && st.pixi.frontback ? st.pixi.frontback : null;
+      const swap = fb && fb.swapsTotal ? ' · 换面 ' + fb.swapsTotal : '';
+      if (!inMatch) return n + ' 项待生效 · 不在对局中';
+      return n + ' 项生效 · 画布 ' + (st && st.groups ? st.groups.length : 0) + ' 组' + swap;
+    } catch { return '—'; }
+  }
+
   /** 浮窗本体（非模态、可拖、半透明；内容复用 DjAllSection）。 */
-  function Win({ fab, onClose, onDragTo }) {
+  function Win({ fab, onClose }) {
     const { html } = api.ui;
     const startDrag = (e) => {
       const hostEl = host && host.firstElementChild;
       if (!hostEl) return;
       const r = hostEl.getBoundingClientRect();
+      // ★★⑥ 先把**定位方式归一化**再拖：窗口本来靠 `left:50%;top:50% + transform:translate(-50%,-50%)` 居中，
+      //   而拖动是写 `left/top` 的 —— 不归一化的话，`translate(-50%,-50%)` 会额外把窗口推走**半个宽高**
+      //   （服主看到的「向左上偏移半个长宽」就是这个）。改成：量出当前位置 ⇒ 写死 left/top ⇒ 去掉 transform。
+      hostEl.style.transform = 'none';
+      hostEl.style.left = Math.round(r.left) + 'px';
+      hostEl.style.top = Math.round(r.top) + 'px';
+      hostEl.classList.add('is-dragging');
       const d = { mx: e.clientX, my: e.clientY, ox: r.left, oy: r.top };
       const mv = (ev) => {
         hostEl.style.left = Math.round(d.ox + ev.clientX - d.mx) + 'px';
         hostEl.style.top = Math.round(d.oy + ev.clientY - d.my) + 'px';
       };
-      const up = () => { win.removeEventListener('pointermove', mv); win.removeEventListener('pointerup', up); };
+      const up = () => {
+        win.removeEventListener('pointermove', mv);
+        win.removeEventListener('pointerup', up);
+        try { hostEl.classList.remove('is-dragging'); } catch { /* ignore */ }
+      };
       win.addEventListener('pointermove', mv);
       win.addEventListener('pointerup', up);
       e.preventDefault();
@@ -183,12 +218,12 @@ export function createFab({ api, store, tree, engine, version, highlighter = nul
     return html`<div class="sp-dja__win" data-dja-win="1" style=${'--sp-dja-alpha:' + (fab.alpha || 0.72)}>
       <div class="sp-dja__winbar" onPointerDown=${startDrag}>
         <span class="sp-dja__wintitle">DJ 整活</span>
-        <span class="sp-dja__winsub">局内浮窗 · 半透明 · 拖标题栏可移动</span>
+        <span class="sp-dja__winsub" title="局内浮窗 · 半透明 · 拖标题栏可移动">${statusText()}</span>
         <button type="button" class="sp-dja__winx" title="关闭（顺便清掉位置高亮）" onClick=${onClose}>✕</button>
       </div>
       <div class="sp-dja__winbody">
         <${DjAllSection} api=${api} store=${store} tree=${tree} engine=${engine} version=${version}
-          highlighter=${highlighter} layout="float" />
+          highlighter=${highlighter} layout="float" scope="elements" />
       </div>
     </div>`;
   }
@@ -204,16 +239,26 @@ export function createFab({ api, store, tree, engine, version, highlighter = nul
     host.id = WIN_HOST_ID;
     if (!host.parentNode) (doc.body || doc.documentElement).appendChild(host);
     const refresh = (fab) => { try { p.render(Win({ fab, onClose: closeWin }), host); stats.renders++; } catch (e) { stats.errors++; log?.warn?.('[cyanfish.dj-all] 浮窗重绘失败', e); } };
+    // ★★ ① "确认期间把浮窗让开"**不在这里实现** —— 由确认层自己按 `data-dja-win` 反查容器加 `is-modal`。
+    //   0.4.0（classList）/ 0.5.0（vnode class）/ 0.6.0 试过的"面板回调 → 本文件 setModal"三条路实测**都没生效**
+    //   （取证：out/adapt/dj-all-027-micro.txt 的 `fabModal:false` / `hostCls:""`，而 `sectionCbs:"mm"` 证明 prop 到了组件）。
+    //   唯一稳的写法是"谁开着确认框谁动手"，见 client/confirm.js 的 setWinAside。
     winApi = { refresh, render: (fab) => refresh(fab) };
     refresh(store.get().fab);
+    // ★ 让标题栏的存活读数跟着"进/出对局"更新（它不由 store 变化驱动）
+    if (tick) { try { clearInterval(tick); } catch { /* ignore */ } }
+    tick = setInterval(() => { if (!disposed) refresh(store.get().fab); }, 1000);
+    if (typeof tick === 'object' && tick && typeof tick.unref === 'function') tick.unref();
     stats.open = true;
     return winApi;
   }
 
   function closeWin() {
     if (!winApi) return;
+    if (tick) { try { clearInterval(tick); } catch { /* ignore */ } tick = 0; }
     const p = preact;
     try { if (p && host) p.render(null, host); } catch { stats.errors++; }
+    try { host?.classList?.remove('is-modal'); } catch { /* ignore */ }   // ★① 别把"让开"状态留在容器上
     try { host?.remove?.(); } catch { /* ignore */ }
     host = null; winApi = null; stats.open = false;
     try { highlighter?.clear?.(); } catch { /* ignore */ }

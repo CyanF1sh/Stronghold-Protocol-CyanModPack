@@ -29,6 +29,13 @@ export const FPS = 60;
 /** 帧 → 秒（精确：帧 / 60）。 */
 export const framesToSec = (n) => (Number.isFinite(n) ? n : 0) / FPS;
 
+/**
+ * ★★ ② 整个 Mod 功能的总闸（服主第 ② 条；**不含**局内入口那个开关 —— 那是 fab.on）。
+ * ★ **出厂 = 关**（服主 2026-10-14 定稿）：装上这个 Mod 之后，**在玩家自己打开总闸之前一个像素都不动**。
+ *   与「每个元素默认也都是关」叠加 ⇒ 双重保险（改了元素档位却忘了开总闸 ⇒ 什么都不发生，是预期行为）。
+ */
+export const DEFAULT_ON = false;
+
 /** 三档模式 + 中文名（面板与预览页共用同一套字）。 */
 export const MODES = Object.freeze(['off', 'global', 'own']);
 export const MODE_LABEL = Object.freeze({ off: '关', global: '全局', own: '独立' });
@@ -38,9 +45,16 @@ export const MODE_HINT = Object.freeze({
   own: '用**自己**那份数值（初值就是当前的全局数值）；改只影响这一个元素，不碰全局。',
 });
 
-/** 旋转模式（两种模式共用同一套参数）。 */
-export const SPIN_MODES = Object.freeze(['axis', 'flat']);
-export const SPIN_MODE_LABEL = Object.freeze({ axis: '绕竖直轴', flat: '平面内' });
+/**
+ * 旋转模式（★ 服主 2026-10-14 定稿：**三档**）。
+ *   `axis`   绕竖直轴 —— 宽度额外乘一个 `cos θ` 模拟转一圈（**允许为负 ⇒ 镜像**，即"转过侧面对着我们"）；
+ *   `squash` 仅压缩   —— **不乘 `cos θ`**（⇒ 「水平旋转速度」这一项不生效，面板里会给它置灰 + 说明）；
+ *   `flat`   平面内   —— 只绕元素**中心点**在屏幕平面里转（`rotate(θ)`），按「水平旋转速度」定一圈的周期。
+ */
+export const SPIN_MODES = Object.freeze(['axis', 'squash', 'flat']);
+export const SPIN_MODE_LABEL = Object.freeze({ axis: '绕竖直轴', squash: '仅压缩', flat: '平面内' });
+/** 不乘 `cos θ` 的模式（「水平旋转速度」对它们不生效）。 */
+export const NO_SPIN_MODES = Object.freeze(['squash']);
 
 /**
  * 参数定义（**面板顺序 = 这里的顺序**）。
@@ -51,9 +65,10 @@ export const SPIN_MODE_LABEL = Object.freeze({ axis: '绕竖直轴', flat: '平�
  */
 export const PARAMS = Object.freeze([
   { key: 'spinMode', label: '旋转模式', kind: 'seg', options: SPIN_MODES, optionLabels: SPIN_MODE_LABEL,
-    hint: '绕竖直轴：横向按转到侧面的程度压窄（平面图片表现「转过去」的方式）。平面内：像指针一样在屏幕平面里转整圈。' },
+    hint: '绕竖直轴：横向按转到侧面的程度压窄，转过侧面时左右镜像（平面图表现「转过去」的方式）。'
+      + '仅压缩：只做压扁与弹回、不做旋转（「水平旋转速度」不生效）。平面内：像指针一样绕元素中心在屏幕平面里转整圈。' },
   { key: 'spinPeriod', label: '水平旋转速度', kind: 'frames', range: [6, 600, 1], unit: 'frames', suffix: '/圈',
-    hint: '转一整圈要多少帧（60 帧 = 1 秒）。右侧给出秒数换算，想对齐音乐就按帧数微调。' },
+    hint: '转一整圈要多少帧（60 帧 = 1 秒）。右侧给出秒数换算，想对齐音乐就按帧数微调。★ 选「仅压缩」时这一项不生效。' },
   { key: 'squashPeriod', label: '压缩周期', kind: 'frames', range: [6, 600, 1], unit: 'frames', suffix: '/次',
     hint: '一次「压下去再弹回来」要多少帧，与旋转各走各的、互不干涉。' },
   { key: 'squashMinPct', label: '压缩强度', kind: 'pct', range: [25, 75, 1], unit: 'pct',
@@ -76,6 +91,24 @@ export const DEFAULT_RND = Object.freeze({ on: false, loPct: 5, hiPct: 15 });
 export const RND_MAX_PCT = 50;
 /** 随机偏移作用到的参数（明确排除两个周期）。 */
 export const RND_KEYS = Object.freeze(['squashMinPct', 'widthMaxPct']);
+
+/**
+ * ★★ 1.0.0：随机要落到**元素实例**上，而不是"目录里的那一项"。
+ *
+ * 服主原话：「随机偏移的随机需要具体到某一个元素实例上，例如**干员 A 与干员 B**，甚至**场上两个同名的干员**。」
+ *
+ * 两个世界各有各的"实例"：
+ *   · **画布对象**（干员 / 敌人 / 召唤物 / 装置 / 特效…）的实例是**运行时的那个对象** ⇒
+ *     用 `view.uid`（服务端 `nextUid()` 发的**每件棋子唯一**的号；两个同名干员 uid 不同）当种子，**每个对象各算一份**。
+ *   · **DOM 元素**是纯 CSS 世界，没法在运行时给每个节点算一份随机（那要写内联样式 + 周期性重扫，
+ *     代价是打破"零痕迹"）⇒ 改用**位置桶**：给一个选择器生成 `:nth-child(1..N)` 的变体规则，
+ *     每个位置一份自己的随机值。**同为兄弟的那些实例**（队伍列 / 商店卡 / 角落四键…）就此各错各的。
+ *
+ * `INSTANCE_BUCKETS` = DOM 侧位置桶的个数（覆盖一屏内可能同时出现的同种实例；超出桶数的位置回落到基准那一份）。
+ */
+export const INSTANCE_BUCKETS = 8;
+/** 位置桶的种子后缀（与"元素基准"的种子区分开，避免第 1 个位置刚好等于基准）。 */
+export const bucketKey = (nodeId, k) => nodeId + '#' + k;
 
 /**
  * 局内入口（服主的第 ② 条）：「在战斗中新增可配置位置的独立入口（可在设置中关闭该局内入口显示）」。
@@ -175,9 +208,60 @@ export function applyRandom(vals, nodeId, rnd) {
   return out;
 }
 
-/** 一个节点的档位（缺省 = 'off'）。 */
+/**
+ * ★ 节点 id 归一化（**容错**）：树节点的 id 有前缀（`E:` / `G:` / `L:`），而"元素 id"（如 `top.roundbox`）没有。
+ *   外部（E2E / 控制台 / 别的 Mod）很容易拿元素 id 直接来调 —— 那样 `cfg.nodes['top.roundbox']` 永远匹配不到
+ *   `compile()` 里查的 `E:top.roundbox`，于是**配置写进去了、效果却没出现**（本工序的 014 探针就踩了这个）。
+ *   ⇒ 这里统一补前缀：没有 `:` 的一律当元素 id 处理（`E:` 前缀）。
+ */
+export function normId(id) {
+  const s = String(id || '').trim();
+  if (!s) return '';
+  return s.includes(':') ? s : 'E:' + s;
+}
+
+/**
+ * ★★ 压缩脉冲的形状（**服主 2026-10-14 定稿**，DOM 与画布两侧共用同一份实现）：
+ *
+ *   「在『绕竖直轴』模式下，元素在周期内**前 40%** 时间高度达到最低、宽度达到最大，
+ *     然后在**后 40%** 时间内回到原位，在**剩余的 20%** 时间内保持原状。由此产生节奏感。」
+ *
+ *   ⇒ 归一化相位 `u ∈ [0,1)` 上的深度 `s`（0 = 原状，1 = 压到最低）：
+ *        u ∈ [0, 0.4)       s = u / 0.4                （0 → 1，单调压到底）
+ *        u ∈ [0.4, 0.8)     s = 1 − (u−0.4) / 0.4      （1 → 0，单调弹回原位）
+ *        u ∈ [0.8, 1)       s = 0                      （**保持原状** —— 这 20% 就是"节奏感"的来源）
+ *   ★ 形状是**线性三角波 + 尾部静止**，不是余弦：余弦没有"保持原状"那一段，听不出节奏。
+ *   ★ 这条曲线只有四个折点（0 / 0.4 / 0.8 / 1），所以 CSS 那条 keyframes 也只需要四个停靠点 —— 精确且最省。
+ */
+export const SQUASH_IN = 0.4;
+export const SQUASH_OUT = 0.4;
+export function squashProfile(u) {
+  let x = Number(u) || 0;
+  x -= Math.floor(x);                       // 折回 [0,1)
+  if (x < SQUASH_IN) return x / SQUASH_IN;
+  if (x < SQUASH_IN + SQUASH_OUT) return 1 - (x - SQUASH_IN) / SQUASH_OUT;
+  return 0;
+}
+
+/**
+ * ★★ 这个元素自己的随机初相位 `φ ∈ [0,1)`（服主 2026-10-14 定稿的第 ⑤ 条末段）：
+ *   「关于随机偏移，还需要给每个元素一个**随机的初相位**，使得其处于相同周期的不同位置，
+ *     否则会出现『开启了随机偏移但是所有元素仍然是都在压缩 / 都在回弹』。」
+ *
+ *   ★ 由「节点 id」确定性哈希 ⇒ 同一个元素永远同一个相位（重开面板 / 刷新都不跳）；
+ *   ★ **不是**一个新参数：它跟着「随机偏移」的开关走（`rnd.on === true` 才生效，否则全体 φ=0、完全同步）。
+ *   ★ 用途：DOM 侧把它变成 `animation-delay: −φ × 周期`（纯 CSS，零每帧开销）；
+ *     画布侧把它加进相位（`phase + φ × T`）。
+ */
+export function phaseOf(cfg, nodeId) {
+  const r = cleanRnd(cfg && cfg.rnd);
+  if (!r.on) return 0;
+  return hash01(nodeId, 'phase');
+}
+
+/** 一个节点的档位（缺省 = 'off'）。★ 参数可以是元素 id（自动补 `E:`）。 */
 export function modeOf(cfg, id) {
-  const n = cfg && cfg.nodes ? cfg.nodes[id] : null;
+  const n = cfg && cfg.nodes ? cfg.nodes[normId(id)] : null;
   return n && MODES.includes(n.m) ? n.m : 'off';
 }
 
@@ -190,7 +274,7 @@ export function valuesOf(cfg, id) {
   const g = cleanValues(cfg && cfg.glob);
   const m = modeOf(cfg, id);
   if (m !== 'own') return g;
-  const own = cfg.nodes[id] && cfg.nodes[id].v;
+  const own = cfg.nodes[normId(id)] && cfg.nodes[normId(id)].v;
   return own ? cleanValues(own) : g;      // ★ 「独立」档默认显示当前全局数值 = 这里回落
 }
 
@@ -209,12 +293,14 @@ export function sanitize(raw) {
   const o = raw && typeof raw === 'object' ? raw : {};
   const nodes = {};
   const src = o.nodes && typeof o.nodes === 'object' ? o.nodes : {};
-  for (const id of Object.keys(src)) {
-    if (typeof id !== 'string' || !id) continue;
-    const n = cleanNode(src[id]);
+  for (const rawId of Object.keys(src)) {
+    const id = normId(rawId);              // ★ 裸元素 id 也接受（归一化到 `E:` 前缀），见 normId 的注释
+    if (!id) continue;
+    const n = cleanNode(src[rawId]);
     if (n) nodes[id] = n;
   }
-  return { v: PREF_V, glob: cleanValues(o.glob), rnd: cleanRnd(o.rnd), fab: cleanFab(o.fab), nodes };
+  // ★ 总闸：**只有显式 true 才算开**（缺省 = 关）⇒ 出厂与老存档升级后都是「全部停手」，要玩家自己打开
+  return { v: PREF_V, on: o.on === true, glob: cleanValues(o.glob), rnd: cleanRnd(o.rnd), fab: cleanFab(o.fab), nodes };
 }
 
 /** 读一份配置；坏 JSON / 没有 localStorage ⇒ 默认值。★ 多种外壳都认（只看有没有 `cfg` 字段）。 */
@@ -274,6 +360,7 @@ export function createStore({ storage = safeStorage(), debounceMs = 250, onError
     set(patch) {
       const p = patch && typeof patch === 'object' ? patch : {};
       const next = sanitize({
+        on: p.on === undefined ? cfg.on : p.on,
         glob: p.glob ? { ...cfg.glob, ...p.glob } : cfg.glob,
         rnd: p.rnd ? { ...cfg.rnd, ...p.rnd } : cfg.rnd,
         fab: p.fab ? { ...cfg.fab, ...p.fab } : cfg.fab,
@@ -291,8 +378,9 @@ export function createStore({ storage = safeStorage(), debounceMs = 250, onError
     /** 改全局数值里的某几个键（」全局「档的节点与所有回落都用它）。 */
     setGlobal(patch) { return this.set({ glob: patch }); },
     /** 改某个节点的档位；切到 'own' 时**不写数值** ⇒ 界面自然显示"当前全局数值"。 */
-    setMode(id, mode) {
-      if (typeof id !== 'string' || !id) return cfg;
+    setMode(rawId, mode) {
+      const id = normId(rawId);
+      if (!id) return cfg;
       const m = MODES.includes(mode) ? mode : 'off';
       const nodes = { ...cfg.nodes };
       if (m === 'off' || m === 'global') nodes[id] = { m };
@@ -300,21 +388,33 @@ export function createStore({ storage = safeStorage(), debounceMs = 250, onError
       return this.set({ nodes });
     },
     /** 改某个节点**自己那份**数值（只对 'own' 档有意义）。 */
-    setOwnValues(id, patch) {
-      if (typeof id !== 'string' || !id) return cfg;
+    setOwnValues(rawId, patch) {
+      const id = normId(rawId);
+      if (!id) return cfg;
       if (modeOf(cfg, id) !== 'own') return cfg;
       const cur = valuesOf(cfg, id);
       const nodes = { ...cfg.nodes };
       nodes[id] = { m: 'own', v: cleanValues({ ...cur, ...(patch && typeof patch === 'object' ? patch : {}) }) };
       return this.set({ nodes });
     },
+    /** ★② 改总闸（整个 Mod 功能的总开关；不影响局内入口 `fab.on`）。 */
+    setOn(v) { return this.set({ on: v !== false }); },
+    /** ★④ 只把**元素相关**的配置恢复出厂（清 nodes + 全局数值回出厂 + 随机偏移回出厂），不动局内入口。 */
+    resetElements() {
+      cfg = sanitize({ on: cfg.on, fab: cfg.fab });
+      emit();
+      if (debounceMs > 0) { if (timer) clearTimeout(timer); timer = setTimeout(writeNow, debounceMs); if (typeof timer === 'object' && timer && typeof timer.unref === 'function') timer.unref(); }
+      else writeNow();
+      return cfg;
+    },
     /** 改「随机偏移」（开关 / 幅度范围）。★ 对全局与独立两档都生效。 */
     setRnd(patch) { return this.set({ rnd: { ...cfg.rnd, ...(patch && typeof patch === 'object' ? patch : {}) } }); },
     /** 改「局内入口」（显示开关 / 位置 / 浮窗不透明度）。 */
     setFab(patch) { return this.set({ fab: { ...cfg.fab, ...(patch && typeof patch === 'object' ? patch : {}) } }); },
     /** 把某个节点恢复成出厂（= 关） */
-    clearNode(id) {
-      if (typeof id !== 'string' || !id) return cfg;
+    clearNode(rawId) {
+      const id = normId(rawId);
+      if (!id) return cfg;
       const nodes = { ...cfg.nodes };
       delete nodes[id];
       return this.set({ nodes });
@@ -343,27 +443,51 @@ export function leavesOf(n) {
   return out;
 }
 
-/** 一组选择器去重后拼成并集。 */
-function joinSelUnion(list) {
-  const seen = new Set();
+/**
+ * 这个元素会不会**在同一屏里重复出现**（`count: 'n'` 或 > 1）⇒ 需要"位置桶"变体。
+ * ★ 依据是元素表里的 `count`（`'n'` = 一屏多个；数字 = 同时存在几个），不猜。
+ */
+function repeatOf(el) {
+  const c = el && el.count;
+  if (c === 'n') return true;
+  return typeof c === 'number' && c > 1;
+}
+
+/**
+ * 给一个会重复的 DOM 元素算 N 份"位置桶"随机值（`:nth-child(k)` 用）。
+ * @returns {Array<{m:number, w:number, phi:number}>} 长度 = INSTANCE_BUCKETS，下标 0 对应 `:nth-child(1)`
+ */
+function bucketVariants(baseVals, nodeId, rnd) {
   const out = [];
-  for (const s of list) {
-    const t = String(s || '').trim();
-    if (!t || seen.has(t)) continue;
-    seen.add(t);
-    out.push(t);
+  for (let k = 1; k <= INSTANCE_BUCKETS; k++) {
+    const key = bucketKey(nodeId, k);
+    const v = applyRandom(baseVals, key, rnd);
+    out.push({ m: v.squashMinPct, w: v.widthMaxPct, phi: phaseOf({ rnd }, key) });
   }
-  return out.join(', ');
+  return out;
 }
 
 /**
  * 把配置**编译**成引擎要的东西：一串"作用项"。
  *
- *   一条作用项 = `{ id, kind, sel, global, pixi, mode, vals, danger }`
- *   · 只有 `mode !== 'off'` 的节点才会出现；
+ *   一条作用项 = `{ id, kind, mode, vals, phase, danger, sel, global, pixi }`
+ *   · 只有"这条路线上有档位不是 off"的叶子才会出现；
  *   · **DOM 元素**：`sel` 非空、`global` 标它是不是"战斗屏之外"（只有 `hint.toast`）；
- *     ★ 一个组/层节点若同时含"屏内"与"屏外"元素 ⇒ 会拆成**两条**（同一个 id、两种作用域），否则前缀会错一个；
  *   · **画布对象**：`sel === ''`、`pixi` 非空（= 引擎分组键），交给 PIXI 侧引擎。
+ *
+ * ★★ 0.6.0 起改为**逐叶子**产出（服主 2026-10-14 的第 ⑤ 条末段：「还需要给每个元素一个随机的初相位，
+ *    使得其处于相同周期的不同位置，否则会出现『开启了随机偏移但是所有元素仍然是都在压缩 / 都在回弹』」）。
+ *    旧写法把"一个节点底下的所有叶子"拼成一个并集选择器、共用一份数值与**同一个相位** ⇒
+ *    玩家给一整层（或一整组）开效果时，那一层的元素**完全同步**地一起压、一起弹 —— 正是服主看到的现场。
+ *    现在每个叶子各出一条：相位 = 那个元素自己的哈希（`phaseOf`，仍跟着「随机偏移」开关走），
+ *    随机偏移的幅度也逐元素算（`applyRandom(…, 叶子 id, …)`）。⇒ 一整层一起开也天然错落。
+ *
+ * ★ 档位与数值**沿树向下继承**（最近的祖先说了算），语义与"选一整组 = 这一组里的元素一起用同一个档位"一致：
+ *   · 叶子自己设了档位 ⇒ 用自己的（`valuesOf(cfg, 叶子 id)`）；
+ *   · 只有祖先设了档位 ⇒ 用祖先那一份（`global` 档 = 全局数值；`own` 档 = 祖先自己那份数值）；
+ *   · 一条路线上谁都没开 ⇒ 这个叶子**不产出**（零残留）。
+ * ★ `kind` 取**"真正下这个档位的那个节点"的 kind** —— 画布侧的去重规则（更具体的节点优先，见 engine.js）
+ *   依赖它，所以不能让"层给的档位"看起来像"叶子自己设的"。
  *
  * ★ 这里**不查 DOM**，纯数据 —— 便于单测，也保证"设置页看到的就是引擎拿到的"。
  * @param {any} cfg
@@ -371,24 +495,49 @@ function joinSelUnion(list) {
  */
 export function compile(cfg, tree) {
   const out = [];
-  const walk = (ns) => {
+  // ★★ ② 总闸关掉 ⇒ 直接不产出任何作用项（引擎两侧都会因此停手、并把已经写过的还回去）
+  //    出厂 on === false（见 DEFAULT_ON）⇒ 装上 Mod 后必须先去设置里把总闸打开，元素才会动。
+  if (!cfg || cfg.on !== true) return out;
+  const rnd = cfg && cfg.rnd;
+  /**
+   * @param {Array<any>} ns 同级节点
+   * @param {null|{mode:string, vals:any, danger:boolean, srcKind:string}} inh 从祖先继承下来的档位
+   */
+  const walk = (ns, inh) => {
     for (const n of ns) {
       const m = modeOf(cfg, n.id);
-      if (m !== 'off') {
-        // ★ 随机偏移在这里生效：它对「全局」与「独立」两档一视同仁（是整份配置的性质，不挂在档位上）
-        const vals = applyRandom(valuesOf(cfg, n.id), n.id, cfg && cfg.rnd);
-        const base = { id: n.id, kind: n.kind, mode: m, vals, danger: n.danger === true };
-        const leaves = leavesOf(n);
-        const scoped = joinSelUnion(leaves.filter((l) => !l.el.global).map((l) => l.el.sel));
-        const glob = joinSelUnion(leaves.filter((l) => l.el.global).map((l) => l.el.sel));
-        if (scoped) out.push({ ...base, sel: scoped, global: false, pixi: '' });
-        if (glob) out.push({ ...base, sel: glob, global: true, pixi: '' });
-        // 画布对象：只可能是叶子（`pixi.*`），且它们没有 DOM 选择器
-        for (const l of leaves) if (l.el.pixi) out.push({ ...base, sel: '', global: false, pixi: l.el.pixi });
+      // 本节点自己的档位（'off' ⇒ 不改继承，让祖先的继续生效）。
+      // ★ 这里**不做**随机偏移 —— 随机必须逐元素算（见下面 emit 处），否则一整层的随机幅度是一样的。
+      const cur = m !== 'off'
+        ? { mode: m, vals: valuesOf(cfg, n.id), danger: n.danger === true, srcKind: n.kind }
+        : inh;
+      // ★★ 组 / 层：**无条件下探**，哪怕自己是「关」。
+      //    这里曾经写成"先 `if (!cur) continue` 再判叶子"⇒ 只要某一层/组自己是「关」，**整棵子树都被跳掉**
+      //    ⇒ **单独给一个元素设档位完全不生效**（0.6.0 的真机事故：服主"刷新后所有动作都不生效"、
+      //    而两个探针恰好都用整层 `L:top` 在测 ⇒ 一路假绿）。判据必须留在**叶子**那一支里。
+      if (n.kind !== 'leaf') {
+        if (n.children) walk(n.children, cur);
+        continue;
       }
-      if (n.children) walk(n.children);
+      if (!cur) continue;                            // 叶子：自己与祖先都没开 ⇒ 不产出
+      // ★★ 逐实例落地的两个"随机"：**幅度**（applyRandom，作用到压缩强度/横向补偿）与**初相位**（phaseOf）。
+      //    画布对象在运行时按 `view.uid` 逐对象算（见 engine-pixi.js 的 instanceFactors）；
+      //    DOM 侧在这里按"基准 + 位置桶"预先把值算好（engine-dom.js 只负责排版，保持纯函数）。
+      const el = n.el;
+      if (!el) continue;
+      const danger = n.danger === true || cur.danger === true;
+      if (el.sel) {
+        out.push({ id: n.id, kind: 'leaf', mode: cur.mode, vals: applyRandom(cur.vals, n.id, rnd),
+          phase: phaseOf(cfg, n.id), danger, sel: el.sel, global: !!el.global, pixi: '',
+          // ★ 会重复出现的那种元素（`count: 'n'` / >1）⇒ 附上"位置桶"变体，让每个实例各错各的
+          buckets: repeatOf(el) ? bucketVariants(cur.vals, n.id, rnd) : null });
+      }
+      if (el.pixi) {
+        out.push({ id: n.id, kind: cur.srcKind, mode: cur.mode, vals: applyRandom(cur.vals, n.id, rnd),
+          phase: phaseOf(cfg, n.id), danger, sel: '', global: false, pixi: el.pixi });
+      }
     }
   };
-  walk(tree || []);
+  walk(tree || [], null);
   return out;
 }

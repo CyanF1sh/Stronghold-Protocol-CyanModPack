@@ -49,21 +49,32 @@ export const TEXTS = Object.freeze({
   globalNote: '你现在改的是全局数值：所有档位为「全局」的元素会立刻跟着变。',
   ownNote: '你现在改的是这个元素自己的数值，不影响别的元素与全局。',
   dangerTitle: '⚠ 危险元素',
-  dangerText: '这是设置入口（或包含设置入口的那一整块）：让它转动可能让你点不到设置、改不回来。'
+  // ★★ 服主 2026-10-14 收窄口径：「危险标记仅需要包含【战斗屏骨架】+【左下角容器 → 四个功能键 → 设置按键】
+  //    + 附：局外及其父级，其余元素修改都不会导致点不到设置。」
+  //    ⇒ 现在带 ⚠ 的**只有 6 个叶子**：shell.screen（战斗屏根）· shell.hud（HUD 层，它是 .gm__corner 的父容器）·
+  //       corner.wrap（左下角容器）· corner.gear（设置按键）· out.ms.gear / out.sv.gear（局外两个入口键）；
+  //       组/层上的 ⚠ 由 elements.js 自动向上传播得到（G:corner/keys · L:corner · L:shell · L:outgame）。
+  //    所以这三句文案只说"它会连累左下角设置键"，不再泛泛地说"设置入口那一整块"。
+  dangerText: '它会让左下角的「设置键」跟着转（或者它自己就是那枚键）—— 一旦点不到设置就改不回来了。'
     + '真要开的话，建议把「水平旋转速度」调慢、把「压缩强度」调大（压得轻一点）。',
   dangerConfirmTitle: '确定要给「{name}」开启效果吗？',
-  dangerConfirmText: '它是设置入口（或包含设置入口的整体）。转起来之后如果点不到设置，'
-    + '可以在浏览器控制台执行 __SP_DJALL__.reset() 一键关掉全部效果。确定要开吗？',
+  dangerConfirmText: '它会让左下角的「设置键」跟着转（或者它自己就是那枚键）。'
+    + '如果转起来后点不到设置：直接刷新页面即可（总闸与各元素的档位都存在本机，不会丢）；'
+    + '也可以在浏览器控制台执行 __SP_DJALL__.reset() 一键关掉全部效果。确定要开吗？',
   dangerConfirmOk: '仍然开启',
   dangerConfirmCancel: '取消',
   // ---- ④ 随机偏移 ----
   rndGroup: '随机偏移',
-  rndHint: '给每个元素的「压缩强度 / 横向补偿」各自叠一个固定的随机量，让整个画面看起来错落一些。'
+  rndHint: '给每个**实例**的「压缩强度 / 横向补偿」各自叠一个固定的随机量，并给每个实例一个**自己的初相位**'
+    + '（错开成"这个正在压、那个正在弹"），让整个画面看起来错落一些。'
+    + '★ 落到的是**实例**而不是目录里的那一项：干员 A 与干员 B 各不相同，**场上两个同名干员也各不相同**；'
+    + '界面上重复出现的同类元素（队伍列 / 商店卡 / 角落四键…）也各错各的。'
     + '两个周期不参与 —— 周期是你用来对齐音乐的量，随机化没有意义。',
   rndOn: '开启随机偏移',
   rndRange: '偏移幅度',
-  rndNote: '幅度是相对值：15% 表示这个参数最多上下浮动 15%。每个元素的偏移由元素本身决定（算出来就不会变），'
-    + '所以重开面板 / 刷新页面都不会跳；只有改这里的范围才会整体重算。',
+  rndNote: '幅度是相对值：15% 表示这个参数最多上下浮动 15%。每个实例的偏移由"它自己"决定'
+    + '（算出来就不会变，重开面板 / 刷新页面都不会跳）；只有改这里的范围才会整体重算。',
+  rndPerInstance: '逐实例',
   // ---- ② 局内入口 ----
   fabGroup: '局内',
   fabHint: '战斗里那颗图标键：拖动它就能改位置；点一下会打开这个 Mod 的半透明浮窗，方便一边调一边看战场。',
@@ -77,7 +88,19 @@ export const TEXTS = Object.freeze({
   hlNoMatch: '现在不在对局里 —— 位置高亮要进对局才看得到。',
   hlPixi: '这一选里包含画布对象（单位 / 血条 / 特效…），它们没有 DOM 位置，标不出外框。',
   hlOff: '位置高亮已关闭（在「局内」那一栏里打开）。',
+  // ---- ② 总闸 ----
+  onLabel: '整个 Mod 的总开关',
+  onHint: '关掉它：所有元素的旋转与压缩立刻停、已经注入的样式被摘掉（元素各自的档位都留着，下次打开就恢复）。'
+    + '它不管局内入口的显示 —— 那是「局内」那一栏的事。',
+  onOffNote: '总开关出厂是关的：所有元素效果都不会生效（打开之后，各元素再按自己的档位走）。',
   resetLabel: '全部恢复默认',
+  resetElementsLabel: '元素恢复默认',
+  resetElementsHint: '把每个元素都变回「关」、全局数值与随机偏移回出厂值。不影响局内入口的位置与显示。',
+  // ---- ④ 浮窗 / 固定页的分工 ----
+  scopeFixedTitle: '设置（这个 Mod 的全局项）',
+  scopeFloatNote: '元素的档位与数值在**局内入口的浮窗**里配（点战斗里那颗图标键）——那一栏只放元素配置，' 
+    + '这一栏只放说明、总开关与局内入口的设置，两边不重复。',
+  editInFloat: '元素配置在局内浮窗里',
   resetHint: '把每个元素都变回「关」、全局数值回出厂值（所有东西立刻回到原位）。',
   footer: '档位：关 / 全局 / 独立 · 改完立刻生效 · 关掉的元素零残留',
 });
@@ -131,13 +154,17 @@ export function headModel(cfg, id, tree) {
   const off = mode === 'off';
   const vals = valuesOf(cfg, id);
   const pathLabel = pathOf(node);
+  // ★★ 「仅压缩」模式：「水平旋转速度」这一项**不生效**（不乘 cos θ、也没有旋转动画）
+  //    ⇒ 面板里给它置灰 + 读数后缀写明，而不是让它看起来还能调（避免「调了没反应」的假象）。
+  const noSpinMode = vals.spinMode === 'squash';
   const params = PARAMS.map((p) => {
+    const dead = noSpinMode && p.key === 'spinPeriod';
     const built = {
       key: p.key, label: p.label, kind: p.kind, unit: p.unit || '',
       hint: p.hint || '',
-      disabled: off,                          // ★ 「关」档：不可输入/不可修改
+      disabled: off || dead,                          // ★ 「关」档：不可输入/不可修改
       value: p.kind === 'seg' ? vals[p.key] : (off ? null : vals[p.key]),
-      text: off ? '' : paramText(p, vals[p.key]),   // ★ 「关」档：显示为空
+      text: off ? '' : (dead ? paramText(p, vals[p.key]) + '（仅压缩模式下不生效）' : paramText(p, vals[p.key])),   // ★ 「关」档：显示为空
     };
     if (p.kind === 'seg') { built.options = p.options; built.optionLabels = p.optionLabels; }
     if (p.range) { built.min = p.range[0]; built.max = p.range[1]; built.step = p.range[2]; }
@@ -156,7 +183,8 @@ export function headModel(cfg, id, tree) {
     mode,
     modes,
     params,
-    note: mode === 'global' ? TEXTS.globalNote : mode === 'own' ? TEXTS.ownNote : TEXTS.paramDisabled,
+    note: (mode === 'global' ? TEXTS.globalNote : mode === 'own' ? TEXTS.ownNote : TEXTS.paramDisabled)
+      + (noSpinMode ? '　★ 当前是「仅压缩」：只做压扁与弹回、不做旋转 ——「水平旋转速度」不参与。' : ''),
     modeHint: TEXTS.modeHint[mode],
     // 给"新切到独立档"用的：当前全局数值（面板据此解释"初值就是它"）
     global: cfg.glob,
@@ -228,6 +256,12 @@ export function fabModel(cfg) {
     hl: f.hl !== false,
     posText: '横向 ' + Math.round(f.x * 100) + '% · 纵向 ' + Math.round(f.y * 100) + '%',
   };
+}
+
+/** ★② 总闸那一行的模型。 */
+export function onModel(cfg) {
+  const on = !!(cfg && cfg.on === true);          // ★ 缺省 = 关（与 config.sanitize 同一口径）
+  return { on, text: on ? '开（按各元素的档位走）' : '关（全部停手 · 出厂状态）' };
 }
 
 /** 三档的语义说明（面板在档位旁显示）。 */
