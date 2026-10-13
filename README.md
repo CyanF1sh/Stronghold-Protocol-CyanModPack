@@ -56,6 +56,33 @@ cd "D:\Stronghold-Protocol-0.2.5" && node tools/mod.mjs validate
 
 ---
 
+## ★ 服主亮点：Mod 管理页 `/admin`
+
+覆盖层里带了一个**单文件管理页**（`overlay/tools/mod-admin.html`，零外部依赖）与它的后端
+（`overlay/server/admin.js`）。**本仓不含任何令牌** —— 你自己设一个环境变量就出现，
+不设就整体 404、游戏行为与上游**完全一致**（默认关闭是设计，不是仓库少了文件）：
+
+在启动游戏服务端**之前**设一个环境变量 `SP_ADMIN_TOKEN`（**>= 16 字符**，你自己想一串长口令即可；
+它**只走环境变量**，我们**绝不要求你写进任何文件**，仓里也不会出现你设的值）。
+
+然后浏览器打开 **`http://localhost:3000/admin`**。这一页是**服主专用**（玩家游戏界面没有任何入口）：
+
+- **Mod 管理**：列表 / 校验 / 上传 / 启停 / 卸载 / 热重载 / 版本日志 / 实时文档；校验**复用**
+  `server/mods/loader.js` 的同一份实现 ⇒ 网页上看到的提示与 `node tools/mod.mjs validate` **逐条一致**；
+- **房间 / 在线明细**（只读）：每房间的房号 / 是否开局 / 回合 / 阶段 / 座位 / 真人 / AI / 观战 / 每人状态，
+  外加 `safeToRestart`（0 真人 0 对局 0 观战时才建议重启）；
+- **趋势图**（只读）：服务端**默认 1 分钟采一点、环形缓冲保留 3 日**，页面用手写 Canvas 画人数与
+  CPU（**均值 + 峰值**）· 内存 · 事件循环延迟，可切窗口 / 系列 / 散点，可导出 CSV / JSON；
+- **官方 release 追踪**（只读）：服务端每 **60 分钟**带 ETag 查一次**上游** GitHub 的 latest release，
+  显示「当前版本 vs 官方最新」、发布时间、说明摘要与官方资产的体积 / sha256。**只读、只走
+  `api.github.com`，不下载任何文件、不自动更新**。
+
+安全口径：令牌**只走请求头**（`Authorization: Bearer …` / `X-SP-Admin-Token: …`），**绝不接受 query string**；
+CORS 是**白名单**（基线 = 同源 + 字面量 `null`，可用 `SP_ADMIN_ORIGIN` 另加；其余 Origin 一个头都不发）；
+响应里**不回显**任何部署细节（绝对路径 / 内网地址 / 实例名都只回一个显示用标签）。
+
+---
+
 ## 21 个 Mod 一览（一句话一个）
 
 完整清单（版本号 / 默认启停 / 每个 Mod 的细节）见 [docs/MODS-LIST.md](docs/MODS-LIST.md)。
@@ -151,6 +178,7 @@ cd "D:\Stronghold-Protocol-0.2.5" && node tools/mod.mjs validate
 ├─ overlay/                # ★ 平台补丁层：105 个文件，目录层次与上游一致
 │   ├─ MANIFEST.sha256      # 本仓每个覆盖层文件的 sha256（完整性校验）
 │   ├─ ORIGIN.sha256        # 你那边官方原版应有的 sha256（原样性校验；上游没有的记 ABSENT）
+│   ├─ tools/mod-admin.html # ★ 单文件 Mod 管理页（服主专用；见上面「Mod 管理页」一节）
 │   └─ server/ shared/ public/ docs/ tools/ test/ scripts/
 ├─ mods/                   # 21 个 Mod（每个自足；含两个 DJ 整活 Mod 的 OUTDATED.md）
 └─ tools/

@@ -13,10 +13,21 @@
 | **Mod** | **21 个目录 / 135 文件** | **1.10 MB** |
 | **平台覆盖层**（Mod 平台本体 + 对上游 0.2.5 的改动） | **105 个文件** | **3.34 MB** |
 | 工具 | `tools/apply-overlay.mjs`（一键叠补丁 · 可回滚）、`tools/publish-scan.mjs`（发布前自检） | — |
+| **服主管理页** | `overlay/tools/mod-admin.html`（单文件 · 零外部依赖）+ `overlay/server/admin.js`（后端 API） | — |
 | 文档 | 本文件 + `README.md` + `docs/INSTALL.md` + `docs/MODS-LIST.md` + `docs/OUTDATED-MODS.md` + `NOTICE.md` + `THIRD-PARTY.md` + `LICENSE` | — |
 
 **总计约 4.5 MB / 250+ 文件**，最大单文件 **331 KB**（覆盖层里的 `docs/MODS.md` —— 平台 Mod 开发规范），
 **无任何单文件接近 GitHub 的 100 MB 上限，不需要 Git LFS**。
+
+## 平台亮点（覆盖层里我们新写的 38 个文件）
+
+- **Mod 平台本体**：`server/mods/{loader,client,content,patch,zip}.js` —— 清单校验 / `apiVersion` / `loadAfter` /
+  内容分层（L1..L4）/ 打包；开发规范 **`docs/MODS.md`**；CLI **`tools/mod.mjs`**。
+- **客户端插槽宿主**：`public/js/ui/extensions.js`。
+- **服主管理页**：`tools/mod-admin.html` + `server/admin.js` + `server/match/roomDetail.js`
+  —— 查房明细 / 趋势图 / 官方 release 追踪（用法与安全口径见 [`README.md`](README.md) 的「Mod 管理页」一节）。
+- **一键安装器**：`tools/apply-overlay.mjs`（`--dry-run` / 先备份 / 逐文件报告 / `--rollback`）
+  与 **发布前自检** `tools/publish-scan.mjs`。
 
 ## 21 个 Mod = 12 个正常装载 + 2 个整活（被版本门槛跳过）+ 7 个历史归档（默认停用）
 
