@@ -249,10 +249,10 @@ if (withMods) {
   }
   modsResult.stateAction = stateAction;
   console.log('启停状态: ' + stateAction);
-  console.log('★ 预期症状：cyanfish.dj-models / cyanfish.dj-bgm 的 gameVersion 是 0.2.4（归档原值），');
-  console.log('  在 0.2.5 上会在 /mods 列表里带一行「gameVersion=0.2.4 与当前游戏版本 0.2.5 不一致」并被 skipped');
-  console.log('  跳过 —— 不装载、**不崩服**，其余 Mod 照常。所以 `mod.mjs validate` 会以退出码 1 结束并报');
-  console.log('  「2/21 个 Mod 校验未通过」（就是这两个），这**是预期**，不是装坏了。');
+  console.log('★ 若某个 Mod 的 gameVersion 与目标本体不一致，它会在 /mods 列表里带一行');
+  console.log('  「gameVersion=X 与当前游戏版本 Y 不一致」并被 skipped —— 不装载、**不崩服**，其余 Mod 照常；');
+  console.log('  此时 `mod.mjs validate` 会以退出码 1 报出它们。★ 版本号必须与本体 package.json 的');
+  console.log('  version **严格相等**（严格相等硬门槛；打了新版本要所有 Mod 一起改）。');
 }
 
 console.log('--- 下一步 ---');
