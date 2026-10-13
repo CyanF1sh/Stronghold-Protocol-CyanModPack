@@ -1,0 +1,1475 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-08T10:04:34.124Z",
+  "source": {
+    "note": "官方 charword_table.json 里 wordKey !== charId 的时装语音条目（战斗 12 槽位 / 14 条），公开 dump 实测可达",
+    "dump": "https://github.com/ArknightsAssets/ArknightsAssets2 (voice/assets/dyn/audio/sound_beta_2)",
+    "data": "https://github.com/Kengxxiao/ArknightsGameData (zh_CN/gamedata/excel/charword_table.json)",
+    "fetch": "https://gh-proxy.com/<raw.githubusercontent.com URL>（raw 直连从 VPS 被限到 ~0.01 MB/s）",
+    "slots": [
+      "start",
+      "faceEnemy",
+      "select",
+      "place",
+      "skill1",
+      "skill2",
+      "skill3",
+      "skill4",
+      "resultFour",
+      "resultThree",
+      "resultTwo",
+      "resultLose"
+    ],
+    "skipped": "_CN_TOPOLECT（方言 24 套）与 _ITA（意大利语 9 套）公开源实测 404，本表不含"
+  },
+  "skins": {
+    "char_003_kalts_boc#6": {
+      "charId": "char_003_kalts",
+      "CN": {
+        "start": [
+          "/assets/voice-skin/char_003_kalts_boc_6/CN/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_003_kalts_boc_6/CN/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_003_kalts_boc_6/CN/cn_021.mp3",
+          "/assets/voice-skin/char_003_kalts_boc_6/CN/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_003_kalts_boc_6/CN/cn_023.mp3",
+          "/assets/voice-skin/char_003_kalts_boc_6/CN/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_003_kalts_boc_6/CN/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_003_kalts_boc_6/CN/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_003_kalts_boc_6/CN/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_003_kalts_boc_6/CN/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_003_kalts_boc_6/CN/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_003_kalts_boc_6/CN/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_003_kalts_boc_6/CN/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_003_kalts_boc_6/CN/cn_032.mp3"
+        ]
+      },
+      "JP": {
+        "start": [
+          "/assets/voice-skin/char_003_kalts_boc_6/JP/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_003_kalts_boc_6/JP/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_003_kalts_boc_6/JP/cn_021.mp3",
+          "/assets/voice-skin/char_003_kalts_boc_6/JP/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_003_kalts_boc_6/JP/cn_023.mp3",
+          "/assets/voice-skin/char_003_kalts_boc_6/JP/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_003_kalts_boc_6/JP/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_003_kalts_boc_6/JP/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_003_kalts_boc_6/JP/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_003_kalts_boc_6/JP/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_003_kalts_boc_6/JP/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_003_kalts_boc_6/JP/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_003_kalts_boc_6/JP/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_003_kalts_boc_6/JP/cn_032.mp3"
+        ]
+      }
+    },
+    "char_1012_skadi2_iteration#2": {
+      "charId": "char_1012_skadi2",
+      "CN": {
+        "start": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/CN/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/CN/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/CN/cn_021.mp3",
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/CN/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/CN/cn_023.mp3",
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/CN/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/CN/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/CN/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/CN/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/CN/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/CN/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/CN/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/CN/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/CN/cn_032.mp3"
+        ]
+      },
+      "JP": {
+        "start": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/JP/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/JP/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/JP/cn_021.mp3",
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/JP/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/JP/cn_023.mp3",
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/JP/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/JP/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/JP/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/JP/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/JP/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/JP/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/JP/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/JP/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_1012_skadi2_iteration_2/JP/cn_032.mp3"
+        ]
+      }
+    },
+    "char_1016_agoat2_epoque#34": {
+      "charId": "char_1016_agoat2",
+      "CN": {
+        "start": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/CN/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/CN/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/CN/cn_021.mp3",
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/CN/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/CN/cn_023.mp3",
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/CN/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/CN/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/CN/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/CN/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/CN/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/CN/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/CN/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/CN/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/CN/cn_032.mp3"
+        ]
+      },
+      "JP": {
+        "start": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/JP/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/JP/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/JP/cn_021.mp3",
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/JP/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/JP/cn_023.mp3",
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/JP/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/JP/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/JP/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/JP/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/JP/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/JP/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/JP/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/JP/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_34/JP/cn_032.mp3"
+        ]
+      }
+    },
+    "char_1016_agoat2_epoque#57": {
+      "charId": "char_1016_agoat2",
+      "CN": {
+        "start": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/CN/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/CN/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/CN/cn_021.mp3",
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/CN/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/CN/cn_023.mp3",
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/CN/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/CN/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/CN/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/CN/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/CN/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/CN/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/CN/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/CN/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/CN/cn_032.mp3"
+        ]
+      },
+      "JP": {
+        "start": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/JP/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/JP/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/JP/cn_021.mp3",
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/JP/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/JP/cn_023.mp3",
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/JP/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/JP/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/JP/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/JP/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/JP/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/JP/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/JP/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/JP/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_1016_agoat2_epoque_57/JP/cn_032.mp3"
+        ]
+      }
+    },
+    "char_1032_excu2_sale#12": {
+      "charId": "char_1032_excu2",
+      "CN": {
+        "start": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/CN/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/CN/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/CN/cn_021.mp3",
+          "/assets/voice-skin/char_1032_excu2_sale_12/CN/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/CN/cn_023.mp3",
+          "/assets/voice-skin/char_1032_excu2_sale_12/CN/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/CN/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/CN/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/CN/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/CN/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/CN/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/CN/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/CN/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/CN/cn_032.mp3"
+        ]
+      },
+      "JP": {
+        "start": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/JP/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/JP/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/JP/cn_021.mp3",
+          "/assets/voice-skin/char_1032_excu2_sale_12/JP/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/JP/cn_023.mp3",
+          "/assets/voice-skin/char_1032_excu2_sale_12/JP/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/JP/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/JP/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/JP/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/JP/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/JP/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/JP/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/JP/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_1032_excu2_sale_12/JP/cn_032.mp3"
+        ]
+      }
+    },
+    "char_1035_wisdel_sale#14": {
+      "charId": "char_1035_wisdel",
+      "CN": {
+        "start": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/CN/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/CN/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/CN/cn_021.mp3",
+          "/assets/voice-skin/char_1035_wisdel_sale_14/CN/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/CN/cn_023.mp3",
+          "/assets/voice-skin/char_1035_wisdel_sale_14/CN/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/CN/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/CN/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/CN/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/CN/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/CN/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/CN/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/CN/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/CN/cn_032.mp3"
+        ]
+      },
+      "JP": {
+        "start": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/JP/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/JP/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/JP/cn_021.mp3",
+          "/assets/voice-skin/char_1035_wisdel_sale_14/JP/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/JP/cn_023.mp3",
+          "/assets/voice-skin/char_1035_wisdel_sale_14/JP/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/JP/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/JP/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/JP/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/JP/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/JP/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/JP/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/JP/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_1035_wisdel_sale_14/JP/cn_032.mp3"
+        ]
+      }
+    },
+    "char_1038_whitw2_sale#15": {
+      "charId": "char_1038_whitw2",
+      "CN": {
+        "start": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/CN/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/CN/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/CN/cn_021.mp3",
+          "/assets/voice-skin/char_1038_whitw2_sale_15/CN/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/CN/cn_023.mp3",
+          "/assets/voice-skin/char_1038_whitw2_sale_15/CN/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/CN/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/CN/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/CN/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/CN/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/CN/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/CN/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/CN/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/CN/cn_032.mp3"
+        ]
+      },
+      "JP": {
+        "start": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/JP/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/JP/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/JP/cn_021.mp3",
+          "/assets/voice-skin/char_1038_whitw2_sale_15/JP/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/JP/cn_023.mp3",
+          "/assets/voice-skin/char_1038_whitw2_sale_15/JP/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/JP/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/JP/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/JP/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/JP/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/JP/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/JP/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/JP/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_1038_whitw2_sale_15/JP/cn_032.mp3"
+        ]
+      }
+    },
+    "char_1041_angel2_iteration#6": {
+      "charId": "char_1041_angel2",
+      "CN": {
+        "start": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/CN/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/CN/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/CN/cn_021.mp3",
+          "/assets/voice-skin/char_1041_angel2_iteration_6/CN/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/CN/cn_023.mp3",
+          "/assets/voice-skin/char_1041_angel2_iteration_6/CN/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/CN/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/CN/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/CN/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/CN/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/CN/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/CN/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/CN/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/CN/cn_032.mp3"
+        ]
+      },
+      "JP": {
+        "start": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/JP/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/JP/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/JP/cn_021.mp3",
+          "/assets/voice-skin/char_1041_angel2_iteration_6/JP/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/JP/cn_023.mp3",
+          "/assets/voice-skin/char_1041_angel2_iteration_6/JP/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/JP/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/JP/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/JP/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/JP/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/JP/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/JP/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/JP/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_1041_angel2_iteration_6/JP/cn_032.mp3"
+        ]
+      }
+    },
+    "char_113_cqbw_epoque#7": {
+      "charId": "char_113_cqbw",
+      "CN": {
+        "start": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/CN/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/CN/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/CN/cn_021.mp3",
+          "/assets/voice-skin/char_113_cqbw_epoque_7/CN/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/CN/cn_023.mp3",
+          "/assets/voice-skin/char_113_cqbw_epoque_7/CN/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/CN/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/CN/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/CN/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/CN/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/CN/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/CN/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/CN/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/CN/cn_032.mp3"
+        ]
+      },
+      "JP": {
+        "start": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/JP/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/JP/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/JP/cn_021.mp3",
+          "/assets/voice-skin/char_113_cqbw_epoque_7/JP/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/JP/cn_023.mp3",
+          "/assets/voice-skin/char_113_cqbw_epoque_7/JP/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/JP/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/JP/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/JP/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/JP/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/JP/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/JP/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/JP/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_113_cqbw_epoque_7/JP/cn_032.mp3"
+        ]
+      }
+    },
+    "char_2023_ling_nian#12": {
+      "charId": "char_2023_ling",
+      "CN": {
+        "start": [
+          "/assets/voice-skin/char_2023_ling_nian_12/CN/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_2023_ling_nian_12/CN/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_2023_ling_nian_12/CN/cn_021.mp3",
+          "/assets/voice-skin/char_2023_ling_nian_12/CN/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_2023_ling_nian_12/CN/cn_023.mp3",
+          "/assets/voice-skin/char_2023_ling_nian_12/CN/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_2023_ling_nian_12/CN/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_2023_ling_nian_12/CN/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_2023_ling_nian_12/CN/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_2023_ling_nian_12/CN/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_2023_ling_nian_12/CN/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_2023_ling_nian_12/CN/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_2023_ling_nian_12/CN/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_2023_ling_nian_12/CN/cn_032.mp3"
+        ]
+      },
+      "JP": {
+        "start": [
+          "/assets/voice-skin/char_2023_ling_nian_12/JP/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_2023_ling_nian_12/JP/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_2023_ling_nian_12/JP/cn_021.mp3",
+          "/assets/voice-skin/char_2023_ling_nian_12/JP/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_2023_ling_nian_12/JP/cn_023.mp3",
+          "/assets/voice-skin/char_2023_ling_nian_12/JP/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_2023_ling_nian_12/JP/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_2023_ling_nian_12/JP/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_2023_ling_nian_12/JP/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_2023_ling_nian_12/JP/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_2023_ling_nian_12/JP/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_2023_ling_nian_12/JP/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_2023_ling_nian_12/JP/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_2023_ling_nian_12/JP/cn_032.mp3"
+        ]
+      }
+    },
+    "char_2024_chyue_cfa#1": {
+      "charId": "char_2024_chyue",
+      "CN": {
+        "start": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/CN/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/CN/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/CN/cn_021.mp3",
+          "/assets/voice-skin/char_2024_chyue_cfa_1/CN/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/CN/cn_023.mp3",
+          "/assets/voice-skin/char_2024_chyue_cfa_1/CN/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/CN/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/CN/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/CN/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/CN/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/CN/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/CN/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/CN/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/CN/cn_032.mp3"
+        ]
+      },
+      "JP": {
+        "start": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/JP/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/JP/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/JP/cn_021.mp3",
+          "/assets/voice-skin/char_2024_chyue_cfa_1/JP/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/JP/cn_023.mp3",
+          "/assets/voice-skin/char_2024_chyue_cfa_1/JP/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/JP/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/JP/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/JP/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/JP/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/JP/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/JP/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/JP/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_2024_chyue_cfa_1/JP/cn_032.mp3"
+        ]
+      }
+    },
+    "char_245_cello_sale#12": {
+      "charId": "char_245_cello",
+      "CN": {
+        "start": [
+          "/assets/voice-skin/char_245_cello_sale_12/CN/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_245_cello_sale_12/CN/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_245_cello_sale_12/CN/cn_021.mp3",
+          "/assets/voice-skin/char_245_cello_sale_12/CN/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_245_cello_sale_12/CN/cn_023.mp3",
+          "/assets/voice-skin/char_245_cello_sale_12/CN/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_245_cello_sale_12/CN/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_245_cello_sale_12/CN/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_245_cello_sale_12/CN/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_245_cello_sale_12/CN/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_245_cello_sale_12/CN/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_245_cello_sale_12/CN/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_245_cello_sale_12/CN/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_245_cello_sale_12/CN/cn_032.mp3"
+        ]
+      },
+      "JP": {
+        "start": [
+          "/assets/voice-skin/char_245_cello_sale_12/JP/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_245_cello_sale_12/JP/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_245_cello_sale_12/JP/cn_021.mp3",
+          "/assets/voice-skin/char_245_cello_sale_12/JP/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_245_cello_sale_12/JP/cn_023.mp3",
+          "/assets/voice-skin/char_245_cello_sale_12/JP/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_245_cello_sale_12/JP/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_245_cello_sale_12/JP/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_245_cello_sale_12/JP/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_245_cello_sale_12/JP/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_245_cello_sale_12/JP/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_245_cello_sale_12/JP/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_245_cello_sale_12/JP/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_245_cello_sale_12/JP/cn_032.mp3"
+        ]
+      }
+    },
+    "char_249_mlyss_boc#8": {
+      "charId": "char_249_mlyss",
+      "CN": {
+        "start": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/CN/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/CN/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/CN/cn_021.mp3",
+          "/assets/voice-skin/char_249_mlyss_boc_8/CN/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/CN/cn_023.mp3",
+          "/assets/voice-skin/char_249_mlyss_boc_8/CN/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/CN/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/CN/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/CN/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/CN/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/CN/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/CN/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/CN/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/CN/cn_032.mp3"
+        ]
+      },
+      "JP": {
+        "start": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/JP/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/JP/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/JP/cn_021.mp3",
+          "/assets/voice-skin/char_249_mlyss_boc_8/JP/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/JP/cn_023.mp3",
+          "/assets/voice-skin/char_249_mlyss_boc_8/JP/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/JP/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/JP/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/JP/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/JP/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/JP/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/JP/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/JP/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_249_mlyss_boc_8/JP/cn_032.mp3"
+        ]
+      }
+    },
+    "char_311_mudrok#1": {
+      "charId": "char_311_mudrok",
+      "CN": {
+        "start": [
+          "/assets/voice-skin/char_311_mudrok_1/CN/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_311_mudrok_1/CN/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_311_mudrok_1/CN/cn_021.mp3",
+          "/assets/voice-skin/char_311_mudrok_1/CN/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_311_mudrok_1/CN/cn_023.mp3",
+          "/assets/voice-skin/char_311_mudrok_1/CN/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_311_mudrok_1/CN/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_311_mudrok_1/CN/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_311_mudrok_1/CN/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_311_mudrok_1/CN/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_311_mudrok_1/CN/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_311_mudrok_1/CN/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_311_mudrok_1/CN/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_311_mudrok_1/CN/cn_032.mp3"
+        ]
+      },
+      "JP": {
+        "start": [
+          "/assets/voice-skin/char_311_mudrok_1/JP/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_311_mudrok_1/JP/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_311_mudrok_1/JP/cn_021.mp3",
+          "/assets/voice-skin/char_311_mudrok_1/JP/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_311_mudrok_1/JP/cn_023.mp3",
+          "/assets/voice-skin/char_311_mudrok_1/JP/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_311_mudrok_1/JP/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_311_mudrok_1/JP/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_311_mudrok_1/JP/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_311_mudrok_1/JP/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_311_mudrok_1/JP/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_311_mudrok_1/JP/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_311_mudrok_1/JP/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_311_mudrok_1/JP/cn_032.mp3"
+        ]
+      }
+    },
+    "char_4064_mlynar_epoque#28": {
+      "charId": "char_4064_mlynar",
+      "CN": {
+        "start": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/CN/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/CN/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/CN/cn_021.mp3",
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/CN/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/CN/cn_023.mp3",
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/CN/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/CN/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/CN/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/CN/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/CN/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/CN/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/CN/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/CN/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/CN/cn_032.mp3"
+        ]
+      },
+      "JP": {
+        "start": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/JP/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/JP/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/JP/cn_021.mp3",
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/JP/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/JP/cn_023.mp3",
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/JP/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/JP/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/JP/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/JP/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/JP/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/JP/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/JP/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/JP/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_4064_mlynar_epoque_28/JP/cn_032.mp3"
+        ]
+      }
+    },
+    "char_4067_lolxh#1": {
+      "charId": "char_4067_lolxh",
+      "CN": {
+        "start": [
+          "/assets/voice-skin/char_4067_lolxh_1/CN/cn_019.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_4067_lolxh_1/CN/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_4067_lolxh_1/CN/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_4067_lolxh_1/CN/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_4067_lolxh_1/CN/cn_032.mp3"
+        ]
+      },
+      "JP": {
+        "start": [
+          "/assets/voice-skin/char_4067_lolxh_1/JP/cn_019.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_4067_lolxh_1/JP/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_4067_lolxh_1/JP/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_4067_lolxh_1/JP/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_4067_lolxh_1/JP/cn_032.mp3"
+        ]
+      }
+    },
+    "char_4134_cetsyr_epoque#50": {
+      "charId": "char_4134_cetsyr",
+      "CN": {
+        "start": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/CN/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/CN/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/CN/cn_021.mp3",
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/CN/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/CN/cn_023.mp3",
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/CN/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/CN/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/CN/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/CN/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/CN/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/CN/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/CN/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/CN/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/CN/cn_032.mp3"
+        ]
+      },
+      "JP": {
+        "start": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/JP/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/JP/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/JP/cn_021.mp3",
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/JP/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/JP/cn_023.mp3",
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/JP/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/JP/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/JP/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/JP/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/JP/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/JP/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/JP/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/JP/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_4134_cetsyr_epoque_50/JP/cn_032.mp3"
+        ]
+      }
+    },
+    "char_472_pasngr_epoque#17": {
+      "charId": "char_472_pasngr",
+      "CN": {
+        "start": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/CN/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/CN/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/CN/cn_021.mp3",
+          "/assets/voice-skin/char_472_pasngr_epoque_17/CN/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/CN/cn_023.mp3",
+          "/assets/voice-skin/char_472_pasngr_epoque_17/CN/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/CN/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/CN/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/CN/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/CN/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/CN/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/CN/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/CN/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/CN/cn_032.mp3"
+        ]
+      },
+      "JP": {
+        "start": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/JP/cn_019.mp3"
+        ],
+        "faceEnemy": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/JP/cn_020.mp3"
+        ],
+        "select": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/JP/cn_021.mp3",
+          "/assets/voice-skin/char_472_pasngr_epoque_17/JP/cn_022.mp3"
+        ],
+        "place": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/JP/cn_023.mp3",
+          "/assets/voice-skin/char_472_pasngr_epoque_17/JP/cn_024.mp3"
+        ],
+        "skill1": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/JP/cn_025.mp3"
+        ],
+        "skill2": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/JP/cn_026.mp3"
+        ],
+        "skill3": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/JP/cn_027.mp3"
+        ],
+        "skill4": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/JP/cn_028.mp3"
+        ],
+        "resultFour": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/JP/cn_029.mp3"
+        ],
+        "resultThree": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/JP/cn_030.mp3"
+        ],
+        "resultTwo": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/JP/cn_031.mp3"
+        ],
+        "resultLose": [
+          "/assets/voice-skin/char_472_pasngr_epoque_17/JP/cn_032.mp3"
+        ]
+      }
+    }
+  }
+}

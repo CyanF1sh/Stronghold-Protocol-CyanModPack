@@ -8,7 +8,7 @@
  *   ③ 有没有**体积**超 GitHub 单文件 100 MB 的东西。
  *
  * 用法（★ 只在**副本**上跑，绝不指向线上目录）：
- *   node host027_publish_scan.mjs --mods "<仓库>/mods"                 # 扫 21 个白名单 Mod
+ *   node host027_publish_scan.mjs --mods "<仓库>/mods"                 # 扫白名单里的 Mod
  *   node host027_publish_scan.mjs --mods "<仓库>/mods" --all-mods       # 连越界目录一起报（含 FAIL）
  *   node host027_publish_scan.mjs --mods "<仓库>/mods" --honor-exceptions
  *                                                                      # ★ 把已登记的第三方素材例外从
@@ -31,39 +31,33 @@ import { fileURLToPath } from 'node:url';
 /* ------------------------------------------------------------------ 规则 */
 
 // ① 允许的发布白名单（工序 host-027 判定：代码 + 我们自制的数据/配置 + 文档，零素材）
+//    ★★ 2026-10-13 收窄（服主口径）：**只收已上线的 Mod**（正式服随包上传并启用）+ 样例包 `demo`。
+//      未部署的实验性 / 退役 Mod 与归档的整活 Mod 已从仓库移除 ⇒ 白名单同步收窄到 11 个。
 const PUBLISH_SET = [
-  'cyanfish.announce', 'cyanfish.banner', 'cyanfish.boss-hp', 'cyanfish.boss-pairing',
-  'cyanfish.chat', 'cyanfish.debug-console', 'cyanfish.demo', 'cyanfish.diy-34',
-  'cyanfish.fix-dsubrl-noattack', 'cyanfish.fix-egir-bond', 'cyanfish.fix-enemy',
-  'cyanfish.fix-mechanism', 'cyanfish.fix-operator', 'cyanfish.fix-targeting',
-  'cyanfish.fix-thorn2-stack', 'cyanfish.loadout-io', 'cyanfish.max-seats',
-  'cyanfish.mod-settings', 'cyanfish.online',
-  // ★★ 服主裁定（工序 host-027 追加）：两个归档的整活 Mod 按**归档原样**发布（含版本过时提醒）
-  'cyanfish.dj-models', 'cyanfish.dj-bgm',
+  'cyanfish.announce', 'cyanfish.banner', 'cyanfish.chat', 'cyanfish.debug-console',
+  'cyanfish.demo', 'cyanfish.diy-34', 'cyanfish.fix-enemy', 'cyanfish.fix-mechanism',
+  'cyanfish.max-seats', 'cyanfish.mod-settings', 'cyanfish.online',
+  // ★★ 工序 host-037（2026-10-13）裁定：`cyanfish.skinvoice` 改为**代码进仓 / 官方素材自取** ⇒
+  //    从 NEVER_PUBLISH 移入白名单；素材目录由仓库根 `.gitignore` 排除（`assets/spine/` + `assets/voice-skin/`）。
+  //    改造完成前它还没进仓库 ⇒ 会有一条「白名单 Mod 缺失」WARN，那正是提醒。
+  'cyanfish.skinvoice',
 ];
 
-// ①b 每个 Mod 期望的 gameVersion。默认与本版游戏一致；
-//     两个 DJ Mod 是「按归档原样发布」⇒ 期望值就是归档时的真实值 0.2.4（过时但**故意**保留）。
-const EXPECTED_GAME_VERSION = {
-  'cyanfish.dj-models': '0.2.4',
-  'cyanfish.dj-bgm': '0.2.4',
-};
+// ①b 每个 Mod 期望的 gameVersion。默认与本版游戏一致。
+//     ★ 2026-10-13 收窄后，仓里**不再有**版本过时的 Mod（两个 DJ 整活已移除）⇒ 本表为空。
+const EXPECTED_GAME_VERSION = {};
 const EXPECTED_DEFAULT = '0.2.5';
-// 过时集合：必须随包带「版本过时」提醒（仓库 README + 自己的 README/OUTDATED.md + 发布说明三处）
-const OUTDATED = new Set(['cyanfish.dj-models', 'cyanfish.dj-bgm']);
+// 过时集合：必须随包带「版本过时」提醒。★ 现为空（没有过时 Mod）。
+const OUTDATED = new Set();
 
 // ①c 素材例外：默认一律 FAIL。只有服主**书面拍板**后才用 --honor-exceptions 降级为 WARN。
-const ASSET_EXCEPTIONS = {
-  'cyanfish.dj-bgm': {
-    paths: ['assets/bgm/friends-wine-dj.m4a'],
-    note: '★★ 本版**不带**该音频（服主裁定：只发代码 + 自备 BGM 说明）。此例外现在只用来把 assets/bgm/ 这个目录名认作合法；'
-      + '若将来真把第三方音频放进来，这里只报 WARN —— 请重新走一次发布前拍板。该 Mod 的代码不依赖任何一首具体的歌。',
-  },
-};
+//     ★ 2026-10-13：`cyanfish.dj-bgm` 已移出仓库 ⇒ 例外表清空（素材后缀一律 FAIL）。
+const ASSET_EXCEPTIONS = {};
 
 // ② 绝不进仓的 id（服主口径 / 版权）：出现目录名即 FAIL
+//     ★ 2026-10-13：`cyanfish.skinvoice` 已由 host-037 裁定改造（代码进仓 / 素材自取）⇒ 从本表移出。
 const NEVER_PUBLISH = [
-  'cyanfish.collab-six', 'cyanfish.skinvoice', 'cyanfish.makoto',
+  'cyanfish.collab-six', 'cyanfish.makoto',
   'cyanfish.archetto-skin', 'cyanfish.danmaku',
 ];
 

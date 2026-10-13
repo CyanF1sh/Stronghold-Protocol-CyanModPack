@@ -44,6 +44,12 @@ _handoff*
 /packs/index.json
 /停止服务器.bat
 
+# ★★ skinvoice（工序 host-037 裁定：代码 + 数据 + 安装脚本进仓 / 官方素材由玩家自取）
+#    这个 Mod 的代码与数据不带素材就能跑（缺素材时优雅降级），官方素材（≈296 MB）一律不进仓；
+#    玩家/服务器用 Mod 自带的 tools/fetch-assets.mjs 自取到自己的 assets/ 下（不进 git）。
+/mods/cyanfish.skinvoice/assets/spine/
+/mods/cyanfish.skinvoice/assets/voice-skin/
+
 # ── ③ 运行时与依赖 ──────────────────────────────────────────────────────────
 node_modules/
 .npm-cache/

@@ -10,13 +10,13 @@
 
 | 组成 | 数量 | 体积 |
 |---|---|---|
-| **Mod** | **21 个目录 / 135 文件** | **1.10 MB** |
+| **Mod** | **14 个目录 / 131 文件** | **3.7 MB** |
 | **平台覆盖层**（Mod 平台本体 + 对上游 0.2.5 的改动） | **105 个文件** | **3.34 MB** |
 | 工具 | `tools/apply-overlay.mjs`（一键叠补丁 · 可回滚）、`tools/publish-scan.mjs`（发布前自检） | — |
 | **服主管理页** | `overlay/tools/mod-admin.html`（单文件 · 零外部依赖）+ `overlay/server/admin.js`（后端 API） | — |
-| 文档 | 本文件 + `README.md` + `docs/INSTALL.md` + `docs/MODS-LIST.md` + `docs/OUTDATED-MODS.md` + `NOTICE.md` + `THIRD-PARTY.md` + `LICENSE` | — |
+| 文档 | 本文件 + `README.md` + `docs/INSTALL.md` + `docs/MODS-LIST.md` + `NOTICE.md` + `THIRD-PARTY.md` + `LICENSE` | — |
 
-**总计约 4.5 MB / 250+ 文件**，最大单文件 **331 KB**（覆盖层里的 `docs/MODS.md` —— 平台 Mod 开发规范），
+**总计约 7.8 MB / 250 文件**，最大单文件 **1.34 MB**（`mods/cyanfish.skinvoice/client/skinvoice.json` —— 皮肤 / 语音目录清单），
 **无任何单文件接近 GitHub 的 100 MB 上限，不需要 Git LFS**。
 
 ## 平台亮点（覆盖层里我们新写的 38 个文件）
@@ -29,35 +29,32 @@
 - **一键安装器**：`tools/apply-overlay.mjs`（`--dry-run` / 先备份 / 逐文件报告 / `--rollback`）
   与 **发布前自检** `tools/publish-scan.mjs`。
 
-## 21 个 Mod = 12 个正常装载 + 2 个整活（被版本门槛跳过）+ 7 个历史归档（默认停用）
+## 14 个 Mod（**已上线为主** + 样例包 + 三类例外）
 
-- **12 个正常装载**：`max-seats` · `diy-34` · `boss-pairing` · `online` · `chat` · `announce` · `banner` ·
-  `mod-settings` · `fix-enemy` · `fix-mechanism` · `debug-console` · `demo`
-- **2 个整活**：`dj-models` **v1.6.1** · `dj-bgm` **v1.0.1**（`gameVersion` 都是 **0.2.4**，当前 **0.2.5**）
-- **7 个历史归档**（上游已修 / 已退役，默认停用）：`boss-hp` · `loadout-io` · `fix-operator` ·
-  `fix-dsubrl-noattack` · `fix-targeting` · `fix-thorn2-stack` · `fix-egir-bond`
+`max-seats` · `diy-34` · `announce` · `online` · `chat` · `banner` · `mod-settings` ·
+`debug-console` · `fix-enemy` · `fix-mechanism` · **`demo`（样例包）**
 
-逐条清单见 [`docs/MODS-LIST.md`](docs/MODS-LIST.md)。
+★ 收录口径：以**已在作者正式服上线的 Mod** 为主，另有三类例外：
+1. **样例包** `cyanfish.demo`（它不是线上 Mod，但它是「想自己写 Mod 从哪开始读」的唯一入口）；
+2. **代码进仓、官方素材自取**：`cyanfish.skinvoice` —— 随包**只有代码与目录**，**官方皮肤 / 语音素材请自行准备**（本仓**不含**任何官方素材副本）；
+3. **作者亲自收录、尚未上线**：`cyanfish.dj-all`（纯界面整活）· `cyanfish.music-overlay`（音效替换，音频由玩家**自己上传**）。
+未部署的实验性 Mod（只在测试实例跑的、退役的、上游已自行修复的）与归档的整活 Mod **整体移出本仓**；
+**自带官方 / 联动素材副本**的 Mod **不在本仓**（★ 例：`cyanfish.dj-all` 原包 `assets/` 下两张第三方角色动图**未随本仓分发**，该目录留了 `assets/图标说明.md` 说明如何自备）。
+
+逐条清单见 [`docs/MODS-LIST.md`](docs/MODS-LIST.md)；完整 Mod 清单（含未发布内容）见覆盖层 `overlay/docs/MODS.md` **§12**（作者树快照）。
 
 ## ⚠ 已知问题 / 预期症状（不是 bug）
 
-1. **两个 DJ 整活 Mod 版本过时**：在 0.2.5 上会**列表可见 + 一行「gameVersion=0.2.4 与当前游戏版本 0.2.5 不一致」+ `skipped` 跳过**，
-   **不装载、不崩服**。`node tools/mod.mjs validate` 会因此报 **`2/21 个 Mod 校验未通过`** 并以退出码 1 结束 ——
-   **这就是预期输出**。详见 [`docs/OUTDATED-MODS.md`](docs/OUTDATED-MODS.md)。
-2. **`dj-bgm` 不带音频**：原归档那首第三方曲子未取得授权，本仓不随包发布（代码逐字节原样，曲目数据驱动，自己放）。
-3. **7 个历史归档 Mod 默认停用**：`apply-overlay.mjs --with-mods` 在 `mods/.state.json` 不存在时会写一份停用它们的状态。
-   为什么必须停用：其中 `boss-hp` 是**数据补丁**（会再次改写血池数值），`fix-targeting` / `fix-dsubrl-noattack` /
-   `fix-thorn2-stack` / `fix-egir-bond` 会与上游已内建的修复**重复**，`fix-targeting` 自己的 README 还标了
-   「会新增一处隐匿误伤」。它们仍然保留在仓里，供源码参考与回滚。
-4. **没有游戏本体**：本仓**不含**任何官方素材（美术 / 语音 / 音乐 / 字体 / 官方数据表）。
+1. **没有游戏本体**：本仓**不含**任何官方素材（美术 / 语音 / 音乐 / 字体 / 官方数据表）。
    必须先自备官方 0.2.5 本体与素材，再叠本仓的覆盖层与 `mods/`。
+2. **14 个 Mod 全部要求 `gameVersion = 0.2.5`**：游戏本体不是 0.2.5 ⇒ **整批拒装**（设计如此，不是 bug）。
 
 ## 安装（三条命令）
 
 ```bash
 node tools/apply-overlay.mjs --target "<你的官方 0.2.5 目录>" --dry-run   # 只报告
 node tools/apply-overlay.mjs --target "<你的官方 0.2.5 目录>" --with-mods # 先备份再写入
-cd "<你的官方 0.2.5 目录>" && node tools/mod.mjs validate                # 期望 2/21 未通过（就是那两个 DJ）
+cd "<你的官方 0.2.5 目录>" && node tools/mod.mjs validate                # 期望 14 个全部通过 · 0 错误
 ```
 
 完整步骤（含「怎么自备官方 0.2.5」与常见问题）见 [`docs/INSTALL.md`](docs/INSTALL.md)。
@@ -66,22 +63,25 @@ cd "<你的官方 0.2.5 目录>" && node tools/mod.mjs validate                #
 
 | 门 | 结果 |
 |---|---|
-| `tools/publish-scan.mjs --repo`（机密 / 素材 / 体积自检） | **FAIL 0**（2 处已登记的上游原文误报降级为 WARN） |
-| `tools/publish-scan.mjs --mods`（21 个 Mod 严格档） | **FAIL 0** |
-| 21 个 Mod 的 `mod.json` 解析 / `apiVersion` / `gameVersion` | 21/21 通过 |
-| 全部 Mod 的 `.js` 过 `node --check` | 56/56 通过 |
-| **纯净 0.2.5 副本上真跑 `apply-overlay.mjs`** | `--dry-run` 105 可写 / 0 冲突；真跑 105/105 sha256 一致 |
-| 应用结果 vs 线上覆盖层 | 105/105 一致（80 个逐字节相同，25 个仅差「清泄密点」的注释文字） |
-| `--rollback` | 105/105 回到打补丁前状态 |
-| 真跑装载器 | 21 个列表可见 · 12 个生效 · 7 个停用 · 2 个 DJ 跳过 · 无其它错误 |
+| `tools/publish-scan.mjs --repo`（机密 / 素材 / 体积自检） | **FAIL 0**（WARN 全为上游原文误报 / 已打码的 IP 类） |
+| `tools/publish-scan.mjs --mods`（白名单 Mod 严格档） | **FAIL 0**（★ 现有 1 条「白名单 Mod 缺失：`cyanfish.skinvoice`」WARN —— 它已裁定改造、尚未进仓，属**预期提醒**） |
+| 14 个 Mod 的 `mod.json` 解析 / `apiVersion` / `gameVersion` | **14/14 通过**（`apiVersion` 全 `1` · `gameVersion` 全 `0.2.5`） |
+| 全部 Mod 的 `.js` 过 `node --check` | **32/32 通过** |
+| 两个工具脚本 `node --check` | `apply-overlay.mjs` · `publish-scan.mjs` 通过 |
+| 真跑装载器（装完 `node tools/mod.mjs validate`） | 期望 **14 个全部通过 · 0 错误 · 退出码 0** |
+
+> ★ 上表**本版（收窄后）已重跑**。以下三行是**首版（工序 host-028）实测**、本次**未重跑** —— 它们只与**覆盖层**有关，
+> 而覆盖层本次**一个字节未改**：`apply-overlay.mjs` 在纯净 0.2.5 副本上的 dry-run / 真跑（105 可写 · 0 冲突 · 105/105 sha256 一致）·
+> 应用结果 vs 线上覆盖层 105/105 一致 · `--rollback` 105/105 复原。
 
 ## 与上一版（服务器私有版）的差别
 
 - **首次公开**：此前只在作者自己的服务器上使用（私有）。
 - **去掉**：所有内部工作区路径、内部工序报告链接、部署路径与内部基建引用（逐处改成中性表述，代码语义未变）。
-- **不带**：`dj-bgm` 的第三方音频（未取得授权）。
-- **不带**：自带官方 / 联动素材的 4 个 Mod（`skinvoice` / `collab-six` / `makoto` / `archetto-skin`）—— 版权原因，永久排除。
-- **澄清**：7 个「上游已修 / 已退役」的 Mod 归入独立一节，并**默认停用**（免得有人以为装坏了，也免得真的重复修）。
+- **不带**：自带官方 / 联动素材的 Mod（`collab-six` / `makoto` / `archetto-skin`）—— 版权原因。
+  ★ `cyanfish.skinvoice` 已裁定改造为「**代码进仓 / 官方素材由玩家自取**」（`host-037`），改造完成后加入下一版。
+- **收窄（2026-10-13）**：本仓**只收已上线的 Mod** + 样例包 `demo` ⇒ Mod 目录 **21 → 11**；
+  未部署的实验性 / 退役 Mod 与归档的整活 Mod **整体移出本仓**（它们仍在上游工作区里，只是不进本仓）。
 
 ## 许可证与致谢
 

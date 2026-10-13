@@ -2,7 +2,7 @@
 /*
  * apply-overlay.mjs —— 把本仓的**平台覆盖层**叠到你自备的官方《卫戍协议》0.2.5 上
  *
- * 它做什么：逐文件校验 + 先备份 + 再写入，最后可选把 21 个 Mod 一起拷进 mods/。
+ * 它做什么：逐文件校验 + 先备份 + 再写入，最后可选把 11 个 Mod 一起拷进 mods/。
  * 它不做什么：不含任何官方素材；不会替你下载游戏本体；不联网。
  *
  * 用法（在本仓根目录下跑）：
@@ -12,9 +12,8 @@
  *   node tools/apply-overlay.mjs --target "D:\Stronghold-Protocol-0.2.5" --with-mods --no-state
  *   node tools/apply-overlay.mjs --target "D:\Stronghold-Protocol-0.2.5" --rollback "<备份目录>"
  *
- * `--with-mods` 会顺手做一件与你有关的事：若 `mods/.state.json` **不存在**，就写一份把 7 个
- * 「历史归档 / 上游已修」的 Mod 停用的状态（作者两台实例就是这个口径，那几个 Mod 自己的 README
- * 也写着「不要再分发本目录 / 建议不装载」）。已有的 `.state.json` **一个字都不动**；不想让它写就加 --no-state。
+ * `--with-mods` 把 **11 个 Mod** 拷进 `mods/`，它们**默认全部启用** ⇒ **不写** `mods/.state.json`；
+ * 已存在的 `.state.json` **一个字都不动**。`--no-state` 保留为**兼容参数**（现在已经没有状态需要写了）。
  *
  * 三个安全闸：
  *   ① 完整性：overlay/ 里的每个文件都要与 overlay/MANIFEST.sha256 对得上（防下载损坏）；
@@ -219,18 +218,12 @@ console.log('文件 ' + written + ' 个 / ' + fmt(bytes) + ' · 覆盖前备份 
 console.log('备份目录: ' + backupDir);
 console.log('写后逐文件复核: ' + (bad.length ? '✗ ' + bad.length + ' 个不符' : '✓ ' + todo.length + '/' + todo.length + ' sha256 一致'));
 
-/* ★ 历史归档 Mod：作者的两台实例都把这 7 个列进 `disabled`，它们自己的 README 也写着
- *   「不要再分发本目录」「建议不装载」。新玩家没有 mods/.state.json ⇒ 全部**默认启用** ⇒
- *   这几个会真的生效（其中 boss-hp 是数据补丁，会把血池再改写一遍）。
- *   所以：状态文件不存在时，我们写一份把 7 个退休 Mod 停用的状态，让装出来的实例与作者口径一致；
- *   已经存在就**一个字都不动**（只打印怎么自己停用）。 */
-const RETIRED_MODS = [
-  'cyanfish.boss-hp', 'cyanfish.fix-dsubrl-noattack', 'cyanfish.fix-egir-bond', 'cyanfish.fix-operator',
-  'cyanfish.fix-targeting', 'cyanfish.fix-thorn2-stack', 'cyanfish.loadout-io',
-];
-const noState = argv.includes('--no-state');
+/* ★ 2026-10-13（发布集收窄）：仓里只剩**已上线**的 Mod（外加样例包 `demo`）—— **11 个默认全部启用**
+ *   ⇒ **不再需要**写 `mods/.state.json`（7 个历史归档 Mod 已整体移出仓库，没有要停用的东西了）。
+ *   `--no-state` 保留为**兼容参数**（现在是空操作），免得旧命令行报错。 */
+const noState = argv.includes('--no-state');   // 兼容保留：现在没有状态需要写
 
-/* 可选：把 21 个 Mod 拷进 mods/ */
+/* 可选：把 11 个 Mod 拷进 mods/ */
 let modsResult = null;
 if (withMods) {
   const src = join(REPO, 'mods');
@@ -246,20 +239,13 @@ if (withMods) {
   if (skipped.length) console.log('★ 已存在、未覆盖（请自己确认要不要换）: ' + skipped.join(', '));
 
   const statePath = join(dst, '.state.json');
-  const retiredPresent = RETIRED_MODS.filter((id) => ids.includes(id)).sort();
   let stateAction;
-  if (noState) {
-    stateAction = '已按 --no-state 跳过写启停状态';
-  } else if (existsSync(statePath)) {
-    stateAction = '已有 mods/.state.json ⇒ 一个字都没动（想停用历史归档 Mod 请自己跑：'
+  if (existsSync(statePath)) {
+    stateAction = '已有 mods/.state.json ⇒ 一个字都没动（11 个 Mod 默认全启用；要停用请自己跑'
       + ' node tools/mod.mjs disable <id>）';
-  } else if (retiredPresent.length) {
-    writeFileSync(statePath, JSON.stringify({ version: 1, disabled: retiredPresent, order: [] }, null, 2) + '\n', 'utf8');
-    stateAction = '已写 mods/.state.json：停用 ' + retiredPresent.length + ' 个历史归档 Mod（'
-      + retiredPresent.join(', ') + '）—— 与作者两台实例的口径一致。'
-      + ' 想全部启用：删掉 mods/.state.json，或 node tools/mod.mjs enable <id>。';
   } else {
-    stateAction = '没有需要停用的历史归档 Mod';
+    stateAction = '11 个 Mod **默认全部启用** ⇒ 不写 mods/.state.json'
+      + (noState ? '（--no-state 已保留为兼容参数）' : '');
   }
   modsResult.stateAction = stateAction;
   console.log('启停状态: ' + stateAction);
