@@ -36,7 +36,9 @@ import { fileURLToPath } from 'node:url';
 const PUBLISH_SET = [
   'cyanfish.announce', 'cyanfish.banner', 'cyanfish.chat', 'cyanfish.debug-console',
   'cyanfish.demo', 'cyanfish.diy-34', 'cyanfish.fix-enemy', 'cyanfish.fix-mechanism',
-  'cyanfish.max-seats', 'cyanfish.mod-settings', 'cyanfish.online',
+  'cyanfish.max-seats', 'cyanfish.mod-settings', 'cyanfish.music-overlay', 'cyanfish.online',
+  'cyanfish.dj-all',
+  // ★★ 2026-10-13（host-049）：服主拍板把 \ 与   //    作为「作者亲自收录、尚未上线」的例外纳入白名单（各自 README 有说明）。
   // ★★ 工序 host-037（2026-10-13）裁定：`cyanfish.skinvoice` 改为**代码进仓 / 官方素材自取** ⇒
   //    从 NEVER_PUBLISH 移入白名单；素材目录由仓库根 `.gitignore` 排除（`assets/spine/` + `assets/voice-skin/`）。
   //    改造完成前它还没进仓库 ⇒ 会有一条「白名单 Mod 缺失」WARN，那正是提醒。
@@ -51,8 +53,18 @@ const EXPECTED_DEFAULT = '0.2.5';
 const OUTDATED = new Set();
 
 // ①c 素材例外：默认一律 FAIL。只有服主**书面拍板**后才用 --honor-exceptions 降级为 WARN。
-//     ★ 2026-10-13：`cyanfish.dj-bgm` 已移出仓库 ⇒ 例外表清空（素材后缀一律 FAIL）。
-const ASSET_EXCEPTIONS = {};
+//     ★ 2026-10-13：`cyanfish.dj-bgm` 已移出仓库 ⇒ 表清空过。
+//     ★★ 2026-10-13 服主**书面拍板**（原话：「amiya-spin.gif 可添加，毕竟只是同人二创表情包，
+//        标注上『若侵权可联系删除』之类的说明即可」）⇒ 登记下面这一条：
+//        `cyanfish.dj-all/assets/amiya-spin.gif` —— 同人二创表情包（128×128 · 局内入口图标），
+//        本仓只做「缩放 + 调色板重编码」；**权利人要求即删**（删它不影响该 Mod 其余功能）。
+//        ★ 960×960 的素材源 `阿米娅旋转.gif` 仍**不随包**（其自身注明「不参与运行，可删」）。
+const ASSET_EXCEPTIONS = {
+  'cyanfish.dj-all': {
+    paths: ['assets/amiya-spin.gif'],
+    note: '同人二创表情包（局内入口图标）· 服主 2026-10-13 书面拍板随包 · 若侵权可联系删除（见 NOTICE.md §5）',
+  },
+};
 
 // ② 绝不进仓的 id（服主口径 / 版权）：出现目录名即 FAIL
 //     ★ 2026-10-13：`cyanfish.skinvoice` 已由 host-037 裁定改造（代码进仓 / 素材自取）⇒ 从本表移出。
@@ -176,28 +188,45 @@ function fail(where, what, detail) {
 function warn(where, what, detail) { warns.push({ where, what, detail: String(detail) }); }
 
 let CURRENT_MOD = null;
+/* ★★ 2026-10-13（host-050）：`--repo` 模式下 `CURRENT_MOD` 恒为 `null` ⇒ 原实现里**登记的例外
+ *   在整仓扫描中永远认不出来**（整仓必 FAIL）。这里补一层「按全路径匹配」
+ *   （`mods/<mod id>/<mod 内相对路径>`），与 mods 模式共用同一张例外表。 */
+function repoModeEx(relPath) {
+  const p = String(relPath || '').replace(/^\.\//, '');
+  for (const [modId, ex] of Object.entries(ASSET_EXCEPTIONS)) {
+    for (const q of ex.paths) {
+      const dir = q.replace(/\/[^/]*$/, '/');
+      if (p === 'mods/' + modId + '/' + q || p.startsWith('mods/' + modId + '/' + dir)) return ex;
+    }
+  }
+  return null;
+}
 function excepted(relPath) {
   const ex = CURRENT_MOD ? ASSET_EXCEPTIONS[CURRENT_MOD] : null;
-  if (!ex) return false;
-  // relPath 是相对扫描根的（mods 模式下形如 "<mod id>/assets/bgm/x.m4a"），
-  // 例外表里写的是 Mod 内相对路径 ⇒ 两种写法都认。
-  return ex.paths.some((p) => {
-    const dir = p.replace(/\/[^/]*$/, '/');
-    const full = CURRENT_MOD + '/' + p;
-    const fullDir = CURRENT_MOD + '/' + dir;
-    return relPath === p || relPath === full || relPath.startsWith(dir) || relPath.startsWith(fullDir);
-  });
+  if (ex) {
+    // relPath 是相对扫描根的（mods 模式下形如 "<mod id>/assets/bgm/x.m4a"），
+    // 例外表里写的是 Mod 内相对路径 ⇒ 两种写法都认。
+    const hit = ex.paths.some((p) => {
+      const dir = p.replace(/\/[^/]*$/, '/');
+      const full = CURRENT_MOD + '/' + p;
+      const fullDir = CURRENT_MOD + '/' + dir;
+      return relPath === p || relPath === full || relPath.startsWith(dir) || relPath.startsWith(fullDir);
+    });
+    if (hit) return true;
+  }
+  return repoModeEx(relPath) !== null;
 }
-function exceptNote() {
-  const ex = CURRENT_MOD ? ASSET_EXCEPTIONS[CURRENT_MOD] : null;
+function exceptNote(relPath) {
+  const ex = (CURRENT_MOD ? ASSET_EXCEPTIONS[CURRENT_MOD] : null) || repoModeEx(relPath);
   return ex ? ex.note : '未登记的例外';
 }
 // 目录例外：该目录**里面**有登记的例外文件（例如 assets/bgm/ 里那首曲子）
 function exceptedDir(relPath) {
   const ex = CURRENT_MOD ? ASSET_EXCEPTIONS[CURRENT_MOD] : null;
-  if (!ex) return false;
-  const rel = relPath.startsWith(CURRENT_MOD + '/') ? relPath.slice(CURRENT_MOD.length + 1) : relPath;
-  return ex.paths.some((p) => p.startsWith(rel + '/') || p === rel);
+  const rel = (ex && CURRENT_MOD && relPath.startsWith(CURRENT_MOD + '/'))
+    ? relPath.slice(CURRENT_MOD.length + 1) : relPath;
+  if (ex && ex.paths.some((p) => p.startsWith(rel + '/') || p === rel)) return true;
+  return repoModeEx(relPath) !== null;
 }
 
 function walk(dir, out = []) {
@@ -207,7 +236,7 @@ function walk(dir, out = []) {
     if (e.isDirectory()) {
       if (BANNED_DIR.has(e.name)) {
         if (honorExceptions && (excepted(rel(p)) || exceptedDir(rel(p)))) {
-          warn(rel(p), '★★ 素材例外目录（服主拍板项）', exceptNote());
+          warn(rel(p), '★★ 素材例外目录（服主拍板项）', exceptNote(rel(p)));
         } else fail(rel(p), '禁止目录', '目录名 ' + e.name);
       }
       walk(p, out);
@@ -224,7 +253,7 @@ function scanFile(p) {
   const r = rel(p);
   const ext = extname(p).toLowerCase();
   if (BINARY_EXT.has(ext)) {
-    if (honorExceptions && excepted(r)) warn(r, '★★ 素材例外：第三方素材随包发布（服主拍板项）', exceptNote() + ' | ' + fmt(st.size));
+    if (honorExceptions && excepted(r)) warn(r, '★★ 素材例外：第三方素材随包发布（服主拍板项）', exceptNote(r) + ' | ' + fmt(st.size));
     else fail(r, '二进制/素材文件', '扩展名 ' + ext + '（' + st.size + ' B）');
   }
   else if (!IN_MODS_LAYOUT && st.size > SIZE_WARN && st.size <= SIZE_FAIL) warn(r, '偏大文件', fmt(st.size));

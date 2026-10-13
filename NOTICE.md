@@ -1,7 +1,7 @@
 # 版权与使用声明（NOTICE）
 
 **本仓 = 卫戍协议 · CyanFish 平台补丁与 Mod 集**：给《明日方舟》限时玩法「卫戍协议：盟约」的
-**非官方同人复刻项目**（上游 **Stronghold Protocol 0.2.5**）做的**平台覆盖层 + 21 个 Mod**。
+**非官方同人复刻项目**（上游 **Stronghold Protocol 0.2.5**）做的**平台覆盖层 + 14 个 Mod**。
 
 与上海鹰角网络科技有限公司（Hypergryph）、Yostar 及其关联方**没有任何关联**，也未获得其授权或认可。
 
@@ -11,7 +11,7 @@
 
 Copyright (C) 2026 CyanFish（本仓覆盖层、Mod 与文档的作者）
 
-- 本仓自己编写的源代码与文档文字（**覆盖层 105 个文件**、`mods/**` 的 21 个 Mod、本仓 `docs/**` 与根级文档）
+- 本仓自己编写的源代码与文档文字（**覆盖层 105 个文件**、`mods/**` 的 14 个 Mod、本仓 `docs/**` 与根级文档）
   以 **GNU 通用公共许可证第 3 版或（由你选择）任何更新版本**（**GPL-3.0-or-later**）发布，全文见 [LICENSE](LICENSE)。
 - **为什么整仓是 GPL**：覆盖层是**上游 GPL 代码的派生作品**（copyleft）⇒ 我们没有选 MIT / Apache-2.0 的余地。
   Mod 目录与覆盖层同仓分发，边界无法逐文件切干净，因此**整仓统一 GPL-3.0-or-later**。
@@ -43,6 +43,7 @@ Copyright (C) 2026 CyanFish（本仓覆盖层、Mod 与文档的作者）
 | 官方字体 | `public/fonts/**` 一个文件都没有 |
 | 官方数据表拷贝 | 没有 `data/*.json` 拷贝；Mod 里的 `data/*.json` 是**我们写的局部补丁**（只写要改的键） |
 | 游戏本体 | 本仓是**补丁 + Mod**，游玩需自备官方 0.2.5 本体与素材 |
+| ★ **唯一例外** | `mods/cyanfish.dj-all/assets/amiya-spin.gif` —— **1 张同人二创表情包**（128×128 · 117 KB · 局内入口图标）。**不是**官方美术文件；来源与删除办法见该目录的 `assets/图标说明.md` 与 [THIRD-PARTY.md](THIRD-PARTY.md) §5。**权利人要求即删。** |
 
 自查命令：`node tools/publish-scan.mjs --repo .`（会检查素材文件、令牌、真实主机名、本地绝对路径、体积）。
 
@@ -55,7 +56,8 @@ Copyright (C) 2026 CyanFish（本仓覆盖层、Mod 与文档的作者）
 
 ## 5. 权利人通知与删除
 
-如果你是相关权利人，认为本仓的任何内容不妥，请在本仓提交 Issue，我们会尽快删除相关内容或下架本仓。
+如果你是相关权利人，认为本仓的任何内容不妥，请在本仓提交 Issue，**我们会尽快删除相关内容或下架本仓**。
+★ 已知的**唯一**随包第三方图片是 `mods/cyanfish.dj-all/assets/amiya-spin.gif`（同人二创表情包，见 [THIRD-PARTY.md](THIRD-PARTY.md) §5）—— 权利人提出后，**删掉这一个文件即可**，不必下架整仓。
 
 ## 6. 免责声明
 
@@ -65,9 +67,11 @@ Copyright (C) 2026 CyanFish（本仓覆盖层、Mod 与文档的作者）
 
 ---
 
-**English summary.** Unofficial, non-commercial fan project: a **platform patch layer plus 21 mods** for the
+**English summary.** Unofficial, non-commercial fan project: a **platform patch layer plus 14 mods** for the
 unofficial Stronghold Protocol remake, targeting upstream **0.2.5**. Our own code and docs are
 **GPL-3.0-or-later** (the overlay is a derivative of upstream GPL code). All Arknights names, art, models,
-audio and data are © Hypergryph / Yostar and their licensors, are **not** included in this repository and are
-**not** covered by the GPL. Study and personal non-commercial use only: no selling, paid distribution, paid
-hosting, ads, donations or any other monetisation. Rights holders can request removal through an issue.
+audio and data are © Hypergryph / Yostar and their licensors and are **not** covered by the GPL.
+The repository ships no official asset; the **only** third-party image is one **fan-made sticker**
+(`mods/cyanfish.dj-all/assets/amiya-spin.gif`, a 128x128 in-raid icon) — **remove it on request** via an issue.
+Study and personal non-commercial use only: no selling, paid distribution, paid hosting, ads, donations or any
+other monetisation.

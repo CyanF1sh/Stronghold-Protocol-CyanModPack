@@ -10,13 +10,13 @@
 
 | 组成 | 数量 | 体积 |
 |---|---|---|
-| **Mod** | **14 个目录 / 131 文件** | **3.7 MB** |
+| **Mod** | **14 个目录 / 132 文件** | **3.8 MB** |
 | **平台覆盖层**（Mod 平台本体 + 对上游 0.2.5 的改动） | **105 个文件** | **3.34 MB** |
 | 工具 | `tools/apply-overlay.mjs`（一键叠补丁 · 可回滚）、`tools/publish-scan.mjs`（发布前自检） | — |
 | **服主管理页** | `overlay/tools/mod-admin.html`（单文件 · 零外部依赖）+ `overlay/server/admin.js`（后端 API） | — |
 | 文档 | 本文件 + `README.md` + `docs/INSTALL.md` + `docs/MODS-LIST.md` + `NOTICE.md` + `THIRD-PARTY.md` + `LICENSE` | — |
 
-**总计约 7.8 MB / 250 文件**，最大单文件 **1.34 MB**（`mods/cyanfish.skinvoice/client/skinvoice.json` —— 皮肤 / 语音目录清单），
+**总计约 7.3 MB / 251 文件**，最大单文件 **1.34 MB**（`mods/cyanfish.skinvoice/client/skinvoice.json` —— 皮肤 / 语音目录清单），
 **无任何单文件接近 GitHub 的 100 MB 上限，不需要 Git LFS**。
 
 ## 平台亮点（覆盖层里我们新写的 38 个文件）
@@ -39,7 +39,7 @@
 2. **代码进仓、官方素材自取**：`cyanfish.skinvoice` —— 随包**只有代码与目录**，**官方皮肤 / 语音素材请自行准备**（本仓**不含**任何官方素材副本）；
 3. **作者亲自收录、尚未上线**：`cyanfish.dj-all`（纯界面整活）· `cyanfish.music-overlay`（音效替换，音频由玩家**自己上传**）。
 未部署的实验性 Mod（只在测试实例跑的、退役的、上游已自行修复的）与归档的整活 Mod **整体移出本仓**；
-**自带官方 / 联动素材副本**的 Mod **不在本仓**（★ 例：`cyanfish.dj-all` 原包 `assets/` 下两张第三方角色动图**未随本仓分发**，该目录留了 `assets/图标说明.md` 说明如何自备）。
+**自带官方 / 联动素材副本**的 Mod **不在本仓**（★ 例：`cyanfish.dj-all` 原包 `assets/` 下两张第三方角色动图**未随本仓分发**；随包的只有 1 张 **128×128 同人二创表情包** `amiya-spin.gif`（局内入口图标），见该目录 `assets/图标说明.md` 与 [THIRD-PARTY.md](THIRD-PARTY.md) §5 —— **若侵权可联系删除**）。
 
 逐条清单见 [`docs/MODS-LIST.md`](docs/MODS-LIST.md)；完整 Mod 清单（含未发布内容）见覆盖层 `overlay/docs/MODS.md` **§12**（作者树快照）。
 
