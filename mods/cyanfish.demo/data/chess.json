@@ -1,0 +1,75 @@
+{
+  "ops": [
+    {
+      "op": "clone",
+      "from": "chess_char_1_01_a",
+      "path": "cyanfish_demo_a",
+      "value": {
+        "chessId": "cyanfish_demo_a",
+        "baseId": "cyanfish_demo_a",
+        "goldenId": "cyanfish_demo_b",
+        "upgradeChessId": "cyanfish_demo_b",
+        "name": "隐现·改",
+        "appellation": "Insider MK2",
+        "isGolden": false,
+        "isDiy": false,
+        "isHidden": false,
+        "visible": true,
+        "tier": 1,
+        "identifier": 900,
+        "price": 2,
+        "sellPrice": 1,
+        "upgradeNum": 3,
+        "stats": {
+          "atk": 520,
+          "maxHp": 1400
+        },
+        "status": {
+          "phase": 1,
+          "level": 55,
+          "skillLevel": 4,
+          "equipLevel": 0
+        }
+      }
+    },
+    {
+      "op": "clone",
+      "from": "chess_char_1_01_b",
+      "path": "cyanfish_demo_b",
+      "value": {
+        "chessId": "cyanfish_demo_b",
+        "baseId": "cyanfish_demo_a",
+        "goldenId": "cyanfish_demo_b",
+        "upgradeChessId": null,
+        "name": "隐现·改",
+        "appellation": "Insider MK2",
+        "isGolden": true,
+        "isDiy": false,
+        "isHidden": false,
+        "visible": true,
+        "tier": 1,
+        "identifier": 901,
+        "price": 2,
+        "sellPrice": 1,
+        "upgradeNum": 0,
+        "stats": {
+          "atk": 700,
+          "maxHp": 1800
+        },
+        "status": {
+          "phase": 2,
+          "level": 50,
+          "skillLevel": 7,
+          "equipLevel": 1
+        }
+      }
+    },
+    {
+      "op": "deepMerge",
+      "path": "chess_char_1_01_a.stats",
+      "value": {
+        "atk": 450
+      }
+    }
+  ]
+}

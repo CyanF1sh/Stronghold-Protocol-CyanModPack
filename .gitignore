@@ -1,0 +1,69 @@
+# ★★ 四道防线：误 `git add .` 也带不进去（本仓的 .gitignore）
+#
+# 本仓**只应包含**：根级文档（README / RELEASE-NOTES / LICENSE / NOTICE / THIRD-PARTY）·
+#                   docs/（我们写的文档）· overlay/（105 个平台补丁文件 + 两份 sha256 清单 + 说明）·
+#                   mods/（21 个 Mod）· tools/（两个脚本）· .gitignore / .gitattributes
+# 下面这些**永不允许进仓**。任何一条被提交进来都是事故。
+#
+# ★ 写法纪律：凡「只针对仓根」的项一律加**前导斜杠**（`/xxx`）。
+#   不加斜杠的模式会匹配**任意层级**的同名目录 —— 我们踩过一次：
+#   `mod-work*/` 把 `overlay/public/mod-work-harness/`（覆盖层 105 个文件之一）静默挡在仓外。
+#   ★ 发布脚本 host028_publish_repo.mjs 里有一条「暂存区每个文件都必须在 git ls-files 里」的完整性断言，
+#     专门防这类**静默漏收**。
+
+# ── ① 机密与工作区（最高优先）────────────────────────────────────────────────
+#     ★ 刻意用通配符写法（不写出完整文件名）：既能挡住那些文件，又不把它们的名字抄进仓里。
+*勿外发*
+*服务器连接*
+_handoff*
+云服务器*
+/mod-work*/
+/issues/
+/.workbuddy/
+*.tgz
+*.spmod
+*.tar
+*.tar.gz
+*.zip
+*.7z
+.sp-overlay-backup-*/
+
+# ── ② 官方本体与素材（上游铁律：No game art in git）──────────────────────────
+/Stronghold-Protocol-v0.*/
+/Stronghold-Protocol-0.2.*/
+/public/assets/
+/public/fonts/
+/public/vendor/
+/data/*.json
+/data/i18n/
+/data/local-assets.json
+/.cache/
+/MANIFEST.json
+/UPDATE.json
+/.update-applied.json
+/packs/index.json
+/停止服务器.bat
+
+# ── ③ 运行时与依赖 ──────────────────────────────────────────────────────────
+node_modules/
+.npm-cache/
+.venv*/
+__pycache__/
+*.py[cod]
+/logs/
+*.log
+/.env
+/.env.*
+/scripts/service.env.cmd
+/mods/.state.json
+/mods/_removed/
+
+# ── ④ 机器态与编辑器 ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*.tmp
+*~

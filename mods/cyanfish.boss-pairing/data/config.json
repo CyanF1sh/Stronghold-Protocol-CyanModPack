@@ -1,0 +1,11 @@
+{
+  "ops": [
+    {
+      "op": "add",
+      "path": "bossPairing",
+      "value": {
+        "default": "random"
+      }
+    }
+  ]
+}

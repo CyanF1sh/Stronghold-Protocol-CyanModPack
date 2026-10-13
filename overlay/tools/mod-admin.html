@@ -1,0 +1,2774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="color-scheme" content="dark light">
+<title>卫戍协议 · Mod 控制台</title>
+<style>
+/* ==========================================================================================
+   主题：内嵌一份 public/css/theme.css 的 token 拷贝（近黑绿灰底 + 薄荷主色 + 金价签 + 四角括号）。
+   单文件、离线可用、不依赖游戏服务在线；游戏改主题时需要手动同步这一份。
+   ========================================================================================== */
+:root{
+  --bg-0:#0c0f0e; --bg-1:#141816; --bg-2:#1e2421; --bg-3:#252c29; --bg-4:#2d3632;
+  --bg-glass:rgba(16,20,18,.82);
+  --line:#2f3a35; --line-2:#3e4b45; --line-3:#58675f;
+  --mint-500:#4ed8af; --mint-400:#59f4ca; --mint-600:#35d8b4; --mint-700:#2a9e7f; --mint-800:#145443; --mint-900:#0d2c24;
+  --mint-a10:rgba(78,216,175,.10); --mint-a20:rgba(78,216,175,.20); --mint-a35:rgba(78,216,175,.35);
+  --gold:#ffc600; --gold-a20:rgba(255,198,0,.2);
+  --amber:#f6a329; --amber-a20:rgba(246,163,41,.2);
+  --orange:#e85a1a; --orange-hi:#ff7a33;
+  --red:#e73118; --red-premium:#ff5454; --red-a20:rgba(231,49,24,.22);
+  --ice:#9fd4ff; --ice-a20:rgba(159,212,255,.2);
+  --text-hi:#f2f2f2; --text-md:#c3cbc7; --text-lo:#8a948f; --text-dim:#5d6863; --text-on-mint:#06110d;
+  --tier-1:#a8a8a8; --tier-2:#f2f2f2; --tier-3:#34e6b2; --tier-4:#34b8d8; --tier-5:#f8bf00; --tier-6:#f88000;
+  --font-cjk:'Noto Sans SC','PingFang SC','Hiragino Sans GB','Microsoft YaHei','Source Han Sans SC','Noto Sans CJK SC',sans-serif;
+  --font-num:'Bender','Rajdhani','Oxanium','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+  --font-display:'Novecento','Novecento Wide','Oxanium','Rajdhani','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+  --font-mono:'Bender','Oxanium',ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;
+  --ease-out:cubic-bezier(.2,.8,.2,1); --t-fast:150ms; --t-med:200ms;
+  --r-sm:6px; --r:10px; --r-lg:14px;
+}
+/* ==========================================================================================
+   ★★ 工序 114（趋势图）的两套「跟随」
+   ① **文字大小**：与游戏**同一套 token**（数值逐字照抄 public/css/theme.css:139-142）——
+      :root{--t:1rem} + :root[data-text="md|lg|xl"]，管理页启动时读**同源** localStorage 的
+      `sp.pref.settings`（游戏「设置 → 文字大小」写的就是它，见 public/js/ui/settings.js）
+      ⇒ 页面里不需要再加一个重复控件。Canvas 里画不了 CSS 变量，所以另给一个**同阶梯的无量纲倍率**
+      `--tscale`（桌面档 sm/md = 1、lg = 1.15、xl = 1.3，与官方 ladder 在 1rem 基准下完全一致）
+      用来算 Canvas 的字号 / 行高。
+   ② **深 / 浅色**：本页原来只有深色（`<meta color-scheme=dark>` + 一套近黑绿 token）。现在补一套浅色
+      token（文件末尾的 @media prefers-color-scheme: light），**图表的线色 / 网格 / 气泡底色也各有两套**
+      （--ch-N / --grid / --ch-band / --ch-tip-bg）⇒ 页面与图一起跟着系统走。
+   ========================================================================================== */
+:root{ --t:1rem; --tscale:1; }
+:root[data-text="md"]{ --t:max(1rem,64px); --tscale:1; }
+:root[data-text="lg"]{ --t:max(calc(1rem * 1.15),76px); --tscale:1.15; }
+:root[data-text="xl"]{ --t:max(calc(1rem * 1.3),88px); --tscale:1.3; }
+:root{
+  /* 图表色（深色档）：与主题的薄荷 / 金 / 冰蓝同族，另加两档区分度高的暖色 */
+  --ch-1:#4ed8af; --ch-2:#ffc600; --ch-3:#9fd4ff; --ch-4:#ff7a33; --ch-5:#ff5454; --ch-6:#c79bff;
+  --grid:rgba(78,216,175,.16); --ch-band:rgba(255,198,0,.16); --ch-tip-bg:rgba(16,20,18,.94);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;background:var(--bg-0);-webkit-text-size-adjust:100%}
+body{
+  margin:0;min-height:100%;background:var(--bg-0);color:var(--text-hi);
+  font-family:var(--font-cjk);font-size:14px;line-height:1.55;font-weight:400;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+}
+/* 全局底纹：薄荷辉光 + 勘测网格 + 扫描线（与游戏 .app-bg 同一套观感，去掉 vignette 免得压暗正文） */
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(120% 80% at 50% 110%,rgba(23,249,183,.10),transparent 55%),
+             radial-gradient(80% 60% at 50% 40%,rgba(40,60,52,.35),transparent 70%),
+             linear-gradient(180deg,#0b0e0d 0%,#0e1311 55%,#0a0d0c 100%)}
+.bg::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(rgba(78,216,175,.045) 1px,transparent 1px) 0 0/64px 64px,
+             linear-gradient(90deg,rgba(78,216,175,.045) 1px,transparent 1px) 0 0/64px 64px;
+  -webkit-mask-image:radial-gradient(90% 80% at 50% 50%,#000 30%,transparent 85%);
+          mask-image:radial-gradient(90% 80% at 50% 50%,#000 30%,transparent 85%)}
+.bg::after{content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0 1px,transparent 1px 3px);opacity:.7}
+.wrap{position:relative;z-index:1;max-width:1120px;margin:0 auto;padding:22px 18px 64px}
+
+h1,h2,h3,p{margin:0}
+a{color:var(--mint-500);text-decoration:none}
+a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--mint-400);outline-offset:2px}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--mint-700)}
+.num{font-family:var(--font-num);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.micro{font-family:var(--font-display);font-size:10px;line-height:1.2;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--text-dim);white-space:nowrap}
+.t-lo{color:var(--text-lo)} .t-dim{color:var(--text-dim)} .t-mint{color:var(--mint-500)}
+.t-gold{color:var(--gold)} .t-amber{color:var(--amber)} .t-red{color:var(--red-premium)} .t-ice{color:var(--ice)}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* 四角括号标记（游戏 .brackets 的同款） */
+.brackets{position:relative}
+.brackets::after{content:'';position:absolute;inset:-1px;pointer-events:none;
+  --bk-c:var(--mint-500);--bk-l:12px;--bk-w:2px;
+  background:
+    linear-gradient(var(--bk-c),var(--bk-c)) top left/var(--bk-l) var(--bk-w) no-repeat,
+    linear-gradient(var(--bk-c),var(--bk-c)) top left/var(--bk-w) var(--bk-l) no-repeat,
+    linear-gradient(var(--bk-c),var(--bk-c)) top right/var(--bk-l) var(--bk-w) no-repeat,
+    linear-gradient(var(--bk-c),var(--bk-c)) top right/var(--bk-w) var(--bk-l) no-repeat,
+    linear-gradient(var(--bk-c),var(--bk-c)) bottom left/var(--bk-l) var(--bk-w) no-repeat,
+    linear-gradient(var(--bk-c),var(--bk-c)) bottom left/var(--bk-w) var(--bk-l) no-repeat,
+    linear-gradient(var(--bk-c),var(--bk-c)) bottom right/var(--bk-l) var(--bk-w) no-repeat,
+    linear-gradient(var(--bk-c),var(--bk-c)) bottom right/var(--bk-w) var(--bk-l) no-repeat}
+
+/* ---- 顶栏 ---- */
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:12px}
+.hex{width:34px;height:34px;flex:0 0 auto;border:2px solid var(--mint-500);
+  clip-path:polygon(25% 3%,75% 3%,100% 50%,75% 97%,25% 97%,0 50%);
+  background:linear-gradient(135deg,transparent 45%,rgba(78,216,175,.35) 50%,transparent 55%)}
+.brand h1{font-size:19px;font-weight:500;letter-spacing:.02em}
+.brand .sub{color:var(--text-lo);font-size:12px;margin-top:1px}
+.top__right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.conn{display:flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid var(--line);
+  border-radius:999px;background:var(--bg-1);font-size:12px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--text-dim);flex:0 0 auto}
+.dot.on{background:var(--mint-500);box-shadow:0 0 8px var(--mint-a35)}
+.dot.off{background:var(--red);box-shadow:0 0 8px var(--red-a20)}
+.dot.wait{background:var(--amber)}
+
+/* ---- 面板 ---- */
+.card{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:16px 18px;margin-bottom:14px}
+.card__hd{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.card__hd h2{font-size:14px;font-weight:500;letter-spacing:.02em;display:flex;align-items:center;gap:8px}
+.card__hd .hint{color:var(--text-dim);font-size:12px}
+.count{font-family:var(--font-num);color:var(--mint-500);font-size:15px;letter-spacing:.04em}
+.sep{color:var(--line-3)}
+
+/* 问号提示（非显而易见的控件才挂） */
+.help{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;
+  border:1px solid var(--line-3);border-radius:50%;color:var(--text-lo);font-size:10px;
+  cursor:help;position:relative;vertical-align:middle;flex:0 0 auto}
+.help::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);
+  width:max-content;max-width:290px;padding:8px 10px;background:var(--bg-4);border:1px solid var(--line-2);
+  border-radius:var(--r-sm);color:var(--text-md);font-size:12px;line-height:1.5;letter-spacing:0;
+  text-transform:none;opacity:0;visibility:hidden;transition:opacity var(--t-fast) var(--ease-out);z-index:40;pointer-events:none;
+  box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.help:hover::after,.help:focus::after{opacity:1;visibility:visible}
+
+/* ---- 键值行 ---- */
+.rows{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:0 22px}
+.row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  padding:7px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row .k{color:var(--text-lo);font-size:12.5px;flex:0 0 auto}
+.row .v{font-family:var(--font-num);font-weight:500;text-align:right;word-break:break-all;font-size:13.5px}
+
+/* ---- 标签 ---- */
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;
+  font-size:11.5px;line-height:1.5;border:1px solid var(--line-2);color:var(--text-lo);background:var(--bg-2);white-space:nowrap}
+.tag.on{background:var(--mint-a10);border-color:var(--mint-800);color:var(--mint-500)}
+.tag.off{color:var(--text-dim)}
+.tag.err{background:var(--red-a20);border-color:#63201a;color:var(--red-premium)}
+.tag.warn{background:var(--amber-a20);border-color:#5c4218;color:var(--amber)}
+.tag.l3{background:var(--ice-a20);border-color:#2a4a63;color:var(--ice)}
+.tag.ui{background:var(--mint-a10);border-color:#1d5344;color:var(--mint-500)}
+.tag.art{background:var(--gold-a20);border-color:#5c4a12;color:var(--gold)}
+.tag.wait{background:var(--amber-a20);border-color:#5c4218;color:var(--amber)}
+
+/* ---- 工具条（搜索 / 筛选 / 排序）---- */
+.tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.search{position:relative;flex:1 1 240px;min-width:180px}
+.search input{width:100%;padding:9px 30px 9px 12px;background:var(--bg-0);color:var(--text-hi);
+  border:1px solid var(--line);border-radius:var(--r);font:inherit;font-size:13px}
+.search input::placeholder{color:var(--text-dim)}
+.search input:focus{border-color:var(--mint-700);outline:none}
+.search .clr{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:18px;height:18px;
+  display:none;align-items:center;justify-content:center;border:0;background:transparent;color:var(--text-lo);
+  font-size:15px;line-height:1;cursor:pointer;padding:0}
+.search.has .clr{display:flex}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:6px 11px;font-size:12px;border:1px solid var(--line);border-radius:999px;
+  background:var(--bg-0);color:var(--text-lo);cursor:pointer;font-family:inherit}
+.chip:hover{border-color:var(--line-3);color:var(--text-md)}
+.chip[aria-pressed="true"]{background:var(--mint-a10);border-color:var(--mint-800);color:var(--mint-500)}
+.chip .n{font-family:var(--font-num);color:var(--text-dim);margin-left:5px}
+.chip[aria-pressed="true"] .n{color:var(--mint-700)}
+select{padding:8px 10px;background:var(--bg-0);color:var(--text-md);border:1px solid var(--line);
+  border-radius:var(--r);font:inherit;font-size:12.5px;cursor:pointer}
+
+/* ---- Mod 列表（固定高度 + 内部滚动）---- */
+.list{max-height:560px;overflow:auto;padding-right:4px;margin:-2px}
+.mod{border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin:2px;
+  background:var(--bg-0);transition:border-color var(--t-fast) var(--ease-out)}
+.mod:hover{border-color:var(--line-2)}
+.mod.off{opacity:.6}
+.mod__hd{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.mod__nm{font-weight:500;font-size:13.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mod__nm code{font-family:var(--font-mono);font-size:11.5px;color:var(--text-dim);font-weight:400}
+.mod__tags{display:flex;gap:5px;flex-wrap:wrap}
+.mod__meta{color:var(--text-lo);font-size:12px;margin-top:5px;word-break:break-all;
+  font-family:var(--font-num);letter-spacing:.01em}
+/* ★ 列表默认只显示「核心一行」（清单的 summary；缺省退化成 description 的第一句），
+   完整 description 收进「查看详情 ▾」—— 否则一屏塞满几十行说明，观感很臃肿。 */
+.mod__sum{color:var(--text-md);font-size:12.5px;margin-top:7px;line-height:1.6}
+.mod__full{color:var(--text-md);font-size:12.5px;margin-top:7px;line-height:1.7;
+  border-left:2px solid var(--line-2);padding-left:10px;white-space:pre-wrap;word-break:break-word}
+/* ★★ 「待更新③」：版本更新日志入口。数据**只有一份**（mods/<id>/CHANGELOG.md，服务端解析成
+   {version,date,items[]} 下发），页面只负责排版 ⇒ 不会出现「HTML 里再抄一份说明」的第二真相。 */
+.mod__links{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:7px}
+.mod__log{margin-top:8px;border-left:2px solid var(--mint-800);padding-left:10px}
+.mod__log[hidden]{display:none}
+.mod__loghd{font-size:11.5px;color:var(--text-dim);font-family:var(--font-num);letter-spacing:.02em;
+  margin-bottom:6px;display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.ver{margin:0 0 9px}
+.ver:last-child{margin-bottom:0}
+.ver__hd{font-size:12px;color:var(--mint-500);font-family:var(--font-num);font-weight:500}
+.ver__date{color:var(--text-dim);font-weight:400;margin-left:7px;font-size:11.5px}
+.ver__items{margin:4px 0 0;padding-left:16px;list-style:disc;color:var(--text-md);font-size:12.5px;line-height:1.65}
+.ver__items li{margin:2px 0;word-break:break-word}
+.ver__empty{color:var(--text-dim);font-size:12px;margin:2px 0 0}
+.lnk{background:none;border:0;padding:0;font:inherit;font-size:12px;color:var(--text-dim);
+  cursor:pointer;margin-top:7px;display:inline-block}
+.lnk:hover{color:var(--text-md);text-decoration:underline}
+.mod__desc{color:var(--text-md);font-size:12.5px;margin-top:7px;line-height:1.6}
+.msgs{margin-top:8px;display:grid;gap:5px}
+.msgs div{font-size:12px;padding:6px 9px;border-radius:var(--r-sm);word-break:break-all;line-height:1.5}
+.msgs .e{background:var(--red-a20);border:1px solid #63201a;color:var(--red-premium)}
+.msgs .w{background:var(--amber-a20);border:1px solid #5c4218;color:var(--amber)}
+.acts{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+
+/* ---- 按钮 ---- */
+button{font:inherit;cursor:pointer;border-radius:var(--r);padding:9px 14px;font-size:13px;
+  border:1px solid var(--line-2);background:var(--bg-2);color:var(--text-md);
+  transition:background var(--t-fast) var(--ease-out),border-color var(--t-fast) var(--ease-out),color var(--t-fast) var(--ease-out)}
+button:hover:not(:disabled){background:var(--bg-3);border-color:var(--line-3);color:var(--text-hi)}
+button:disabled{opacity:.42;cursor:not-allowed}
+button.primary{background:var(--mint-500);border-color:var(--mint-400);color:var(--text-on-mint);font-weight:500}
+button.primary:hover:not(:disabled){background:var(--mint-400);border-color:var(--mint-400);color:var(--text-on-mint)}
+button.amber{background:var(--amber-a20);border-color:#5c4218;color:var(--amber)}
+button.amber:hover:not(:disabled){background:rgba(246,163,41,.3);color:#ffd48c}
+button.danger{background:transparent;border-color:#63201a;color:var(--red-premium)}
+button.danger:hover:not(:disabled){background:var(--red-a20);color:#ff8a8a}
+button.ghost{background:transparent}
+button.wide{width:100%;padding:13px;font-size:14px}
+button.sm{padding:6px 11px;font-size:12px}
+
+/* ---- 横幅 ---- */
+.banner{border-radius:var(--r);padding:10px 13px;margin-bottom:12px;font-size:13px;display:flex;gap:9px;align-items:flex-start}
+.banner.ok{background:var(--mint-a10);border:1px solid var(--mint-800);color:var(--mint-500)}
+.banner.warn{background:var(--amber-a20);border:1px solid #5c4218;color:var(--amber)}
+.banner.err{background:var(--red-a20);border:1px solid #63201a;color:var(--red-premium)}
+
+/* ---- 表单 ---- */
+label.fld{display:block;margin-bottom:13px}
+label.fld > span{display:block;font-size:12px;color:var(--text-lo);margin-bottom:5px}
+input[type=text],input[type=password]{width:100%;padding:10px 12px;background:var(--bg-0);color:var(--text-hi);
+  border:1px solid var(--line);border-radius:var(--r);font:inherit;font-size:13px;font-family:var(--font-mono)}
+input[type=text]:focus,input[type=password]:focus{border-color:var(--mint-700);outline:none}
+.fld .hint{font-size:11.5px;color:var(--text-dim);margin-top:4px;line-height:1.5}
+
+/* ---- 实时文档（工序 61）：把「本机运行态」写进 <mods>/<id>/live.json，玩家端轮询同一个文件 ----
+   ★ 这一栏是**通用**的（任何 Mod 都能收一份 live.json），`cyanfish.banner` 只是现成的消费方；
+   所以「目标 Mod」是可填的，页面不认识任何具体 Mod 的业务字段（正文/级别/时间段是横幅这一份文档的约定）。 */
+.live-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0 14px}
+.live-grid label.fld{margin-bottom:13px}
+.live-grid label.fld.wide{grid-column:1/-1}
+textarea{width:100%;padding:10px 12px;background:var(--bg-0);color:var(--text-hi);border:1px solid var(--line);
+  border-radius:var(--r);font:inherit;font-size:13px;resize:vertical;min-height:54px}
+textarea:focus{border-color:var(--mint-700);outline:none}
+input[type=datetime-local]{width:100%;padding:10px 12px;background:var(--bg-0);color:var(--text-hi);
+  border:1px solid var(--line);border-radius:var(--r);font:inherit;font-size:12.5px;font-family:var(--font-mono)}
+input[type=datetime-local]:focus{border-color:var(--mint-700);outline:none}
+/* ---- 「持续」控件（工序 75，服主口径：横幅用**持续时间**，不用结束时刻）----
+   ★ 一个下拉（常用档）+ 一个只在「自定义…」时出现的分钟数输入框。两者都在同一行的 fld 里，
+     不新造第二套观感：下拉沿用本页 `select`，数字框沿用 `input` 的底/边/圆角。 */
+.mins{display:flex;gap:8px;align-items:center}
+.mins select{flex:1 1 auto;min-width:0}
+.mins input[type=number]{flex:0 0 110px;padding:10px 12px;background:var(--bg-0);color:var(--text-hi);
+  border:1px solid var(--line);border-radius:var(--r);font:inherit;font-size:12.5px;font-family:var(--font-mono)}
+.mins input[type=number]:focus{border-color:var(--mint-700);outline:none}
+.live-list{margin-top:11px;display:grid;gap:8px}
+.live-item{border:1px solid var(--line);border-radius:var(--r);background:var(--bg-0);padding:10px 12px;
+  display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.live-item__t{font-size:13px;color:var(--text-hi);word-break:break-word}
+.live-item__m{font-family:var(--font-mono);font-size:11.5px;color:var(--text-dim);margin-top:4px;word-break:break-all}
+.live-item .tag{flex:0 0 auto}
+
+/* ---- 连接管理 ---- */
+.connlist{display:grid;gap:9px;margin-top:4px}
+.connrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;
+  border:1px solid var(--line);border-radius:var(--r);background:var(--bg-0)}
+.connrow.active{border-color:var(--mint-800);background:var(--mint-a10)}
+.connrow .nm{font-weight:500;font-size:13.5px}
+.connrow .url{font-family:var(--font-mono);font-size:11.5px;color:var(--text-dim);margin-top:2px;word-break:break-all}
+
+/* ---- 拖拽上传 ---- */
+.drop{border:1px dashed var(--line-2);border-radius:var(--r);padding:22px;text-align:center;
+  color:var(--text-lo);font-size:13px;cursor:pointer;transition:border-color var(--t-fast) var(--ease-out),background var(--t-fast) var(--ease-out)}
+.drop:hover{border-color:var(--mint-700);color:var(--text-md)}
+.drop.over{border-color:var(--mint-500);background:var(--mint-a10);color:var(--mint-500)}
+
+/* ---- 代码 / 折叠 ---- */
+code{background:var(--bg-3);padding:1px 6px;border-radius:5px;font-family:var(--font-mono);font-size:12px;word-break:break-all}
+pre{background:var(--bg-0);border:1px solid var(--line);border-radius:var(--r);padding:11px;
+  font-family:var(--font-mono);font-size:11.5px;line-height:1.6;overflow:auto;max-height:300px;margin:9px 0 0;color:var(--text-md)}
+details summary{cursor:pointer;color:var(--text-lo);font-size:12.5px;list-style:none}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:'+ ';color:var(--mint-700);font-family:var(--font-num)}
+details[open] summary::before{content:'− '}
+.note{color:var(--text-lo);font-size:12px;margin-top:9px;line-height:1.6}
+.empty{color:var(--text-lo);font-size:13px;padding:18px 4px;text-align:center;line-height:1.7}
+
+/* ---- 房间 / 在线明细（工序 69）：**管理员专用**的只读面板 ----
+   ★ 数据来自 GET /admin/api/rooms（需令牌、只走请求头），只在本页出现；玩家界面（public/**、mods/**）
+     一个字节都没动。表头 / 表行沿用本页已有的 token（--line / --text-dim / 等宽数字），不做第二套观感。 */
+.rowlink{background:none;border:0;padding:0 0 0 9px;font:inherit;font-size:12px;color:var(--mint-500);cursor:pointer}
+.rowlink:hover{color:var(--mint-400);text-decoration:underline}
+.rowlink[aria-expanded="true"]{color:var(--text-lo)}
+.rooms{display:grid;gap:9px;margin-top:12px}
+.room{border:1px solid var(--line);border-radius:var(--r);background:var(--bg-0);padding:12px 14px}
+.room__hd{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.room__code{font-family:var(--font-num);font-size:15px;font-weight:500;letter-spacing:.1em;color:var(--mint-500)}
+.room__tags{display:flex;gap:5px;flex-wrap:wrap}
+.room__meta{color:var(--text-lo);font-size:12px;margin-top:5px;font-family:var(--font-num);letter-spacing:.01em}
+.rtable{width:100%;border-collapse:collapse;margin-top:9px;font-size:12.5px}
+.rtable th{text-align:left;font-weight:400;color:var(--text-dim);font-size:11.5px;
+  padding:4px 10px 4px 0;border-bottom:1px solid var(--line);white-space:nowrap}
+.rtable td{padding:5px 10px 5px 0;border-bottom:1px solid var(--line);color:var(--text-md);vertical-align:top;word-break:break-all}
+.rtable tr:last-child td{border-bottom:0}
+.rtable code{font-size:11.5px}
+.rooms__auto{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--text-lo);cursor:pointer}
+.rooms__auto input{accent-color:var(--mint-500)}
+.spin{display:inline-block;width:11px;height:11px;border:2px solid var(--mint-800);border-top-color:var(--mint-500);
+  border-radius:50%;animation:sp .7s linear infinite;vertical-align:-1px}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ---- 趋势图（工序 114）：**手写 Canvas**、零外部依赖 ----
+   ★ 为什么是 Canvas 而不是 SVG / 图表库：见本页 JS 里「趋势」那一段的注释（点数 × 系列数是主因）。 */
+.metrics__bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:10px}
+.metrics__acts{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.metrics__acts button{padding:6px 11px;font-size:calc(12px * var(--tscale))}
+.metrics__wrap{position:relative;margin-top:10px;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--bg-0);overflow:hidden}
+#metrics-canvas{display:block;width:100%}
+.metrics__tip{position:absolute;pointer-events:none;background:var(--ch-tip-bg);border:1px solid var(--line-2);
+  border-radius:var(--r-sm);padding:7px 9px;font-size:calc(11.5px * var(--tscale));line-height:1.55;
+  color:var(--text-md);box-shadow:0 8px 24px rgba(0,0,0,.45);white-space:nowrap;z-index:30}
+.metrics__tip b{color:var(--text-hi);font-family:var(--font-num)}
+.metrics__tip .k{color:var(--text-dim)}
+.legend{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.legend .chip{display:inline-flex;align-items:center;gap:6px;font-size:calc(11.5px * var(--tscale))}
+.legend .chip i{width:10px;height:10px;border-radius:2px;display:inline-block;flex:0 0 auto}
+.legend .chip b{font-family:var(--font-num);color:var(--text-hi);font-weight:500}
+.legend .chip[aria-pressed="false"]{opacity:.5}
+.legend .chip[aria-pressed="false"] i{background:var(--text-dim)!important}
+.metrics__sel{display:inline-flex;align-items:center;gap:6px;font-size:calc(12px * var(--tscale));color:var(--text-lo)}
+.metrics__sel select{padding:6px 9px;font-size:calc(12px * var(--tscale))}
+
+/* ---- 官方 release 追踪（工序 host-024）：一句话横幅 + 独立可收起栏 ----
+   ★ 横幅只管一句话（落后时出现，可关闭并记住选择）；明细在「更新追踪」栏里。
+   观感沿用本页已有 token（--amber / --mint / --line / --font-num），不新造第二套。 */
+#up-banner{margin:0 0 14px}
+.up-banner{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 13px;border-radius:var(--r);
+  border:1px solid var(--line-2);background:var(--bg-2);font-size:13px;line-height:1.5}
+.up-banner.behind{border-color:#5c4218;background:var(--amber-a20)}
+.up-banner.ok{border-color:var(--mint-800);background:var(--mint-a10)}
+.up-banner__t{flex:1 1 320px;min-width:0;color:var(--text-hi)}
+.up-banner__t b{font-family:var(--font-num);color:var(--gold)}
+.up-banner__acts{display:flex;gap:7px;align-items:center;flex:0 0 auto}
+.up-banner__x{background:none;border:0;color:var(--text-dim);font-size:16px;line-height:1;cursor:pointer;padding:2px 6px}
+.up-banner__x:hover{color:var(--text-md)}
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;padding:0 5px;
+  border-radius:999px;background:var(--amber);color:#1b1206;font-family:var(--font-num);font-size:11px;font-weight:600}
+.badge.mute{background:var(--bg-3);color:var(--text-lo);border:1px solid var(--line-2)}
+.up-grid{display:grid;gap:9px;margin-top:12px}
+.up-rel{border:1px solid var(--line);border-radius:var(--r);background:var(--bg-0);padding:12px 14px}
+.up-rel__hd{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.up-rel__tag{font-family:var(--font-num);font-size:15px;font-weight:500;letter-spacing:.04em;color:var(--mint-500)}
+.up-rel__meta{color:var(--text-lo);font-size:12px;margin-top:5px;font-family:var(--font-num);letter-spacing:.01em}
+.up-body{margin-top:9px;border-left:2px solid var(--line-2);padding-left:10px;color:var(--text-md);
+  font-size:12.5px;line-height:1.65;white-space:pre-wrap;word-break:break-word;max-height:190px;overflow:auto}
+.up-body.open{max-height:none}
+.up-assets{margin-top:9px}
+.up-assets .rtable td{font-family:var(--font-mono);font-size:11.5px}
+.up-err{border:1px solid #63201a;background:var(--red-a20);border-radius:var(--r);padding:9px 12px;margin-top:10px;
+  color:var(--red-premium);font-size:12.5px;line-height:1.6;word-break:break-word}
+
+/* ---- ★ 浅色档（工序 114）：只在系统 / 浏览器偏好浅色时生效。
+   页面原来声明的是 color-scheme:dark（浏览器永远报 dark）⇒ 本次把 meta 改成 `dark light`
+   并补这一套 token；图表色与网格另有一套，见上面的 --ch-* / --grid / --ch-band / --ch-tip-bg。 ---- */
+@media (prefers-color-scheme:light){
+  :root{
+    color-scheme:light;
+    --bg-0:#eef1ef; --bg-1:#f7f9f8; --bg-2:#e7ebe9; --bg-3:#dde3e0; --bg-4:#d2dad6;
+    --bg-glass:rgba(247,249,248,.85);
+    --line:#ccd5d1; --line-2:#b3bfb9; --line-3:#8d9a94;
+    --mint-500:#0e8a69; --mint-400:#0b7458; --mint-600:#0c7d60; --mint-700:#0a6a53;
+    --text-hi:#111a18; --text-md:#33403c; --text-lo:#5b6863; --text-dim:#7b8a84; --text-on-mint:#ffffff;
+    --mint-a10:rgba(14,138,105,.10); --mint-a20:rgba(14,138,105,.18); --mint-a35:rgba(14,138,105,.32);
+    --amber-a20:rgba(246,163,41,.22); --gold-a20:rgba(176,125,0,.18);
+    --red-a20:rgba(184,37,15,.12); --ice-a20:rgba(31,111,176,.12);
+    --ch-1:#0e8a69; --ch-2:#a97a00; --ch-3:#1f6fb0; --ch-4:#c04a12; --ch-5:#b8250f; --ch-6:#6b46c1;
+    --grid:rgba(20,60,45,.16); --ch-band:rgba(169,122,0,.18); --ch-tip-bg:rgba(255,255,255,.96);
+  }
+  .bg{background:radial-gradient(120% 80% at 50% 110%,rgba(14,138,105,.10),transparent 55%),
+      linear-gradient(180deg,#f3f6f4 0%,#eef2f0 55%,#e9eeec 100%)}
+  .bg::before{background:linear-gradient(rgba(14,138,105,.07) 1px,transparent 1px) 0 0/64px 64px,
+      linear-gradient(90deg,rgba(14,138,105,.07) 1px,transparent 1px) 0 0/64px 64px}
+  .bg::after{background:repeating-linear-gradient(0deg,rgba(0,0,0,.02) 0 1px,transparent 1px 3px)}
+  .hex{background:linear-gradient(135deg,transparent 45%,rgba(14,138,105,.25) 50%,transparent 55%)}
+  .help::after{box-shadow:0 8px 24px rgba(0,0,0,.18)}
+  .tag.err{border-color:#e0b0a6} .tag.warn{border-color:#e3c48d} .tag.l3{border-color:#a8c8e0}
+  .tag.ui{border-color:#a9d8c9} .tag.art{border-color:#e3d19a}
+  .banner.warn{border-color:#e3c48d} .banner.err{border-color:#e0b0a6}
+  .msgs .e{border-color:#e0b0a6} .msgs .w{border-color:#e3c48d}
+  button.amber{border-color:#e3c48d;color:#7d5200}
+  button.danger{border-color:#e0b0a6;color:#b8250f}
+  .mod__log{border-left-color:#7fc3ac}
+  .metrics__tip{box-shadow:0 8px 24px rgba(0,0,0,.16)}
+  ::-webkit-scrollbar-thumb{background:#c2cbc7}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:1ms!important;transition-duration:1ms!important}}
+@media (max-width:640px){
+  .wrap{padding:16px 12px 48px}
+  .rows{grid-template-columns:1fr}
+  .list{max-height:none}
+}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<h2 class="sr-only">卫戍协议 Mod 控制台：连接任意自建服务器，管理其 Mod 仓库</h2>
+<div class="wrap">
+
+  <!-- ============================ 连接配置 ============================ -->
+  <section id="scr-conn">
+    <header class="top">
+      <div class="brand">
+        <div class="hex"></div>
+        <div>
+          <h1>卫戍协议 · Mod 控制台</h1>
+          <div class="sub">连接一台自建服务器来管理它的 Mod 仓库</div>
+        </div>
+      </div>
+      <span class="micro">可分发 · 单文件 · 配置只存在你自己的浏览器里</span>
+    </header>
+
+    <div id="conn-flash"></div>
+
+    <div class="card brackets">
+      <div class="card__hd">
+        <h2>新增服务器连接 <span class="help" tabindex="0" data-tip="管理接口跑在游戏服务端本进程内（/admin/api/*），由服务端环境变量 SP_ADMIN_TOKEN 控制开关。地址填游戏服务的可达地址即可，不需要额外的管理端口。">?</span></h2>
+        <span class="hint">管理接口与游戏同端口</span>
+      </div>
+      <label class="fld">
+        <span>名称</span>
+        <input type="text" id="f-label" placeholder="我的服务器" autocomplete="off" spellcheck="false">
+      </label>
+      <label class="fld">
+        <span>服务器地址</span>
+        <input type="text" id="f-base" placeholder="http://192.168.1.10:3000" autocomplete="off" spellcheck="false">
+        <div class="hint">游戏服务的访问地址，带协议与端口，末尾不要带 /。本页也从该地址加载管理页时，可直接填当前站点。</div>
+      </label>
+      <label class="fld">
+        <span>管理令牌</span>
+        <input type="password" id="f-token" placeholder="服务端 SP_ADMIN_TOKEN 的值" autocomplete="off" spellcheck="false">
+        <div class="hint">只在内存与本站 localStorage 中使用，只通过请求头发送，不会出现在网址里。</div>
+      </label>
+      <div class="acts">
+        <button class="primary" id="btn-test">测试并保存</button>
+        <button class="ghost" id="btn-hint-local">填入当前站点</button>
+      </div>
+      <p class="note" id="test-result"></p>
+    </div>
+
+    <div class="card" id="card-connlist">
+      <div class="card__hd">
+        <h2>已保存的服务器 <span class="count" id="conn-count">0</span></h2>
+        <span class="hint">单击切换；令牌保存在本机浏览器，不会上传到任何第三方</span>
+      </div>
+      <div class="connlist" id="connlist"></div>
+      <p class="empty hide" id="conn-empty">还没有保存任何服务器。填好上面的三项，点「测试并保存」。</p>
+    </div>
+  </section>
+
+  <!-- ============================ 主面板 ============================ -->
+  <section id="scr-app" class="hide">
+    <header class="top">
+      <div class="brand">
+        <div class="hex"></div>
+        <div>
+          <h1>Mod 控制台</h1>
+          <div class="sub" id="app-sub">—</div>
+        </div>
+      </div>
+      <div class="top__right">
+        <span class="conn"><span class="dot" id="app-dot"></span><span id="app-conn">未连接</span></span>
+        <button class="ghost sm" id="btn-refresh">刷新</button>
+        <button class="ghost sm" id="btn-switch">切换服务器</button>
+      </div>
+    </header>
+
+    <div id="app-flash"></div>
+    <!-- ★ 工序 host-024：官方 release 的一句话更新提示（落后时才出现；可关闭，选择记在本机浏览器）。 -->
+    <div id="up-banner"></div>
+
+    <div class="card" id="card-status">
+      <div class="card__hd">
+        <h2>运行状态 <span class="help" tabindex="0" data-tip="来自游戏服务端本进程的真实快照。这里不显示服务端上的任何绝对路径或服务名——部署细节由管理员自己掌握。">?</span></h2>
+        <span class="hint" id="status-hint">进程实际加载</span>
+      </div>
+      <div class="rows" id="status-rows"></div>
+    </div>
+
+    <!-- ==================== 房间 / 在线明细（工序 69，管理员专用） ====================
+         数据源：GET /admin/api/rooms（需管理令牌，只走请求头）。默认收起，由「运行状态」卡的
+         「房间明细 ▾」按钮展开 —— 那一行本来就是显示房间与在线人数的地方。 -->
+    <div class="card hide" id="card-rooms">
+      <div class="card__hd">
+        <h2>房间 / 在线明细 <span class="help" tabindex="0" data-tip="每个房间的真值明细：房号、创建时间、是否已开局、对局开始时间、回合与阶段、座位 / 真人 / AI / 观战、每个人的在座状态，外加 safeToRestart（0 真人 · 0 对局 · 0 观战 —— 重启会把观战者一起踢下线，所以观战也算「有人」）。数据直接读服务端本进程的 Room / Match 对象（GET /admin/api/rooms，需管理令牌），不是另算的一份。这一页只在你自己浏览器里、用你填的令牌打开 —— 玩家界面看不到它。">?</span></h2>
+        <span class="hint" id="rooms-hint">未读取</span>
+      </div>
+      <div id="rooms-safe"></div>
+      <div class="rows" id="rooms-summary"></div>
+      <div class="rooms" id="rooms-list"></div>
+      <p class="empty hide" id="rooms-empty">当前没有任何房间。</p>
+      <div class="acts">
+        <button class="ghost sm" id="btn-rooms-refresh">刷新明细</button>
+        <label class="rooms__auto"><input type="checkbox" id="rooms-auto" checked> 自动刷新（15 秒）</label>
+      </div>
+      <p class="note" id="rooms-note">还没读取。</p>
+    </div>
+
+    <!-- ==================== 趋势（工序 114，管理员专用；★ 与上面那一栏互不影响） ====================
+         数据源：GET /admin/api/metrics（需管理令牌，只走请求头，**只读**）。
+         服务端默认 1 分钟 1 点、环形缓冲 4320 点（3 日）；CPU 同时给**均值**与**分钟内峰值**。
+         默认收起，由「运行状态」卡的「趋势图 ▾」按钮展开（与「房间明细 ▾」同一个写法）。 -->
+    <div class="card hide" id="card-metrics">
+      <div class="card__hd">
+        <h2>趋势 <span class="help" tabindex="0" data-tip="服务端每分钟采一个点，默认保留 3 日。CPU 有两个数：均值 = 这一分钟的平均占用；峰值 = 这一分钟里每 2 秒取一次瞬时值的最大者 —— AI 排练 / 发牌时会顶出一个远高于均值的瞬时高压，判断容量要看峰值那条。人数与 CPU 上下叠放、共享同一条时间轴，方便直接看人多了曲线怎么变。数据来自 GET /admin/api/metrics（需管理令牌、只走请求头、只读），可导出 CSV / JSON 自己分析。">?</span></h2>
+        <span class="micro" id="metrics-hint">未读取</span>
+      </div>
+      <div class="metrics__bar">
+        <div class="chips" id="metrics-range"></div>
+        <div class="metrics__acts">
+          <button class="ghost sm" id="btn-metrics-refresh">刷新</button>
+          <label class="rooms__auto"><input type="checkbox" id="metrics-auto" checked> 自动刷新（60 秒）</label>
+          <button class="ghost sm" id="btn-metrics-csv">导出 CSV</button>
+          <button class="ghost sm" id="btn-metrics-json">导出 JSON</button>
+          <label class="metrics__sel">散点
+            <select id="metrics-scatter">
+              <option value="off">关</option>
+              <option value="cpu">人数 × CPU 峰值</option>
+              <option value="lat">人数 × 延迟均值</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div class="rows" id="metrics-readouts"></div>
+      <div class="legend" id="metrics-legend"></div>
+      <div class="metrics__wrap" id="metrics-wrap">
+        <canvas id="metrics-canvas"></canvas>
+        <div class="metrics__tip hide" id="metrics-tip"></div>
+      </div>
+      <p class="note" id="metrics-note">还没读取。</p>
+    </div>
+
+    <!-- ==================== 官方 release 追踪（工序 host-024，管理员专用；★ 与上面两栏互不影响） ====================
+         数据源：GET /admin/api/upstream-release（需管理令牌，只走请求头，**只读**）。
+         服务端每 60 分钟带 ETag 拉一次 api.github.com 的 releases/latest（★ 只走 API —— 实测这台服务器上
+         `github.com` 8 秒超时，`api.github.com` 0.8 秒 200）；失败只填 error，继续展示上次成功的缓存。
+         默认收起，由「运行状态」卡的「更新追踪 ▾」按钮展开（与「房间明细 ▾」「趋势图 ▾」同一个写法）。 -->
+    <div class="card hide" id="card-upstream">
+      <div class="card__hd">
+        <h2>更新追踪 <span class="help" tabindex="0" data-tip="服务端定期检查官方 GitHub 仓库的 release（只读、只走 api.github.com，不下载任何文件）：当前版本 vs 官方最新版本、发布时间、更新说明摘要、官方资产的体积与 sha256。官方更新说明太长就截断，点「展开全文」看完整正文。这一页只在你自己浏览器里（游戏页面看不到它）。">?</span></h2>
+        <span class="micro" id="up-hint">未检查</span>
+      </div>
+      <div class="rows" id="up-rows"></div>
+      <div class="up-grid" id="up-grid"></div>
+      <div class="acts">
+        <button class="ghost sm" id="btn-up-check">立即检查</button>
+        <label class="rooms__auto"><input type="checkbox" id="up-auto" checked> 自动刷新（5 分钟）</label>
+      </div>
+      <p class="note" id="up-note">还没读取。</p>
+    </div>
+
+    <div class="card">
+      <div class="card__hd">
+        <h2>Mod 仓库 <span class="count" id="repo-count">0</span></h2>
+        <span class="hint" id="repo-hint">目录里即启用；改了要重载才生效</span>
+      </div>
+      <div class="tools">
+        <div class="search" id="search-wrap">
+          <input type="text" id="q" placeholder="搜索名称 / id / 作者 / 说明…" autocomplete="off" spellcheck="false">
+          <button class="clr" id="btn-clr" title="清空" aria-label="清空搜索">×</button>
+        </div>
+        <div class="chips" id="chips"></div>
+        <select id="sort" aria-label="排序">
+          <option value="order">按仓库顺序</option>
+          <option value="name">按名称</option>
+          <option value="ops">按补丁条数</option>
+          <option value="size">按体积</option>
+          <option value="mtime">按修改时间</option>
+        </select>
+      </div>
+      <div class="list" id="modlist"></div>
+      <p class="empty hide" id="modlist-empty"></p>
+    </div>
+
+    <div class="card" id="card-live">
+      <div class="card__hd">
+        <h2>实时横幅公告 <span class="help" tabindex="0" data-tip="发布即生效：文档写进 <mods>/<目标 Mod>/live.json，玩家端每 20 秒读一次同一个文件（不需要重载、不需要重启、不影响正在进行的对局）。撤回就是把它清空。文档上限 64 KB。">?</span></h2>
+        <span class="hint" id="live-hint">发布即生效 · 不用重载</span>
+      </div>
+      <div class="live-grid">
+        <label class="fld"><span>目标 Mod</span>
+          <input type="text" id="live-id" value="cyanfish.banner" spellcheck="false" autocomplete="off">
+          <span class="hint">这一栏是通用的：任何 Mod 都能收一份 live.json；cyanfish.banner 是现成的消费方。</span>
+        </label>
+        <label class="fld"><span>级别</span>
+          <select id="live-level" aria-label="级别">
+            <option value="info">提示（绿）</option>
+            <option value="warn">警告（琥珀）</option>
+            <option value="danger">紧急（红）</option>
+          </select>
+          <span class="hint">只影响横幅配色。</span>
+        </label>
+        <label class="fld wide"><span>横幅正文</span>
+          <textarea id="live-text" rows="2" maxlength="200" placeholder="例：服务器将于今天 22:00 重启，请提前结束对局（约 1 分钟）"></textarea>
+          <span class="hint">≤ 200 字，一行最好（横幅是单行条带，过长会省略号截断）。</span>
+        </label>
+        <label class="fld"><span>开始（可留空 = 立即）</span><input type="datetime-local" id="live-from">
+          <span class="hint">按你自己浏览器的时区；留空 = 发布这一刻就开始显示。</span></label>
+        <label class="fld"><span>持续 <span class="help" tabindex="0" data-tip="这条公告发布之后**持续多久**才自动消失（按发布那一刻起算，不用你算结束时刻）。到点后玩家端最迟 20 秒看不见；刷新页面立刻看不见。★ 临时提醒一般不会太久，30 分钟 ~ 1 天最常见。★ 选「不过期」= 一直显示，要你自己来撤回。★ 上限 30 天（手滑多打几位数字会被夹回来）。★ 时间按玩家本机时钟判断，服务器时钟不参与。">?</span></span>
+          <div class="mins">
+            <select id="live-mins" aria-label="持续时间">
+              <option value="30">30 分钟</option>
+              <option value="120">2 小时</option>
+              <option value="360">6 小时</option>
+              <option value="1440" selected>1 天</option>
+              <option value="4320">3 天</option>
+              <option value="0">不过期（一直显示）</option>
+              <option value="custom">自定义…</option>
+            </select>
+            <input type="number" id="live-mins-custom" min="1" max="43200" step="1" placeholder="分钟" aria-label="自定义持续分钟数" class="hide">
+          </div>
+          <span class="hint" id="live-mins-hint">到点自动消失；选「不过期」就要你自己来撤回。</span></label>
+        <label class="fld"><span>条目 id（可留空 = 自动）</span>
+          <input type="text" id="live-key" placeholder="banner-restart" spellcheck="false" autocomplete="off">
+          <span class="hint">同一个 id 再发一次 = 就地覆盖；不同 id = 追加一条。</span>
+        </label>
+        <label class="fld"><span>链接（可选）</span>
+          <input type="text" id="live-href" placeholder="https://… 以新标签页打开" spellcheck="false" autocomplete="off">
+          <span class="hint">只接受 http/https；其它一律丢弃（客户端也会再查一次）。</span>
+        </label>
+      </div>
+      <div class="acts">
+        <button class="primary" id="btn-live-pub">发布 / 覆盖</button>
+        <button class="ghost" id="btn-live-load">读取当前</button>
+        <button class="amber" id="btn-live-clear">撤回全部</button>
+      </div>
+      <p class="note" id="live-note">还没有读取过。</p>
+      <div class="live-list" id="live-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card__hd">
+        <h2>安装 Mod <span class="help" tabindex="0" data-tip="上传 .spmod（就是一个 zip）。服务端会先跑完整校验，通过才落盘；不通过会拒绝安装并把包留在服务器供排查。">?</span></h2>
+        <span class="hint">.spmod 单文件包</span>
+      </div>
+      <div class="drop" id="drop">
+        <div id="drop-text">把 .spmod 拖到这里，或点击选择文件</div>
+        <div class="micro" style="margin-top:6px">上限 32 MB</div>
+      </div>
+      <input type="file" id="file" accept=".spmod,.zip" class="hide">
+      <p class="note">安装后需要「重载」或「重启进程」才会生效。</p>
+      <details style="margin-top:12px">
+        <summary>怎么写一个 Mod？</summary>
+        <p class="note">一个 Mod 就是一个目录，最少两个文件：</p>
+        <pre>my.mod/
+  ├─ mod.json                 清单：id/name/version/apiVersion/gameVersion
+  ├─ data/chess.json          数据补丁：{ "ops": [ … ] }
+  ├─ content/index.js         可选：L3 行为代码（新技能机制）
+  └─ assets/                  可选：自带美术，/assets/ 未命中时按 Mod 顺序兜底
+
+# mod.json
+{ "id": "my.mod", "name": "显示名", "version": "1.0.0",
+  "apiVersion": 1, "gameVersion": "0.1.2",
+  "author": "你的名字", "description": "一句话说明" }
+
+# data/chess.json —— 从现有干员克隆一名新干员，再改数字
+{ "ops": [
+  { "op": "clone", "from": "chess_char_1_01_a",
+    "path": "my_op_a", "value": { "name": "我的干员", "visible": true } },
+  { "op": "deepMerge", "path": "my_op_a.stats", "value": { "atk": 999 } }
+] }
+
+# 本地先校验再打包（不通过不给打包）
+node tools/mod.mjs lint &lt;你的Mod目录&gt;
+node tools/mod.mjs pack my.mod -o my.spmod</pre>
+        <p class="note">可用操作：<code>add</code> 新增 · <code>clone</code> 复制已有记录再覆盖 · <code>replace</code> 替换 ·
+          <code>merge</code> / <code>deepMerge</code> 字段级合并 · <code>remove</code> 删除 ·
+          <code>append</code> 往数组幂等追加（专用于盟约成员表）。</p>
+      </details>
+    </div>
+
+    <div class="card">
+      <div class="card__hd">
+        <h2>维护</h2>
+        <span class="hint" id="maint-hint"></span>
+      </div>
+      <div class="acts">
+        <button class="ghost" id="btn-verify">深度校验</button>
+        <button class="primary" id="btn-reload">重载 Mod</button>
+        <button class="amber" id="btn-restart">重启进程</button>
+      </div>
+      <p class="note" id="maint-note">「重载 Mod」不重启进程，秒级生效；客户端本地跑战斗，玩家需刷新页面才能拿到同一份数据。「重启进程」会断开所有连接，由 systemd 在 1~2 秒内重拉。</p>
+      <div id="verify-out"></div>
+      <div id="exports-out"></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+'use strict';
+/* ==========================================================================================
+   配置：只存在本机浏览器（localStorage）。没有任何硬编码的服务器地址、端口或部署路径。
+   ========================================================================================== */
+const LS_SERVERS = 'sp.modadmin.servers.v1';
+const LS_ACTIVE  = 'sp.modadmin.active.v1';
+const API = '/admin/api';
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function loadServers() {
+  try { const a = JSON.parse(localStorage.getItem(LS_SERVERS) || '[]'); return Array.isArray(a) ? a.filter((s) => s && s.base && s.token) : []; }
+  catch { return []; }
+}
+function saveServers(list) { try { localStorage.setItem(LS_SERVERS, JSON.stringify(list)); } catch { /* 私密模式 */ } }
+function activeId() { try { return localStorage.getItem(LS_ACTIVE) || ''; } catch { return ''; } }
+function setActiveId(id) { try { localStorage.setItem(LS_ACTIVE, id); } catch { /* ignore */ } }
+const keyOf = (s) => s.base + '|' + (s.token || '').slice(0, 8);
+function current() { const l = loadServers(); return l.find((s) => keyOf(s) === activeId()) || null; }
+
+/* ---- API 客户端：口令只走请求头 ---- */
+async function api(conn, path, opts = {}) {
+  const url = conn.base.replace(/\/+$/, '') + API + path;
+  const headers = { Authorization: 'Bearer ' + conn.token };
+  const init = { method: opts.method || 'GET', headers, cache: 'no-store' };
+  if (opts.body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+    init.body = JSON.stringify(opts.body);
+  }
+  if (opts.raw !== undefined) {
+    headers['Content-Type'] = 'application/octet-stream';
+    init.body = opts.raw;
+  }
+  let res;
+  try { res = await fetch(url, init); }
+  catch (e) { throw new Error('连不上 ' + conn.base + '：' + (e && e.message ? e.message : e)); }
+  let data = null;
+  const text = await res.text();
+  try { data = text ? JSON.parse(text) : null; } catch { /* 非 JSON */ }
+  if (!res.ok) {
+    if (res.status === 401) throw new Error('管理令牌不对（服务端 SP_ADMIN_TOKEN 与本页填写的不一致）');
+    throw new Error((data && data.error) || ('HTTP ' + res.status));
+  }
+  if (!data || data.ok !== true) throw new Error((data && data.error) || '服务端返回异常');
+  return data;
+}
+
+/* ==========================================================================================
+   状态
+   ========================================================================================== */
+const S = {
+  conn: null,          // 当前连接
+  snapshot: null,      // GET /snapshot
+  online: false,
+  filter: 'all',
+  q: '',
+  sort: 'order',
+  busy: false,
+  openDesc: new Set(), // 展开了「详情」的 Mod id（刷新列表后保持展开状态）
+  openLog: new Set(),  // 展开了「版本更新日志」的 Mod id
+  logs: {},            // Mod id → 完整日志（GET /admin/api/changelog 的 versions 数组；只在展开时拉一次）
+  logBusy: new Set(),  // 正在拉日志的 Mod id
+  live: null,          // { id, doc, present, bytes, savedAt } —— 实时文档（横幅公告）当前状态
+  // ★ 房间 / 在线明细（工序 69）：GET /admin/api/rooms 的快照 + 面板的开关与轮询状态。
+  rooms: null,         // 最近一次快照（未读取 ⇒ null）
+  roomsOpen: false,    // 明细面板是否展开（收起时**不轮询**）
+  roomsAuto: true,     // 自动刷新开关（15 秒）
+  roomsBusy: false,    // 一次只发一个请求（15 秒的轮询不会叠起来）
+  roomsTimer: 0,       // setInterval 的句柄
+  // ★ 趋势（工序 114）：GET /admin/api/metrics 的快照 + 本机界面偏好（系列开关 / 窗口 / 散点）。
+  metrics: null,       // 最近一次快照（未读取 ⇒ null）
+  metricsOpen: false,  // 趋势栏是否展开（★ 默认收起；收起时不轮询、不重绘）
+  metricsAuto: true,   // 自动刷新开关（60 秒）
+  metricsBusy: false,
+  metricsTimer: 0,
+  metricsHover: null,  // 悬停命中的桶下标（null = 没悬停）
+  metricsHidden: new Set(),   // 被关掉的系列 key（存本机 localStorage）
+  metricsRangeH: 6,    // 「过去 X 小时」窗口（1/3/6/12/24/72）
+  metricsScatter: 'off',      // 散点视图：off / cpu / lat
+  // ★ 官方 release 追踪（工序 host-024）：GET /admin/api/upstream-release 的快照 + 本机偏好。
+  up: null,            // 最近一次快照（未读取 ⇒ null）
+  upOpen: false,       // 「更新追踪」栏是否展开（★ 默认收起；收起时不轮询、不重绘）
+  upAuto: true,        // 自动刷新开关（5 分钟 —— 服务端本身 60 分钟才拉一次）
+  upBusy: false,
+  upTimer: 0,
+  upBodyOpen: false,   // 更新说明是否展开全文（本机偏好）
+  upBannerHidden: false, // 顶部横幅被关掉了吗（本机偏好，跟「哪一版」绑定：换了 tag 会再出现）
+  upBannerTag: null,   // 关掉横幅时官方是哪个 tag（官方再发新版 ⇒ 横幅重新出现）
+};
+
+/* ==========================================================================================
+   实时文档（横幅公告）：读 / 写 <mods>/<目标 Mod>/live.json
+   ★ 只有「怎么存取」在这里；「文档长什么样」是**消费方**（Mod 的 client/ 代码）的约定 ——
+     所以本文件不 import 任何 Mod 的东西，也不认识除横幅之外的字段。
+   ========================================================================================== */
+const LIVE_DEFAULT_ID = 'cyanfish.banner';
+/** 与 server/admin.js 的 MAX_LIVE 同一个上限（客户端先拦一道，免得白跑一趟）。 */
+const LIVE_MAX = 64 * 1024;
+/** 允许的级别（服务端不校验业务字段；这是横幅这一份文档的约定，客户端也会再过滤一次）。 */
+const LIVE_LEVELS = ['info', 'warn', 'danger'];
+/** 「持续」的上下限（分钟），与 `mods/cyanfish.banner/client/plan.js` 的 MINS_MIN / MINS_MAX 逐值相同。 */
+const LIVE_MINS_MIN = 1;
+const LIVE_MINS_MAX = 30 * 24 * 60;
+
+/** `datetime-local` 的值（本地时区的 'YYYY-MM-DDTHH:mm'）→ 毫秒；空 / 非法 → null。 */
+function liveTimeToMs(v) {
+  const s = String(v || '').trim();
+  if (!s) return null;
+  const n = new Date(s).getTime();
+  return Number.isFinite(n) ? n : null;
+}
+/**
+ * 「持续」控件 → 分钟数。
+ * `0` / 空 ⇒ null = **不过期**（一直显示，要服主自己撤回）；`custom` ⇒ 读旁边的数字框。
+ * ★ 只收正数并夹到 [LIVE_MINS_MIN, LIVE_MINS_MAX]：写进文档的就是夹取过的值（面板上看得见），
+ *   不留「文档里 999999、客户端偷偷改成 30 天」这种暗坑。
+ */
+function liveReadMins() {
+  const v = $('live-mins').value;
+  const raw = v === 'custom' ? Number($('live-mins-custom').value) : Number(v);
+  if (!Number.isFinite(raw) || raw < LIVE_MINS_MIN) return null;
+  return Math.min(LIVE_MINS_MAX, Math.round(raw));
+}
+/** 分钟数 → 人话（列表里显示用）。 */
+function liveMinsText(m) {
+  if (!Number.isFinite(m)) return '不过期';
+  if (m % 1440 === 0) return '持续 ' + (m / 1440) + ' 天';
+  if (m % 60 === 0) return '持续 ' + (m / 60) + ' 小时';
+  return '持续 ' + m + ' 分钟';
+}
+/** 「自定义…」时才露出那个分钟数输入框；切回常用档就藏起来（并把残留值清掉，免得误发上一次的数字）。 */
+function liveSyncMinsUI() {
+  const custom = $('live-mins').value === 'custom';
+  $('live-mins-custom').classList.toggle('hide', !custom);
+  if (custom) { try { $('live-mins-custom').focus(); } catch { /* ignore */ } }
+  else $('live-mins-custom').value = '';
+}
+/** 从 form 里读出一条**已清洗**的横幅条目；正文为空 → null（调用方报错）。 */
+function liveReadForm() {
+  const text = $('live-text').value.trim();
+  if (!text) return null;
+  const href = $('live-href').value.trim();
+  const mins = liveReadMins();
+  const startMs = liveTimeToMs($('live-from').value);
+  // ★ 时间窗：**持续时间**是主模型（服主口径）。锚点 `from` = 填了的开始时刻；没填就是**发布这一刻**。
+  //   只填了「开始」而没填时长（= 不过期）时 from 仍然有意义；两个都没填 ⇒ 一直显示。
+  const from = startMs != null ? startMs : (mins != null ? Date.now() : null);
+  return {
+    id: $('live-key').value.trim() || ('live-' + Date.now().toString(36)),
+    text: text.slice(0, 200),
+    level: LIVE_LEVELS.indexOf($('live-level').value) >= 0 ? $('live-level').value : 'info',
+    from,
+    // ★ 老客户端（< 1.1.0，例如还没重推的实例）只认 `to` ⇒ 这里**镜像**一份同一个截止时刻，
+    //   让"还没升级"的实例照样到点消失；1.1.0+ 的客户端以 `mins` 为准，忽略这个镜像。
+    to: (from != null && mins != null) ? from + mins * 60000 : null,
+    mins,
+    href: /^https?:\/\//i.test(href) ? href : null,
+  };
+}
+
+/** 当前文档里的条目数组（干净拷贝）。 */
+function liveItems() {
+  const d = S.live && S.live.doc;
+  return d && Array.isArray(d.items) ? d.items.filter((x) => x && typeof x === 'object') : [];
+}
+
+function renderLive() {
+  const st = S.live;
+  if (!st || !st.id) { $('live-note').textContent = '还没有读取过。'; $('live-list').innerHTML = ''; return; }
+  const items = liveItems();
+  const last = items.length ? items[items.length - 1] : null;
+  $('live-note').innerHTML = '目标 <code>' + esc(st.id) + '</code> · '
+    + (st.present ? '<span class="t-mint">已发布 ' + items.length + ' 条</span>' : '<span class="t-dim">未发布（玩家端回落到数据补丁里的默认公告）</span>')
+    + ' · 文件 <code>' + esc('/mods/' + st.id + '/live.json') + '</code>'
+    + (st.present ? ' · ' + esc(sizeFmt(st.bytes)) + ' · 保存于 ' + esc(timeFmt(st.savedAt)) : '');
+  if (!items.length) { $('live-list').innerHTML = ''; return; }
+  $('live-list').innerHTML = items.map((it, i) => {
+    const lv = LIVE_LEVELS.indexOf(it.level) >= 0 ? it.level : 'info';
+    // ★ 时间窗：有 `mins` 就按「开始 + 持续」显示（1.1.0 起的写法）；
+    //   只有 `to` 的老条目照旧显示绝对结束时刻，并挂一枚「旧格式」标记 —— 服主一眼能看出哪条该重发一次。
+    const mins = (typeof it.mins === 'number' && isFinite(it.mins) && it.mins > 0) ? Math.round(it.mins) : null;
+    const legacy = mins === null && Number.isFinite(it.to);
+    const win = (Number.isFinite(it.from) ? timeFmt(it.from) : '立即') + ' → '
+      + (mins !== null ? liveMinsText(mins) + '（至 ' + timeFmt((Number.isFinite(it.from) ? it.from : Date.now()) + mins * 60000) + '）'
+        : (Number.isFinite(it.to) ? timeFmt(it.to) : '不过期'));
+    return '<div class="live-item">'
+      + '<div style="min-width:0">'
+      + '<div class="live-item__t">' + esc(String(it.text || '(无正文)')) + '</div>'
+      + '<div class="live-item__m">' + esc(String(it.id || '?')) + ' · ' + esc(win)
+      + (legacy ? ' · <span class="tag warn">旧格式（结束时刻）</span>' : '')
+      + (it.href ? ' · ' + esc(String(it.href)) : '') + '</div>'
+      + '</div>'
+      + '<span class="tag ' + (lv === 'danger' ? 'err' : lv === 'warn' ? 'warn' : 'on') + '">'
+      + (lv === 'danger' ? '紧急' : lv === 'warn' ? '警告' : '提示') + '</span>'
+      + '<button class="sm danger" data-live-del="' + esc(String(it.id || '')) + '">删除</button>'
+      + '</div>';
+  }).join('');
+  void last;
+}
+
+/** 读一次当前的 live.json（`GET /admin/api/live`）。 */
+async function liveRefresh(showFlash) {
+  const id = ($('live-id').value || LIVE_DEFAULT_ID).trim();
+  if (!id) return;
+  try {
+    const r = await api(S.conn, '/live?id=' + encodeURIComponent(id));
+    S.live = { id: r.id, doc: r.doc, present: r.present === true, bytes: r.bytes || 0, savedAt: r.savedAt || null };
+    renderLive();
+    if (showFlash) flash('app-flash', '已读取 ' + r.id + ' 的实时文档：' + (r.present ? '已发布' : '尚未发布'), 'ok');
+  } catch (err) {
+    S.live = null;
+    $('live-note').innerHTML = '<span class="t-red">读取失败：' + esc(err.message) + '</span>';
+    $('live-list').innerHTML = '';
+  }
+}
+
+/** 把一份文档写回去（`POST /admin/api/live`）；成功后就地刷新显示。 */
+async function liveWrite(doc, what) {
+  const id = ($('live-id').value || LIVE_DEFAULT_ID).trim();
+  if (!id) { flash('app-flash', '请先填「目标 Mod」', 'err'); return; }
+  const body = JSON.stringify(doc);
+  if (body.length > LIVE_MAX) { flash('app-flash', '文档超过 ' + sizeFmt(LIVE_MAX) + '，请删掉几条再发', 'err'); return; }
+  const r = await api(S.conn, '/live?id=' + encodeURIComponent(id), { method: 'POST', body: doc });
+  // ★ 不从表单重算显示，而是拿服务端回的字节数 —— 页面显示的就是**落盘的那一份**的规模。
+  await liveRefresh(false);
+  flash('app-flash', what + '：' + id + ' · ' + sizeFmt(r.bytes) + ' · 玩家端 20 秒内可见'
+    + '（客户端本地跑战斗，正在对局的玩家不受影响）', 'ok');
+}
+
+function flash(host, msg, kind) {
+  const el = $(host);
+  if (!msg) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div class="banner ' + (kind || 'ok') + '">' + esc(msg) + '</div>';
+}
+const sizeFmt = (n) => {
+  if (!n) return '0 B';
+  const u = ['B', 'KB', 'MB', 'GB'];
+  let i = 0, v = n;
+  while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
+  return (i === 0 ? v : v.toFixed(1)) + ' ' + u[i];
+};
+const timeFmt = (ms) => { if (!ms) return '-'; const d = new Date(ms); const p = (n) => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); };
+const uptimeFmt = (s) => { if (typeof s !== 'number') return '-'; const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return d ? d + ' 天 ' + h + ' 小时' : (h ? h + ' 小时 ' + m + ' 分' : m + ' 分 ' + Math.floor(s % 60) + ' 秒'); };
+
+/* ==========================================================================================
+   连接管理
+   ========================================================================================== */
+function renderConns() {
+  const list = loadServers();
+  const cur = current();
+  $('conn-count').textContent = String(list.length);
+  $('conn-empty').classList.toggle('hide', list.length > 0);
+  $('connlist').innerHTML = list.map((s) => {
+    const on = cur && keyOf(cur) === keyOf(s);
+    return '<div class="connrow' + (on ? ' active' : '') + '">'
+      + '<div style="min-width:0">'
+      + '<div class="nm">' + esc(s.label || s.base) + (on ? ' <span class="tag on">使用中</span>' : '') + '</div>'
+      + '<div class="url">' + esc(s.base) + ' · 令牌 ' + esc((s.token || '').slice(0, 4)) + '····</div>'
+      + '</div>'
+      + '<div class="acts" style="margin:0">'
+      + (on ? '' : '<button class="sm" data-use="' + esc(keyOf(s)) + '">使用</button>')
+      + '<button class="sm danger" data-del="' + esc(keyOf(s)) + '">删除</button>'
+      + '</div></div>';
+  }).join('');
+}
+
+$('connlist').addEventListener('click', (e) => {
+  const use = e.target.getAttribute && e.target.getAttribute('data-use');
+  const del = e.target.getAttribute && e.target.getAttribute('data-del');
+  if (use) { setActiveId(use); openApp(); return; }
+  if (del) {
+    const s = loadServers().find((x) => keyOf(x) === del);
+    if (!s) return;
+    if (!confirm('删除连接「' + (s.label || s.base) + '」？\n只删本机浏览器里的配置，不影响服务器。')) return;
+    saveServers(loadServers().filter((x) => keyOf(x) !== del));
+    if (activeId() === del) setActiveId('');
+    renderConns();
+  }
+});
+
+$('btn-hint-local').addEventListener('click', () => {
+  $('f-base').value = location.origin !== 'null' ? location.origin : 'http://127.0.0.1:3000';
+  if (!$('f-label').value) $('f-label').value = '当前站点';
+});
+
+$('btn-test').addEventListener('click', async () => {
+  const label = $('f-label').value.trim();
+  const base = $('f-base').value.trim().replace(/\/+$/, '');
+  const token = $('f-token').value;
+  const out = $('test-result');
+  if (!base) { out.innerHTML = '<span class="t-red">请填写服务器地址。</span>'; return; }
+  if (!token) { out.innerHTML = '<span class="t-red">请填写管理令牌。</span>'; return; }
+  out.innerHTML = '<span class="spin"></span> 正在连接…';
+  const probe = { label: label || base, base, token };
+  try {
+    const p = await api(probe, '/ping');
+    const caps = (p.capabilities || {});
+    out.innerHTML = '<span class="t-mint">连接成功</span> · 接口 v' + esc(p.apiVersion)
+      + ' · 实例「' + esc(p.label || '-') + '」'
+      + (caps.restart ? ' · 允许重启进程' : ' · 重启未开放');
+    const list = loadServers().filter((s) => keyOf(s) !== keyOf(probe));
+    list.push(probe);
+    saveServers(list);
+    setActiveId(keyOf(probe));
+    renderConns();
+    openApp();
+  } catch (err) {
+    out.innerHTML = '<span class="t-red">' + esc(err.message) + '</span>';
+  }
+});
+
+$('btn-switch').addEventListener('click', () => {
+  $('scr-app').classList.add('hide');
+  $('scr-conn').classList.remove('hide');
+  $('f-token').value = '';
+  renderConns();
+  flash('app-flash', '');
+});
+
+$('btn-refresh').addEventListener('click', () => refresh(true));
+
+/* ==========================================================================================
+   主面板
+   ========================================================================================== */
+async function openApp() {
+  const c = current();
+  if (!c) { $('scr-app').classList.add('hide'); $('scr-conn').classList.remove('hide'); renderConns(); return; }
+  S.conn = c;
+  $('scr-conn').classList.add('hide');
+  $('scr-app').classList.remove('hide');
+  $('app-sub').textContent = (c.label || c.base);
+  // 换了服务器 ⇒ 上一个实例的房间明细与展开状态一律作废（免得把 A 服的房间显示成 B 服的）。
+  S.rooms = null; S.roomsOpen = false; S.roomsBusy = false;
+  stopRoomsPoll(); renderRooms();
+  // 趋势同理：换服务器 ⇒ 上一个实例的采样点一律作废（系列开关 / 窗口是本机偏好，保留）。
+  S.metrics = null; S.metricsOpen = false; S.metricsBusy = false; S.metricsHover = null;
+  stopMetricsPoll(); renderMetrics();
+  // 官方 release 追踪同理：换服务器 ⇒ 上一个实例的结果作废（说明展开 / 横幅关闭是本机偏好，保留）。
+  S.up = null; S.upOpen = false; S.upBusy = false;
+  stopUpPoll(); renderUpstream();
+  await refresh(false);
+}
+
+async function refresh(showFlash) {
+  const c = current();
+  if (!c) return;
+  S.conn = c;
+  const dot = $('app-dot');
+  dot.className = 'dot wait';
+  $('app-conn').textContent = '连接中…';
+  try {
+    const snap = await api(c, '/snapshot');
+    S.snapshot = snap;
+    // ★ 换了快照 ⇒ 之前拉过的**完整**日志缓存作废（重载/换实例后日志可能已经变了）。
+    //   `openLog`（展开了哪些）保留：与 `openDesc` 同一条口径 —— 刷新后展开状态不跳。
+    S.logs = {};
+    S.logBusy = new Set();
+    S.online = true;
+    dot.className = 'dot on';
+    $('app-conn').textContent = (c.label || c.base) + ' · 在线';
+    if (showFlash) flash('app-flash', '已刷新（revision ' + snap.revision + '）', 'ok');
+    renderApp();
+    // 明细面板开着就跟一份新的（收起时不发请求）。
+    if (S.roomsOpen) void roomsRefresh(false);
+    // ★ 官方 release 追踪（工序 host-024）：**不只在展开时才读** —— 顶部横幅与「运行状态」里那一行
+    //   都要用最新结果，所以每次刷新快照都顺手读一次（服务端自己 60 分钟才出网，这里只是读缓存）。
+    //   ★ `caps` 必须从这一份快照里取（`renderStatus` 里那个是它自己的局部量，这里取不到）。
+    const capsNow = (snap && snap.caps) || {};
+    if (capsNow.upstream !== false) void upRefresh(false);
+  } catch (err) {
+    S.online = false;
+    dot.className = 'dot off';
+    $('app-conn').textContent = '离线';
+    flash('app-flash', err.message, 'err');
+    stopRoomsPoll();
+    stopMetricsPoll();
+    $('status-rows').innerHTML = '<div class="row"><span class="k">连接</span><span class="v t-red">失败</span></div>';
+  }
+}
+
+function renderStatus() {
+  const g = (S.snapshot && S.snapshot.game) || {};
+  const caps = (S.snapshot && S.snapshot.caps) || {};
+  const isUp = g.ok === true;
+  // ★ 「房间 · 在线」这一行就是显示房间与在线人数的地方 —— 它就是明细面板的入口（工序 69）。
+  //   老服务端没有 /rooms（caps.rooms === false）⇒ 入口不出现（而不是点了才报错）。
+  const roomsLink = caps.rooms === false ? ''
+    : ' <button class="rowlink" data-rooms-toggle="1" aria-expanded="' + (S.roomsOpen ? 'true' : 'false') + '">'
+      + (S.roomsOpen ? '收起明细 ▴' : '房间明细 ▾') + '</button>';
+  // ★ 趋势（工序 114）：仿上面那一行的写法 —— 老服务端（caps.metrics === false）不出现入口。
+  const msp = (S.metrics && S.metrics.sampling) || {};
+  const metricsLink = caps.metrics === false ? ''
+    : ' <button class="rowlink" data-metrics-toggle="1" aria-expanded="' + (S.metricsOpen ? 'true' : 'false') + '">'
+      + (S.metricsOpen ? '收起 ▴' : '趋势图 ▾') + '</button>';
+  // ★ 官方 release 追踪（工序 host-024）：与上面两行同一个写法。
+  //   落后时这一行带角标（★ 服主要的「更新提示」）；不确定 / 已最新时角标是灰的（不说没有的结论）。
+  const up = S.up || {};
+  const upKnown = !!(up.latest && up.latest.tag);
+  const upBadge = !upKnown ? '' : (up.behind
+    ? ' <span class="badge" id="up-badge" title="官方已发布新版本">' + esc(String(up.behindCount || 1)) + '</span>'
+    : ' <span class="badge mute" id="up-badge" title="没有检测到新版本">✓</span>');
+  const upstreamLink = caps.upstream === false ? ''
+    : ' <button class="rowlink" data-up-toggle="1" aria-expanded="' + (S.upOpen ? 'true' : 'false') + '">'
+      + (S.upOpen ? '收起 ▴' : '更新追踪 ▾') + '</button>';
+  const upText = !upKnown ? (up.error ? '<span class="t-red">未取到</span>' : '未知')
+    : (up.behind
+      ? '<span class="t-amber">落后</span> <span class="sep">·</span> 官方 ' + esc(up.latest.tag)
+      : '<span class="t-mint">已最新</span> <span class="sep">·</span> ' + esc(up.latest.tag));
+  const rows = [
+    ['服务状态', isUp ? '<span class="tag on">运行中</span>' : '<span class="tag err">未运行</span>'],
+    ['版本', esc(g.app || '-') + ' <span class="sep">/</span> <span class="micro">proto ' + esc(g.version || '-') + '</span>'],
+    ['人数上限', g.maxSeats ? g.maxSeats + ' 人' : '-'],
+    ['房间 · 在线', (g.rooms != null ? g.rooms : '-') + ' <span class="sep">·</span> ' + (g.humans != null ? g.humans : '-') + roomsLink],
+    ['趋势采样', (caps.metrics === false ? '-' : (msp.intervalSec ? msp.intervalSec + ' 秒 1 点' : '1 分钟 1 点')) + metricsLink],
+    ['官方版本', upText + upBadge + upstreamLink],
+    ['连接 · 会话', (g.sockets != null ? g.sockets : '-') + ' <span class="sep">·</span> ' + (g.sessions != null ? g.sessions : '-')],
+    ['运行时长', uptimeFmt(g.uptimeSec)],
+    ['干员总数', g.counts && g.counts.chess != null ? String(g.counts.chess) : '-'],
+    ['Mod 版本号', '<span class="t-mint">r' + esc(g.revision != null ? g.revision : 0) + '</span>'],
+    ['已打补丁数据', (g.patched && g.patched.length) ? esc(g.patched.join(', ')) : '<span class="t-dim">无</span>'],
+    ['启动于', timeFmt(g.startedAt)],
+  ];
+  $('status-rows').innerHTML = rows.map((kv) => '<div class="row"><span class="k">' + kv[0] + '</span><span class="v">' + kv[1] + '</span></div>').join('');
+  const warn = $('status-hint');
+  if (g.reportOk === false) { warn.innerHTML = '<span class="t-amber">有 Mod 加载失败（已容错跳过）</span>'; }
+  else { warn.textContent = '进程实际加载 · 已脱敏'; }
+}
+
+/* ---- 筛选 ---- */
+function filtersFor(mods) {
+  const n = (f) => mods.filter(f).length;
+  return [
+    ['all', '全部', mods.length],
+    ['on', '已启用', n((m) => m.enabled && !m.errors.length)],
+    ['off', '已停用', n((m) => !m.enabled)],
+    ['bad', '有问题', n((m) => m.errors.length > 0)],
+    ['l3', '含行为代码', n((m) => m.hasContent)],
+    ['ui', '含界面扩展', n((m) => m.hasClient)],
+    ['art', '含美术', n((m) => m.hasAssets)],
+  ];
+}
+function renderChips(mods) {
+  $('chips').innerHTML = filtersFor(mods).map((f) =>
+    '<button class="chip" data-f="' + f[0] + '" aria-pressed="' + (S.filter === f[0]) + '">'
+    + f[1] + '<span class="n">' + f[2] + '</span></button>').join('');
+}
+function applyFilter(mods) {
+  const q = S.q.trim().toLowerCase();
+  let out = mods.filter((m) => {
+    if (S.filter === 'on' && !(m.enabled && !m.errors.length)) return false;
+    if (S.filter === 'off' && m.enabled) return false;
+    if (S.filter === 'bad' && !m.errors.length) return false;
+    if (S.filter === 'l3' && !m.hasContent) return false;
+    if (S.filter === 'ui' && !m.hasClient) return false;
+    if (S.filter === 'art' && !m.hasAssets) return false;
+    if (!q) return true;
+    // ★ 搜索同时看 summary 与 description ⇒ 「列表里只显示摘要」不会让全文搜不到。
+    return [m.id, m.name, m.author, m.summary, m.description].some((v) => v && String(v).toLowerCase().includes(q));
+  });
+  const cmp = {
+    name: (a, b) => String(a.name || a.id).localeCompare(String(b.name || b.id), 'zh'),
+    ops: (a, b) => b.ops - a.ops,
+    size: (a, b) => b.sizeBytes - a.sizeBytes,
+    mtime: (a, b) => b.mtime - a.mtime,
+    order: () => 0,
+  }[S.sort];
+  out = out.slice().sort(cmp);
+  return out;
+}
+
+/**
+ * 列表里显示的「核心一行」：优先用清单的 summary；没写就退化成 description 的**第一句**
+ * （在 。/；/!/? 处断开，最多 90 字），保证第三方 Mod 没写 summary 时列表也不会被整段说明撑爆。
+ */
+function coreText(m) {
+  const s = typeof m.summary === 'string' ? m.summary.trim() : '';
+  if (s) return s;
+  const d = typeof m.description === 'string' ? m.description.trim() : '';
+  if (!d) return '';
+  const first = (d.match(/^[\s\S]*?[。；！？!?]/) || [d])[0].trim() || d;
+  return first.length > 90 ? first.slice(0, 90) + '…' : first;
+}
+
+/**
+ * 渲染一个 Mod 的「版本更新日志」（★ 「待更新③」的入口）。
+ *
+ * ★★ 单一真相：内容全部来自服务端从 `mods/<id>/CHANGELOG.md` 解析出来的结构
+ *   （快照里的 `changelog` = 最近 3 版 + 总版数；完整日志由 `GET /admin/api/changelog?id=…` 给）。
+ *   这个函数**只排版**，一个字的说明都不自己写；`mod.json` 里也**不存**日志（docs/MODS.md §4.12.5）。
+ *
+ * @param {object} m 快照里的一行 Mod
+ * @param {Array} versions 要渲染的版本数组（`[{version,date,items:[]}]`）
+ * @param {number} total 日志总版数（比 versions 多时在标题里标注）
+ */
+function logHtml(m, versions, total) {
+  const more = total > versions.length;
+  const body = versions.map((v) => {
+    const items = (v.items || []).length
+      ? '<ul class="ver__items">' + v.items.map((s) => '<li>' + esc(s) + '</li>').join('') + '</ul>'
+      : '<p class="ver__empty">这一版没有条目。</p>';
+    return '<div class="ver"><div class="ver__hd">' + esc(v.version)
+      + (v.date ? ' <span class="ver__date">' + esc(v.date) + '</span>' : '') + '</div>' + items + '</div>';
+  }).join('');
+  return '<div class="mod__loghd"><span>' + (m.changelog && m.changelog.file ? esc(m.changelog.file) : 'CHANGELOG.md')
+    + '</span><span>' + total + ' 版' + (more ? '（显示最近 ' + versions.length + ' 版）' : '') + '</span></div>' + body;
+}
+
+function renderMod(m, runningIds) {
+  const errs = m.errors || [], warns = m.warnings || [];
+  const live = m.enabled && !errs.length;
+  const tags = [];
+  if (errs.length) tags.push('<span class="tag err">' + errs.length + ' 个错误</span>');
+  tags.push(m.enabled ? '<span class="tag on">启用</span>' : '<span class="tag off">停用</span>');
+  if (live && !runningIds.has(m.id)) tags.push('<span class="tag wait">未生效</span>');
+  if (m.hasContent) tags.push('<span class="tag l3">行为代码</span>');
+  if (m.hasClient) tags.push('<span class="tag ui">界面扩展</span>');
+  if (m.hasAssets) tags.push('<span class="tag art">美术</span>');
+
+  const meta = [];
+  if (m.version) meta.push('v' + m.version);
+  if (m.author) meta.push(m.author);
+  if (m.apiVersion != null) meta.push('接口 v' + m.apiVersion);
+  if (m.gameVersion) meta.push('游戏 ' + m.gameVersion);
+  meta.push(m.ops + ' 条补丁 / ' + (m.files || []).length + ' 个文件');
+  meta.push(sizeFmt(m.sizeBytes));
+  meta.push(timeFmt(m.mtime));
+  if (m.loadAfter && m.loadAfter.length) meta.push('依赖 ' + m.loadAfter.join(', '));
+
+  const msgs = (errs.length || warns.length)
+    ? '<div class="msgs">' + errs.map((e) => '<div class="e">' + esc(e) + '</div>').join('')
+      + warns.map((w) => '<div class="w">' + esc(w) + '</div>').join('') + '</div>'
+    : '';
+
+  const full = typeof m.description === 'string' ? m.description.trim() : '';
+  const core = coreText(m);
+  const open = S.openDesc.has(m.id);
+  // 只有「还有没显示出来的内容」才给「详情」入口
+  const hasMore = !!full && full !== core;
+
+  // ---- 版本更新日志（「待更新③」）--------------------------------------------------------------
+  const log = m.changelog && m.changelog.versions && m.changelog.versions.length ? m.changelog : null;
+  const logOpen = S.openLog.has(m.id);
+  const loaded = S.logs[m.id] || null;                   // 展开时拉到的完整日志
+  const logTotal = (loaded && loaded.length) ? loaded.length : (log ? log.total : 0);
+  const logVersions = (loaded && loaded.length) ? loaded : (log ? log.versions : []);
+  const logBlock = !logOpen ? ''
+    : logVersions.length ? logHtml(m, logVersions, logTotal)
+      : S.logBusy.has(m.id) ? '<div class="ver__empty">正在读取日志…</div>'
+        : '<div class="ver__empty">这个 Mod 还没有 CHANGELOG.md。</div>';
+
+  const links = (hasMore || log)
+    ? '<div class="mod__links">'
+      + (hasMore
+        ? '<button class="lnk" data-detail="' + esc(m.id) + '" aria-expanded="' + open + '">'
+          + (open ? '收起详情 ▴' : '查看详情 ▾') + '</button>'
+        : '')
+      + (log
+        ? '<button class="lnk" data-log="' + esc(m.id) + '" aria-expanded="' + logOpen + '">'
+          + (logOpen ? '收起更新日志 ▴' : '版本更新日志 · ' + log.total + ' 版 ▾') + '</button>'
+        : '')
+      + '</div>'
+    : '';
+
+  return '<div class="mod' + (live ? '' : ' off') + '">'
+    + '<div class="mod__hd"><div class="mod__nm">' + esc(m.name || '(无清单名)')
+    + ' <code>' + esc(m.id) + '</code></div>'
+    + '<div class="mod__tags">' + tags.join('') + '</div></div>'
+    + '<div class="mod__meta">' + esc(meta.join(' · ')) + '</div>'
+    + (core ? '<div class="mod__sum">' + esc(core) + '</div>' : '')
+    + links
+    + (open && hasMore ? '<div class="mod__full">' + esc(full) + '</div>' : '')
+    + (logOpen ? '<div class="mod__log" data-log-body="' + esc(m.id) + '">' + logBlock + '</div>' : '')
+    + msgs
+    + '<div class="acts">'
+    + '<button class="sm' + (m.enabled ? '' : ' primary') + '" data-act="' + (m.enabled ? 'disable' : 'enable') + '" data-id="' + esc(m.id) + '"'
+    + (errs.length && !m.enabled ? ' disabled' : '') + '>' + (m.enabled ? '停用' : '启用') + '</button>'
+    + '<button class="sm" data-act="pack" data-id="' + esc(m.id) + '"' + (m.ops ? '' : ' disabled') + '>导出 .spmod</button>'
+    + '<button class="sm danger" data-act="remove" data-id="' + esc(m.id) + '">卸载</button>'
+    + '</div></div>';
+}
+
+function renderMods() {
+  const snap = S.snapshot || {};
+  const mods = snap.mods || [];
+  renderChips(mods);
+  const shown = applyFilter(mods);
+  const runningIds = new Set(((snap.game || {}).modsRunning || []).filter((m) => m.enabled).map((m) => m.id));
+
+  $('repo-count').textContent = mods.length;
+  $('repo-hint').textContent = shown.length === mods.length
+    ? '目录里即启用；改了要重载才生效'
+    : '筛出 ' + shown.length + ' / ' + mods.length;
+
+  const box = $('modlist'), empty = $('modlist-empty');
+  if (!mods.length) {
+    box.innerHTML = '';
+    empty.classList.remove('hide');
+    empty.innerHTML = '仓库里还没有 Mod。上传一个 <code>.spmod</code>，或把 Mod 目录拷进服务器的 Mod 仓库即可（默认自动启用）。';
+    return;
+  }
+  if (!shown.length) {
+    box.innerHTML = '';
+    empty.classList.remove('hide');
+    empty.innerHTML = '没有匹配的 Mod。清空搜索或换一个筛选条件。';
+    return;
+  }
+  empty.classList.add('hide');
+  box.innerHTML = shown.map((m) => renderMod(m, runningIds)).join('');
+}
+
+/* ---- 下载导出包 ----------------------------------------------------------------------------
+   ★ 为什么不能直接写 <a href="…/admin/api/download?f=…">：
+     浏览器点普通链接发的是**导航请求**，它**不会**带上 Authorization 自定义头；而服务端按硬性
+     约束只认请求头（见 server/admin.js 顶部第 2 条：**绝不接受 query string**，因为查询串会进
+     access log / Referer）⇒ 服务端拿到空令牌 ⇒ 401 ⇒ 浏览器什么也不下载。
+   所以下载必须自己 fetch（带头）→ 拿 Blob → 造一个临时 <a download> 点一下。
+   --------------------------------------------------------------------------------------------- */
+async function downloadExport(file, conn = S.conn) {
+  const url = conn.base.replace(/\/+$/, '') + API + '/download?f=' + encodeURIComponent(file);
+  let res;
+  try { res = await fetch(url, { headers: { Authorization: 'Bearer ' + conn.token }, cache: 'no-store' }); }
+  catch (e) { throw new Error('连不上 ' + conn.base + '：' + (e && e.message ? e.message : e)); }
+  if (!res.ok) {
+    if (res.status === 401) throw new Error('管理令牌不对（服务端 SP_ADMIN_TOKEN 与本页填写的不一致）');
+    if (res.status === 404) throw new Error('服务器上已经没有这个包了（重新点一次「导出 .spmod」即可）');
+    throw new Error('下载失败：HTTP ' + res.status);
+  }
+  // 文件名优先用服务端给的 Content-Disposition（CORS 已 Expose-Headers: content-disposition）
+  let name = file;
+  const m = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(res.headers.get('content-disposition') || '');
+  if (m && m[1]) { try { name = decodeURIComponent(m[1]); } catch { name = m[1]; } }
+
+  const blob = await res.blob();
+  const obj = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = obj;
+  a.download = name;
+  a.rel = 'noopener';
+  a.style.display = 'none';
+  document.body.appendChild(a);   // Firefox 要求节点在文档里才认 click()
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(obj), 30000);   // 立刻 revoke 会让部分浏览器截断下载
+  return { name, bytes: blob.size };
+}
+
+function renderExports() {
+  const ex = (S.snapshot || {}).exports || [];
+  const canDl = ((S.snapshot || {}).caps || {}).download !== false;
+  $('exports-out').innerHTML = ex.length
+    ? '<p class="note" style="margin-top:12px">导出的 .spmod 先落在<b>服务器</b>的 Mod 仓库里（不是你的下载目录）。'
+      + '点「下载」把它取到本机；发给其他服主时，让他们把包解到自己的 Mod 仓库即可。</p>'
+      + ex.map((e) => '<div class="row"><span class="k">' + esc(e.file) + '</span><span class="v">' + sizeFmt(e.bytes)
+        + ' <button class="sm" data-dl="' + esc(e.file) + '"' + (canDl ? '' : ' disabled') + '>下载</button></span></div>').join('')
+    : '';
+}
+
+function renderApp() {
+  renderStatus();
+  renderMods();
+  renderExports();
+  renderRooms();
+  renderMetrics();
+  const caps = (S.snapshot || {}).caps || {};
+  const rb = $('btn-restart');
+  rb.disabled = !caps.restart;
+  rb.title = caps.restart ? '' : '本实例未开启「重启进程」（服务端需 SP_ADMIN_ALLOW_RESTART=1，且由 systemd Restart=always 托管）';
+  $('btn-reload').disabled = !caps.reload;
+  $('maint-hint').textContent = [
+    caps.reload ? '支持热重载' : '不支持热重载',
+    caps.restart ? '支持重启进程' : '重启未开放',
+  ].join(' · ');
+  // 实时文档：老服务端（caps.live 缺失）上整栏灰掉，而不是点了才报错。读一次当前状态（便宜，一次 GET）。
+  // ★ 「持续」控件（工序 75）：`live-mins` 是下拉、`live-mins-custom` 是它旁边的分钟数输入框 —— 两个都要跟着灰。
+  const liveOn = caps.live !== false;
+  for (const id of ['live-id', 'live-level', 'live-text', 'live-from', 'live-mins', 'live-mins-custom', 'live-key', 'live-href',
+    'btn-live-pub', 'btn-live-load', 'btn-live-clear']) $(id).disabled = !liveOn;
+  $('live-hint').textContent = liveOn ? '发布即生效 · 不用重载' : '本实例不支持（需较新的服务端）';
+  if (liveOn) void liveRefresh(false);
+}
+
+/* ==========================================================================================
+   房间 / 在线明细（工序 69，服主口径）
+   ★ 放哪：就放在这一页（tools/mod-admin.html）—— 它是**本地单文件 + 手填令牌**的管理页，
+     令牌只存在你自己的浏览器里、只走 Authorization 请求头，**永远不会进游戏页面**（游戏页面零变化）。
+   ★ 数据：GET /admin/api/rooms（server/admin.js，需 SP_ADMIN_TOKEN）→ 每房间明细 + 顶层汇总 +
+     safeToRestart + blockers / blockersText。真值来自服务端本进程的 Room / Match 对象，页面只排版，
+     一个字段都不自己算。
+   ★ safeToRestart 的口径（工序 73 起）：**0 真人 · 0 对局 · 0 观战** 才算「现在可以推」——
+     重启会把观战者一起踢下线，所以观战也算「有人」；琥珀条按 blockers 逐条列出**是什么在挡**。
+   ★ 刷新间隔 15 秒的理由：服主要拿它决定「什么时候好推横幅公告 / 什么时候好推更新」，这是**分钟级**
+     的决策颗粒度（横幅发布后玩家端最迟 20 秒可见，重启本身只要 1~2 秒）；15 秒足够看到「有人进房 /
+     开局 / 打完」，而一次请求只是一份只读 JSON。面板收起、页签切到后台时**一律不轮询**。
+   ========================================================================================== */
+const ROOMS_POLL_MS = 15000;
+
+/** 数字 → 显示串；拿不到（null / 非数字）一律「不可得」——绝不拿 0 冒充。 */
+const fmtN = (v) => (typeof v === 'number' && Number.isFinite(v) ? String(v) : '不可得');
+
+/** 秒数 → 人话（拿不到 ⇒「不可得」）。 */
+function durFmt(sec) {
+  if (typeof sec !== 'number' || !Number.isFinite(sec)) return '不可得';
+  const s = Math.max(0, Math.round(sec));
+  const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
+  if (d) return d + ' 天 ' + h + ' 小时';
+  if (h) return h + ' 小时 ' + m + ' 分';
+  if (m) return m + ' 分 ' + (s % 60) + ' 秒';
+  return s + ' 秒';
+}
+
+/** 一个人（座位 / 对局玩家 / 观战）的状态标签。状态由服务端的布尔字段拼出来，页面不猜。 */
+function personTags(p) {
+  const out = [];
+  if (p.isBot) out.push('<span class="tag off">AI 队友</span>');
+  else if (p.left) out.push('<span class="tag err">已离场</span>');
+  else if (p.connected) out.push('<span class="tag on">在座</span>');
+  else out.push('<span class="tag warn">掉线（座位保留）</span>');
+  if (p.alive === false && !p.isBot && !p.left) out.push('<span class="tag off">已淘汰</span>');
+  if (p.ready === true) out.push('<span class="tag ui">已准备</span>');
+  return out.join(' ');
+}
+
+/** 人列表 → 表（座位 / 昵称 / 玩家 ID / 状态）。空列表也给一句话，不留空白。
+ *  `noSeat`：观战者没有座位号 ⇒ 不画那一列（也不编一个 0 出来）。 */
+function partyTable(list, emptyText, noSeat) {
+  if (!Array.isArray(list) || !list.length) return '<p class="note">' + esc(emptyText || '没有。') + '</p>';
+  return '<table class="rtable"><thead><tr>' + (noSeat ? '' : '<th>座位</th>') + '<th>昵称</th><th>玩家 ID</th><th>状态</th></tr></thead><tbody>'
+    + list.map((p) => '<tr>'
+      + (noSeat ? '' : '<td class="num">' + (typeof p.seat === 'number' ? '#' + (p.seat + 1) : '-') + '</td>')
+      + '<td>' + esc(p.name || '(无昵称)') + '</td>'
+      + '<td><code>' + esc(p.playerId || '不可得') + '</code></td>'
+      + '<td>' + personTags(p) + '</td>'
+      + '</tr>').join('')
+    + '</tbody></table>';
+}
+
+/** 一个房间 → 一张卡。`r.error` 是服务端对「这个房间读不出来」的降级行（其余房间照常）。 */
+function roomHtml(r) {
+  if (r && r.error) {
+    return '<div class="room"><div class="room__hd"><span class="room__code">' + esc(r.code || '????') + '</span>'
+      + '<span class="room__tags"><span class="tag err">读取失败</span></span></div>'
+      + '<div class="room__meta">' + esc(r.error) + '</div></div>';
+  }
+  const seats = r.seats || {};
+  const tags = [
+    r.inMatch ? '<span class="tag wait">对局进行中</span>' : '<span class="tag on">等待中（未开局）</span>',
+    '<span class="tag">' + (r.mode === 'solo' ? '独立模拟' : '同盟模拟') + '</span>',
+  ];
+  if (r.difficulty) tags.push('<span class="tag">难度 ' + esc(r.difficulty) + '</span>');
+  if (r.spectators && r.spectators.length) tags.push('<span class="tag l3">观战 ' + r.spectators.length + '</span>');
+
+  const rows = [
+    ['房间创建', esc(timeFmt(r.createdAt)) + ' <span class="t-dim">（' + esc(durFmt(r.ageSec)) + '前）</span>'],
+    ['座位', fmtN(seats.occupied) + ' / ' + fmtN(seats.capacity) + ' <span class="sep">·</span> 真人 ' + fmtN(seats.humans)
+      + ' <span class="sep">·</span> AI ' + fmtN(seats.bots) + ' <span class="sep">·</span> 空 ' + fmtN(seats.empty)],
+    ['房主 ID', r.hostId ? '<code>' + esc(r.hostId) + '</code>' : '<span class="t-dim">不可得</span>'],
+    ['本房累计对局', r.matchCount == null ? '不可得' : String(r.matchCount) + ' 局'],
+  ];
+
+  const m = r.match;
+  if (m) {
+    rows.push(['对局开始', esc(timeFmt(m.startedAt)) + ' <span class="t-dim">（已进行 ' + esc(durFmt(m.elapsedSec)) + '）</span>']);
+    rows.push(['回合 / 阶段', '第 ' + fmtN(m.round) + ' 回合 <span class="sep">·</span> '
+      + esc(m.phaseName || '不可得') + (m.phase ? ' <code>' + esc(m.phase) + '</code>' : '')]);
+    rows.push(['阶段截止', m.deadline ? esc(timeFmt(m.deadline)) : '<span class="t-dim">本阶段无倒计时</span>']);
+    rows.push(['对局规模', fmtN(m.seatCount) + ' 个玩家座位 <span class="sep">·</span> 种子 ' + fmtN(m.seed)
+      + (m.paused ? ' <span class="sep">·</span> <span class="t-amber">已暂停</span>' : '')]);
+  }
+
+  // ★ 观战者的**昵称**只在房间那一层有（`match.spectators` 里是 Match 的替身，只有 playerId / 连接状态）
+  //   ⇒ 用同一个房间的 `room.spectators` 按 playerId 补名字（两份都是服务端真值，缺了就显示"无昵称"）。
+  const spNames = new Map((r.spectators || []).map((s) => [s.playerId, s.name]));
+  const mSpec = (m && m.spectators ? m.spectators : []).map((s) => ({
+    playerId: s.playerId, name: spNames.get(s.playerId) || null, connected: s.connected,
+  }));
+  return '<div class="room">'
+    + '<div class="room__hd"><span class="room__code">' + esc(r.code || '????') + '</span>'
+    + '<span class="room__tags">' + tags.join('') + '</span></div>'
+    + '<div class="rows" style="margin-top:8px">'
+    + rows.map((kv) => '<div class="row"><span class="k">' + kv[0] + '</span><span class="v">' + kv[1] + '</span></div>').join('')
+    + '</div>'
+    + (m
+      ? '<div class="room__meta">对局中的玩家（' + (m.players || []).length + '）</div>' + partyTable(m.players, '这场对局里没有玩家。')
+        + (mSpec.length
+          ? '<div class="room__meta">对局中的观战（' + mSpec.length + '）</div>' + partyTable(mSpec, '没有观战者。', true)
+          : '')
+      : '<div class="room__meta">等待室里的座位</div>' + partyTable(r.attending, '等待室里还没有人。')
+        + (r.spectators && r.spectators.length
+          ? '<div class="room__meta">等待室里的观战（' + r.spectators.length + '）</div>'
+            + partyTable(r.spectators.map((sp) => ({ playerId: sp.playerId, name: sp.name, connected: sp.connected })), '没有观战者。', true)
+          : ''))
+    + '</div>';
+}
+
+function renderRooms() {
+  const card = $('card-rooms');
+  // 间隔理由写在面板上（服主看的运营文本）：判据是「什么时候好推公告 / 推更新」，颗粒度是分钟级。
+  $('rooms-note').innerHTML = '数据来自服务端本进程的 Room / Match 对象（<code>GET /admin/api/rooms</code>，需管理令牌，'
+    + '只走请求头）。刷新间隔 <b>' + (ROOMS_POLL_MS / 1000) + ' 秒</b>：推公告 / 推更新是<b>分钟级</b>决策'
+    + '（横幅发布后玩家端最迟 20 秒可见，重启本身只要 1~2 秒），15 秒足够看到「有人进房 / 开局 / 打完」；'
+    + '面板收起或页签切到后台时<b>不轮询</b>。这一页只在你自己浏览器里（游戏页面看不到它）。';
+  if (!S.roomsOpen) { card.classList.add('hide'); return; }
+  card.classList.remove('hide');
+  const snap = S.rooms;
+  if (!snap) {
+    $('rooms-safe').innerHTML = '';
+    $('rooms-summary').innerHTML = '<div class="row"><span class="k">读取</span><span class="v"><span class="spin"></span> 正在读取…</span></div>';
+    $('rooms-list').innerHTML = '';
+    $('rooms-empty').classList.add('hide');
+    return;
+  }
+  const s = snap.summary || {};
+  const safe = s.safeToRestart === true;
+  const blockers = Array.isArray(s.blockers) ? s.blockers : [];
+  // ★ 口径（工序 73）：**0 真人 · 0 对局 · 0 观战** 才算可以推 —— 重启同样会把观战者踢下线。
+  //   「是什么在挡」逐条从服务端的 blockers 代码 + 同一个汇总里的计数拼出来（页面不自己算判据）。
+  const why = [];
+  if (blockers.indexOf('humans') >= 0) why.push(fmtN(s.humans) + ' 名真人在座');
+  if (blockers.indexOf('matches') >= 0) why.push(fmtN(s.matches) + ' 局进行中');
+  if (blockers.indexOf('spectators') >= 0) why.push(fmtN(s.spectators) + ' 名观战者在看');
+  // 老服务端（不懂某个新代码）时兜底：把服务端给的 blockersText 里那一条直接显示出来，绝不吞掉原因。
+  const texts = Array.isArray(s.blockersText) ? s.blockersText : [];
+  const known = { humans: 1, matches: 1, spectators: 1 };
+  blockers.forEach((b, i) => { if (!known[b] && texts[i]) why.push(String(texts[i])); });
+  $('rooms-safe').innerHTML = '<div class="banner ' + (safe ? 'ok' : 'warn') + '">'
+    + (safe
+      ? '<b>现在可以推</b>：0 真人 · 0 对局 · 0 观战 ⇒ 重启进程不会打断任何人，也不会把谁踢下线。'
+      : '<b>建议等一等</b>：' + esc(why.join(' · ')) + ' ⇒ 现在重启会把这些人都踢下线（观战者也要重连）。')
+    + '</div>';
+
+  $('rooms-summary').innerHTML = [
+    ['房间', fmtN(s.rooms)],
+    ['进行中的对局', fmtN(s.matches)],
+    ['座位上的真人', fmtN(s.humans)],
+    ['AI 队友', fmtN(s.bots)],
+    ['观战', fmtN(s.spectators)],
+    ['单房间人数上限', fmtN(s.maxSeats)],
+    ['safeToRestart', safe ? '<span class="tag on">可以推</span>' : '<span class="tag warn">等一等</span>'],
+    ['读取于', esc(timeFmt(snap.ts))],
+  ].map((kv) => '<div class="row"><span class="k">' + kv[0] + '</span><span class="v">' + kv[1] + '</span></div>').join('');
+
+  const list = Array.isArray(snap.rooms) ? snap.rooms : [];
+  $('rooms-list').innerHTML = list.map(roomHtml).join('');
+  $('rooms-empty').classList.toggle('hide', list.length > 0);
+  $('rooms-hint').textContent = '读取于 ' + timeFmt(snap.ts)
+    + (S.roomsAuto ? ' · 每 ' + (ROOMS_POLL_MS / 1000) + ' 秒自动刷新' : ' · 仅手动刷新');
+}
+
+function stopRoomsPoll() { if (S.roomsTimer) { clearInterval(S.roomsTimer); S.roomsTimer = 0; } }
+
+function startRoomsPoll() {
+  stopRoomsPoll();
+  if (!S.roomsOpen || !S.roomsAuto) return;
+  S.roomsTimer = setInterval(() => {
+    // 页签在后台时不发请求（回来时由 visibilitychange 补一次）。
+    if (!document.hidden) void roomsRefresh(false);
+  }, ROOMS_POLL_MS);
+}
+
+/** 读一次房间明细（GET /admin/api/rooms，带令牌）。 */
+async function roomsRefresh(showFlash) {
+  if (!S.conn || S.roomsBusy) return;
+  S.roomsBusy = true;
+  try {
+    const r = await api(S.conn, '/rooms');
+    S.rooms = r;
+    renderRooms();
+    if (showFlash) flash('app-flash', '房间明细已刷新：' + fmtN((r.summary || {}).rooms) + ' 个房间，'
+      + fmtN((r.summary || {}).humans) + ' 名真人在座', 'ok');
+  } catch (err) {
+    $('rooms-note').innerHTML = '<span class="t-red">读取失败：' + esc(err.message) + '</span>';
+  } finally { S.roomsBusy = false; }
+}
+
+/** 展开 / 收起明细面板（由「运行状态」里那一行触发）。 */
+function toggleRooms() {
+  S.roomsOpen = !S.roomsOpen;
+  if (S.roomsOpen) {
+    renderRooms();
+    startRoomsPoll();
+    void roomsRefresh(false);
+    try { $('card-rooms').scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch { /* 老浏览器 */ }
+  } else {
+    stopRoomsPoll();
+    renderRooms();
+  }
+  renderStatus();
+}
+
+$('status-rows').addEventListener('click', (e) => {
+  const m = e.target.closest && e.target.closest('[data-metrics-toggle]');
+  if (m) { toggleMetrics(); return; }
+  const b = e.target.closest && e.target.closest('[data-rooms-toggle]');
+  if (b) toggleRooms();
+});
+$('btn-rooms-refresh').addEventListener('click', (e) => {
+  const b = e.target; b.disabled = true; const old = b.textContent;
+  b.innerHTML = '<span class="spin"></span> 刷新中';
+  roomsRefresh(true).finally(() => { b.disabled = false; b.textContent = old; });
+});
+$('rooms-auto').addEventListener('change', () => {
+  S.roomsAuto = $('rooms-auto').checked;
+  if (S.roomsOpen) startRoomsPoll();
+  renderRooms();
+});
+document.addEventListener('visibilitychange', () => {
+  // 回到前台立刻补一次（页签在后台时轮询是停的）。
+  if (!document.hidden && S.roomsOpen && S.roomsAuto) void roomsRefresh(false);
+  if (!document.hidden && S.metricsOpen && S.metricsAuto) void metricsRefresh(false);
+  // 更新追踪：回前台补一次（栏收起也补 —— 顶部横幅要用最新结果）。收起时由 startUpPoll 自己判断。
+  if (!document.hidden && S.online && S.upOpen) void upRefresh(false);
+});
+
+/* ==========================================================================================
+   趋势（工序 114，服主口径）
+   ★ 数据：GET /admin/api/metrics（server/admin.js；需 SP_ADMIN_TOKEN、只走请求头、**只读**）。
+     服务端默认 **1 分钟 1 点**、环形缓冲 **4320 点 = 3 日**；每个点同时有 **CPU 均值** 与
+     **CPU 分钟内峰值**（峰值 = 窗口内每 2 秒一次的高频子采样取 max，并记下那一刻的 AI / 真人数
+     与秒偏移 —— 「几个 AI 造成了多大的瞬间压力」就靠这三个数回答）。
+   ★ 为什么**手写 Canvas**（而不是 SVG，也不是任何图表库）：
+     ① 服主口径：**不许 CDN、不许 vendored 图表库** ⇒ 只剩手写 SVG / Canvas 两条路；
+     ② 一条 72 小时的曲线最多 4320 点 × 十几个系列 —— SVG 要为每个点建 DOM 节点、hover 命中测试与
+        重排都随点数上涨；Canvas 一次绘制完成，悬停只重绘一次，且分辨率用 devicePixelRatio 拉满；
+     ③ 四张图**共享同一条时间轴** + 一条跨图十字线：在 Canvas 里就是一个坐标系的事，DOM 反而要同步四份。
+     代价（诚实登记）：Canvas 里的文字**读不到 CSS 变量**，字体 / 字号 / 颜色都要自己算 ⇒ 字号走
+     `--tscale` 倍率、颜色走 `--ch-N` 一族 token（深浅色各一套），改一处即可全局生效。
+   ★ 边界（空数据 / 只有 1 个点 / 刚重启）都走同一条绘制路径，显式判空，不抛不崩。
+   ★ 原「房间明细」那一栏**一行没动**：两个面板各有各的开关、各自的轮询与各自的收起状态。
+   ========================================================================================== */
+const METRICS_POLL_MS = 60000;   // 采样 1 分钟 1 点 ⇒ 60 秒刷一次就够（收起 / 后台一律不轮询）
+const METRICS_RANGES = [[1, '1 小时'], [3, '3 小时'], [6, '6 小时'], [12, '12 小时'], [24, '24 小时'], [72, '72 小时']];
+const METRICS_LS = 'sp.modadmin.metrics.v1';
+const METRICS_SCATTER = { off: '关', cpu: '人数 × CPU 峰值', lat: '人数 × 延迟均值' };
+const METRICS_DEFAULT_RANGE_H = 6;
+
+/** 本机界面偏好（系列开关 / 窗口 / 散点）——只存你自己的浏览器，不影响任何服务端行为。 */
+function metricsPrefs() {
+  const def = { hidden: [], rangeH: METRICS_DEFAULT_RANGE_H, scatter: 'off' };
+  try {
+    const j = JSON.parse(localStorage.getItem(METRICS_LS) || 'null');
+    if (!j || typeof j !== 'object') return def;
+    return {
+      hidden: Array.isArray(j.hidden) ? j.hidden.filter((x) => typeof x === 'string') : [],
+      rangeH: METRICS_RANGES.some((r) => r[0] === j.rangeH) ? j.rangeH : METRICS_DEFAULT_RANGE_H,
+      scatter: Object.prototype.hasOwnProperty.call(METRICS_SCATTER, j.scatter) ? j.scatter : 'off',
+    };
+  } catch { return def; }
+}
+function metricsSavePrefs() {
+  try {
+    localStorage.setItem(METRICS_LS, JSON.stringify({
+      hidden: [...S.metricsHidden], rangeH: S.metricsRangeH, scatter: S.metricsScatter,
+    }));
+  } catch { /* 私密模式 */ }
+}
+
+/** `--tscale`（与官方「文字大小」同一阶梯的无量纲倍率）——Canvas 里画不了 CSS 变量，只能读出来算。 */
+function tScale() {
+  try {
+    const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tscale'));
+    return Number.isFinite(v) && v > 0 ? v : 1;
+  } catch { return 1; }
+}
+
+/**
+ * 把游戏「设置 → 文字大小」搬到本页：同源时读得到同一个 `sp.pref.settings`
+ * （游戏写它，见 public/js/ui/settings.js）⇒ 只需在 <html> 上放同一个 `data-text`。
+ * 读不到（`file://` 打开、没玩过游戏、私密模式）⇒ 留在默认档，不报错。
+ */
+function applyTextSize() {
+  let step = 'sm';
+  try {
+    const j = JSON.parse(localStorage.getItem('sp.pref.settings') || 'null');
+    if (j && ['sm', 'md', 'lg', 'xl'].includes(j.textSize)) step = j.textSize;
+  } catch { /* 用默认档 */ }
+  try { document.documentElement.setAttribute('data-text', step); } catch { /* ignore */ }
+}
+
+/** 空窗口也安全的窗口计算：过去 N 小时 → [since, until]（ms）。 */
+function metricsWindow() {
+  const until = Date.now();
+  return { since: until - S.metricsRangeH * 3600 * 1000, until };
+}
+
+const lastFinite = (arr) => {
+  if (!Array.isArray(arr)) return null;
+  for (let i = arr.length - 1; i >= 0; i--) if (typeof arr[i] === 'number') return arr[i];
+  return null;
+};
+
+/** 读数格式化：拿不到一律「不可得」，绝不拿 0 冒充。 */
+function metricFmt(v, unit) {
+  if (typeof v !== 'number' || !Number.isFinite(v)) return '<span class="t-dim">不可得</span>';
+  const n = Math.abs(v) >= 100 ? Math.round(v) : Math.round(v * 10) / 10;
+  return esc(String(n)) + (unit ? ' <span class="t-dim">' + esc(unit) + '</span>' : '');
+}
+
+/** 时间标签：跨度大给日期，跨度小给时分秒。 */
+function metricTimeFmt(ms, withSec) {
+  if (typeof ms !== 'number' || !Number.isFinite(ms)) return '—';
+  const d = new Date(ms);
+  const p = (n) => String(n).padStart(2, '0');
+  const hm = p(d.getHours()) + ':' + p(d.getMinutes());
+  return withSec ? hm + ':' + p(d.getSeconds()) : hm;
+}
+function metricSpanFmt(sec) {
+  if (!Number.isFinite(sec) || sec <= 0) return '0 秒';
+  if (sec >= 86400) return (sec / 86400).toFixed(1) + ' 天';
+  if (sec >= 3600) return (sec / 3600).toFixed(1) + ' 小时';
+  if (sec >= 120) return Math.round(sec / 60) + ' 分';
+  return Math.round(sec) + ' 秒';   // 本机验收用 5 秒间隔时，步长是"秒"级 —— 不许显示成「0 分」
+}
+
+function stopMetricsPoll() { if (S.metricsTimer) { clearInterval(S.metricsTimer); S.metricsTimer = 0; } }
+
+function startMetricsPoll() {
+  stopMetricsPoll();
+  if (!S.metricsOpen || !S.metricsAuto) return;
+  S.metricsTimer = setInterval(() => {
+    if (!document.hidden) void metricsRefresh(false);
+  }, METRICS_POLL_MS);
+}
+
+/** 展开 / 收起趋势栏（由「运行状态」里那一行触发）——与「房间明细」同一套写法。 */
+function toggleMetrics() {
+  S.metricsOpen = !S.metricsOpen;
+  if (S.metricsOpen) {
+    renderMetrics();
+    startMetricsPoll();
+    void metricsRefresh(false);
+    try { $('card-metrics').scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch { /* 老浏览器 */ }
+  } else {
+    stopMetricsPoll();
+    renderMetrics();
+  }
+  renderStatus();
+}
+
+/** 读一次趋势数据（GET /admin/api/metrics，带令牌、只读）。 */
+async function metricsRefresh(showFlash) {
+  if (!S.conn || S.metricsBusy) return;
+  S.metricsBusy = true;
+  try {
+    const w = metricsWindow();
+    const r = await api(S.conn, '/metrics?since=' + Math.round(w.since) + '&until=' + Math.round(w.until));
+    S.metrics = r;
+    renderMetrics();
+    if (showFlash) {
+      const sp = r.sampling || {};
+      flash('app-flash', '趋势已刷新：窗口 ' + S.metricsRangeH + ' 小时 · ' + fmtN(sp.points) + ' 个采样点'
+        + (sp.persist && sp.persist.active ? ' · 已落盘' : ''), 'ok');
+    }
+  } catch (err) {
+    $('metrics-note').innerHTML = '<span class="t-red">读取失败：' + esc(err.message) + '</span>';
+  } finally { S.metricsBusy = false; }
+}
+
+function renderMetrics() {
+  const card = $('card-metrics');
+  $('metrics-range').innerHTML = METRICS_RANGES.map((r) =>
+    '<button class="chip" data-mrange="' + r[0] + '" aria-pressed="' + (S.metricsRangeH === r[0]) + '">'
+    + esc(r[1]) + '</button>').join('');
+  $('metrics-auto').checked = S.metricsAuto;
+  $('metrics-scatter').value = S.metricsScatter;
+  if (!S.metricsOpen) { card.classList.add('hide'); return; }
+  card.classList.remove('hide');
+
+  const snap = S.metrics;
+  if (!snap) {
+    $('metrics-hint').textContent = '正在读取…';
+    $('metrics-readouts').innerHTML = '<div class="row"><span class="k">读取</span><span class="v"><span class="spin"></span> 正在读取…</span></div>';
+    $('metrics-legend').innerHTML = '';
+    $('metrics-note').textContent = '正在读取趋势数据（GET /admin/api/metrics）。';
+    drawMetrics();
+    return;
+  }
+
+  const sp = snap.sampling || {};
+  const latest = snap.latest || {};
+  // 读数行：服务端给标签与单位（页面不自己维护第二份口径）。★ 峰值那一行就是"判断容量"的那条。
+  $('metrics-readouts').innerHTML = (snap.readouts || []).map((r) =>
+    '<div class="row"><span class="k">' + esc(r.label) + '</span><span class="v">' + metricFmt(latest[r.key], r.unit) + '</span></div>').join('')
+    + '<div class="row"><span class="k">采样 / 回溯</span><span class="v">' + fmtN(sp.intervalSec) + ' 秒 1 点 <span class="sep">·</span> '
+      + fmtN(sp.points) + ' 点 <span class="sep">·</span> ' + esc(metricSpanFmt((sp.points || 0) * (sp.intervalSec || 0))) + '</span></div>'
+    + '<div class="row"><span class="k">落盘</span><span class="v">'
+      + (sp.persist && sp.persist.active
+        ? '<span class="tag on">已开</span> ' + esc(String(sp.persist.files)) + ' 文件 <span class="sep">·</span> ' + esc(sizeFmt(sp.persist.bytes))
+        : '<span class="tag off">未开</span> <span class="t-dim">' + esc((sp.persist && sp.persist.reason) || '—') + '</span>')
+      + '</span></div>'
+    + '<div class="row"><span class="k">系统负载 / 平台</span><span class="v">'
+      + (typeof latest.load1 === 'number' ? esc(String(Math.round(latest.load1 * 100) / 100)) : '<span class="t-dim">不可得</span>')
+      + ' <span class="sep">·</span> <span class="t-dim">' + esc(String(sp.platform || '-')) + (sp.loadavgSource ? ' / ' + esc(sp.loadavgSource) : '') + '</span></span></div>';
+
+  // 图例（每个系列一个真的开关：点击隐藏 / 显示那条线，并在 chip 上显示窗口内最后一个值）。
+  const legend = (snap.series || []).filter((s) => !s.tipOnly);
+  $('metrics-legend').innerHTML = legend.map((s) => {
+    const v = lastFinite(s.values);
+    const on = !S.metricsHidden.has(s.key);
+    return '<button class="chip" data-mseries="' + esc(s.key) + '" aria-pressed="' + on + '"'
+      + ' title="' + esc(s.label + '（' + s.unit + '）—— 点一下' + (on ? '隐藏' : '显示') + '这条线') + '">'
+      + '<i style="background:var(--ch-' + (s.tone || 1) + ')"></i>' + esc(s.label)
+      + ' <b>' + (v === null ? '—' : esc(String(v))) + '</b></button>';
+  }).join('');
+
+  const q = snap.query || {};
+  $('metrics-hint').textContent = '窗口 ' + S.metricsRangeH + ' 小时 · ' + fmtN(sp.points) + ' 点 · 步长 '
+    + esc(metricSpanFmt(q.stepSec)) + (S.metricsAuto ? ' · 每 60 秒自动刷新' : ' · 仅手动刷新');
+  $('metrics-note').innerHTML = '数据来自服务端本进程（<code>GET /admin/api/metrics</code>，需管理令牌，只走请求头，<b>只读</b>）：'
+    + '每 <b>' + fmtN(sp.intervalSec) + ' 秒 1 点</b>、环形缓冲 <b>' + fmtN(sp.capacity) + ' 点</b>（回溯 <b>' + esc(metricSpanFmt(sp.spanSec)) + '</b>）。'
+    + 'CPU 有两条线：<b>均值</b>（这一分钟的平均占用）与 <b>峰值</b>（这一分钟里每 ' + fmtN(sp.peakEverySec) + ' 秒取一次瞬时值的最大者）—— '
+    + 'AI 排练 / 发牌会顶出远高于均值的瞬时高压，<b>判断容量看峰值那条</b>；悬停可看那一刻的 AI / 真人数与秒偏移。'
+    + '事件循环延迟的<b>均值</b>含约 ' + fmtN(sp.elResMs) + ' ms 的定时器底噪（它 = 直方图分辨率），<b>看 max / P99 与相对变化</b>。'
+    + '面板收起或页签切到后台时<b>不轮询</b>。这一页只在你自己浏览器里（游戏页面看不到它）。';
+  drawMetrics();
+}
+
+// -------------------------------------------------------------------------------------------
+// 绘制：四张图上下叠放、**共享同一条时间轴**，一条跨图十字线；散点视图是可选的第五块。
+// -------------------------------------------------------------------------------------------
+
+/** 美刻度（1/2/5 × 10^n）。 */
+function niceTicks(lo, hi, count) {
+  const span = hi - lo;
+  if (!(span > 0)) return [lo];
+  const raw = span / count;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / mag;
+  const step = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * mag;
+  const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-6; v += step) out.push(Math.round(v * 1000) / 1000);
+  return out;
+}
+
+/** 一组系列的值域（全 null ⇒ null）。数值都非负 ⇒ 下界贴 0 更好读。 */
+function metricsRangeOf(list) {
+  let mn = Infinity; let mx = -Infinity;
+  for (const s of list) for (const v of s.values) if (typeof v === 'number' && Number.isFinite(v)) { if (v < mn) mn = v; if (v > mx) mx = v; }
+  if (!Number.isFinite(mn) || !Number.isFinite(mx)) return null;
+  if (mx === mn) { const d = Math.abs(mx) > 0 ? Math.abs(mx) * 0.25 : 1; mn -= d; mx += d; }
+  const pad = (mx - mn) * 0.1;
+  return { lo: Math.max(0, mn - pad), hi: mx + pad };
+}
+
+function drawMetrics() {
+  const wrap = $('metrics-wrap');
+  const cv = $('metrics-canvas');
+  if (!wrap || !cv) return;
+  const k = tScale();
+  const W = Math.max(320, Math.round((wrap.clientWidth || 720) - 2));
+  const snap = S.metrics;
+  const all = (snap && Array.isArray(snap.series)) ? snap.series : [];
+  const charts = (snap && Array.isArray(snap.charts) && snap.charts.length) ? snap.charts : [];
+  const legend = all.filter((s) => !s.tipOnly);
+  const visible = legend.filter((s) => !S.metricsHidden.has(s.key));
+  const scatterOn = S.metricsScatter !== 'off';
+
+  const padT = Math.round(26 * k);      // 给第一张图的标题留出整行（标题画在面板**上方**）
+  const padL = Math.round(44 * k);
+  const padR = Math.round(48 * k);
+  const panelH = Math.round(84 * k);
+  const gap = Math.round(22 * k);       // 面板间距 = 下一张图的标题行；太窄会和上一张的顶部刻度叠字
+  const axisH = Math.round(22 * k);
+  const nPanel = Math.max(1, charts.length);
+  const H = padT + nPanel * panelH + (nPanel - 1) * gap + (scatterOn ? panelH + gap : 0) + axisH;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(W * dpr);
+  cv.height = Math.round(H * dpr);
+  cv.style.height = H + 'px';
+  const g = cv.getContext('2d');
+  if (!g) return;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, W, H);
+
+  const css = getComputedStyle(document.documentElement);
+  const cvar = (n, fb) => { const v = css.getPropertyValue(n).trim(); return v || fb; };
+  const tone = (t) => cvar('--ch-' + (t || 1), '#4ed8af');
+  const gridC = cvar('--grid', 'rgba(78,216,175,.16)');
+  const axisC = cvar('--line-3', '#58675f');
+  const dimC = cvar('--text-dim', '#7b8a84');
+  const hiC = cvar('--text-hi', '#f2f2f2');
+  const bandC = cvar('--ch-band', 'rgba(255,198,0,.16)');
+  const fontNum = (px) => Math.round(px * k) + 'px ' + cvar('--font-num', 'sans-serif');
+  const fontCjk = (px) => Math.round(px * k) + 'px ' + cvar('--font-cjk', 'sans-serif');
+
+  const x0 = padL; const x1 = W - padR;
+  const panels = [];
+  let y = padT;
+  for (let i = 0; i < nPanel; i++) { panels.push({ chart: charts[i] || { key: 'x', title: '-' }, y0: y, y1: y + panelH }); y += panelH + gap; }
+  const scat = scatterOn ? { y0: y, y1: y + panelH } : null;
+
+  const q = (snap && snap.query) || { since: 0, until: 1, stepSec: 60 };
+  const tsArr = (snap && Array.isArray(snap.ts)) ? snap.ts : [];
+  const t0 = q.since; const t1 = (q.until > q.since) ? q.until : q.since + 1;
+  const n = tsArr.length;
+  const X = (t) => x0 + ((t - t0) / (t1 - t0)) * (x1 - x0);
+
+  const line = (ax, ay, bx, by, color, w, dash) => {
+    g.save();
+    g.strokeStyle = color; g.lineWidth = w || 1;
+    if (dash) g.setLineDash(dash);
+    g.beginPath(); g.moveTo(ax, ay); g.lineTo(bx, by); g.stroke();
+    g.restore();
+  };
+  const text = (s, px, x, yy, align, color, font) => {
+    g.save();
+    g.font = font || fontNum(px);
+    g.fillStyle = color || dimC;
+    g.textAlign = align || 'left';
+    g.textBaseline = 'middle';
+    g.fillText(String(s), x, yy);
+    g.restore();
+  };
+
+  // ★ 空数据 / 刚重启：只画一句人话（不画坐标系，不留空白）。
+  if (!snap || n === 0 || !visible.length) {
+    const msg = !snap ? '正在读取…'
+      : (n === 0 ? '还没有采样点：服务刚启动，第 1 个点约 1 分钟后出现。'
+        : '所有系列都被关掉了：点上面的图例把它们打开。');
+    g.save();
+    g.strokeStyle = gridC; g.lineWidth = 1;
+    g.strokeRect(x0 + 0.5, padT + 0.5, Math.max(1, x1 - x0) - 1, Math.max(1, H - padT - axisH) - 1);
+    g.restore();
+    text(msg, 12, (x0 + x1) / 2, padT + (H - padT - axisH) / 2, 'center', dimC, fontCjk(12));
+    return;
+  }
+
+  // 共享时间轴的刻度（四个图对齐同一批竖线）
+  const timeTicks = [];
+  const tickCount = W > 780 ? 6 : 4;
+  for (let i = 0; i <= tickCount; i++) timeTicks.push(t0 + (t1 - t0) * i / tickCount);
+  const spanH = (t1 - t0) / 3600000;
+  const fmtTick = spanH >= 48 ? (ms) => { const d = new Date(ms); const p = (x) => String(x).padStart(2, '0'); return p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':00'; }
+    : (spanH >= 3 ? (ms) => metricTimeFmt(ms, false) : (ms) => metricTimeFmt(ms, true));
+
+  const hovered = (S.metricsHover && typeof S.metricsHover.idx === 'number') ? S.metricsHover.idx : null;
+
+  for (const p of panels) {
+    const list = visible.filter((s) => s.chart === (p.chart && p.chart.key));
+    const left = list.filter((s) => (s.axis || 'l') === 'l');
+    const right = list.filter((s) => s.axis === 'r');
+    const sl = metricsRangeOf(left);
+    const sr = metricsRangeOf(right);
+    const Y = (v, sc) => p.y1 - ((v - sc.lo) / (sc.hi - sc.lo)) * (p.y1 - p.y0);
+
+    // 面板框 + 水平网格 + 左轴刻度（右轴刻度只在双轴面板上出现，并用该轴第一条线的颜色标注）
+    g.save(); g.strokeStyle = gridC; g.lineWidth = 1;
+    g.strokeRect(x0 + 0.5, p.y0 + 0.5, Math.max(1, x1 - x0) - 1, Math.max(1, p.y1 - p.y0) - 1);
+    g.restore();
+    if (sl) for (const v of niceTicks(sl.lo, sl.hi, 3)) {
+      const yy = Y(v, sl);
+      line(x0, yy, x1, yy, gridC, 1);
+      // ★ 贴着面板顶边的那个刻度**不画字**：那里是标题行，标上去必然和标题叠字（网格线照画）。
+      if (yy < p.y0 + Math.round(8 * k)) continue;
+      text(v, 9.5, x0 - 6, yy, 'right', dimC);
+    }
+    if (sr) for (const v of niceTicks(sr.lo, sr.hi, 3)) {
+      const yy = Y(v, sr);
+      if (yy < p.y0 + Math.round(8 * k)) continue;
+      text(v, 9.5, x1 + 6, yy, 'left', tone(right[0].tone));
+    }
+    const title = String((p.chart && p.chart.title) || '') + '（' + String((p.chart && p.chart.unit) || '') + '）'
+      + (p.chart && p.chart.rightUnit ? ' / 右轴 ' + p.chart.rightUnit : '');
+    text(title, 11, x0 + 2, p.y0 - Math.round(13 * k), 'left', hiC, fontCjk(11));
+
+    // 峰值带：先画 CPU 均值 ↔ 峰值之间的阴影（"峰值才是判断容量的那条"）
+    for (const s of list) {
+      if (!s.band) continue;
+      const other = list.find((x) => x.key === s.band);
+      if (!other || !sl) continue;
+      g.save(); g.fillStyle = bandC;
+      g.beginPath();
+      let started = false;
+      for (let i = 0; i < n; i++) {
+        const a = s.values[i]; const b = other.values[i];
+        if (typeof a !== 'number' || typeof b !== 'number' || tsArr[i] === null) continue;
+        const xx = X(tsArr[i]);
+        if (!started) { g.moveTo(xx, Y(b, sl)); started = true; } else { g.lineTo(xx, Y(b, sl)); }
+      }
+      for (let i = n - 1; i >= 0; i--) {
+        const a = s.values[i]; const b = other.values[i];
+        if (typeof a !== 'number' || typeof b !== 'number' || tsArr[i] === null) continue;
+        g.lineTo(X(tsArr[i]), Y(a, sl));
+      }
+      if (started) { g.closePath(); g.fill(); }
+      g.restore();
+    }
+
+    // 折线（null / 空桶 ⇒ 断开；单点 ⇒ 画一个点）
+    for (const s of list) {
+      const sc = (s.axis === 'r') ? sr : sl;
+      if (!sc) continue;
+      g.save();
+      g.strokeStyle = tone(s.tone); g.lineWidth = s.agg === 'max' ? 1.2 : 1.6;
+      if (s.agg === 'max') g.setLineDash([4, 3]);   // 峰值类用虚线：与均值一眼分得开
+      g.beginPath();
+      let pen = false; let solo = 0;
+      for (let i = 0; i < n; i++) {
+        const v = s.values[i];
+        if (typeof v !== 'number' || tsArr[i] === null) { pen = false; continue; }
+        const xx = X(tsArr[i]); const yy = Y(v, sc);
+        if (!pen) { g.moveTo(xx, yy); pen = true; solo = 1; } else { g.lineTo(xx, yy); solo++; }
+      }
+      g.stroke();
+      g.restore();
+      if (solo === 1) {   // ★ 只有 1 个采样点：折线画不出来，至少把那个点画出来
+        for (let i = 0; i < n; i++) {
+          const v = s.values[i];
+          if (typeof v !== 'number' || tsArr[i] === null) continue;
+          g.save(); g.fillStyle = tone(s.tone);
+          g.beginPath(); g.arc(X(tsArr[i]), Y(v, sc), 2.2, 0, Math.PI * 2); g.fill(); g.restore();
+          break;
+        }
+      }
+    }
+  }
+
+  // 共享时间轴：竖网格线 + 底部标签（只画一次）
+  for (const t of timeTicks) {
+    const xx = X(t);
+    line(xx, padT, xx, (scat ? scat.y1 : panels[panels.length - 1].y1), gridC, 1);
+    text(fmtTick(t), 9.5, xx, (scat ? scat.y1 : panels[panels.length - 1].y1) + 11 * k, 'center', dimC);
+  }
+
+  // 可选：散点视图（人数 × CPU 峰值 / 延迟均值）—— 看压力关系最直白的一块
+  if (scat) {
+    const humansS = all.find((s) => s.key === 'humans');
+    const botsS = all.find((s) => s.key === 'bots');
+    const yKey = S.metricsScatter === 'cpu' ? 'cpuPeak' : 'elMeanMs';
+    const yS = all.find((s) => s.key === yKey);
+    g.save(); g.strokeStyle = gridC; g.lineWidth = 1;
+    g.strokeRect(x0 + 0.5, scat.y0 + 0.5, Math.max(1, x1 - x0) - 1, Math.max(1, scat.y1 - scat.y0) - 1);
+    g.restore();
+    text('散点：总人数（真人+AI） × ' + (yS ? yS.label : yKey), 11, x0 + 2, scat.y0 - Math.round(13 * k), 'left', hiC, fontCjk(11));
+    const pts = [];
+    let xmax = 1; let ymax = 1;
+    for (let i = 0; i < n; i++) {
+      const h = humansS ? humansS.values[i] : null;
+      const b = botsS ? botsS.values[i] : null;
+      const yv = yS ? yS.values[i] : null;
+      if (typeof h !== 'number' && typeof b !== 'number') continue;
+      if (typeof yv !== 'number') continue;
+      const xv = (typeof h === 'number' ? h : 0) + (typeof b === 'number' ? b : 0);
+      pts.push([xv, yv]);
+      if (xv > xmax) xmax = xv;
+      if (yv > ymax) ymax = yv;
+    }
+    const YS = (v) => scat.y1 - (v / (ymax * 1.1)) * (scat.y1 - scat.y0);
+    const XS = (v) => x0 + (v / (xmax * 1.15)) * (x1 - x0);
+    for (const v of niceTicks(0, ymax * 1.1, 2)) { const yy = YS(v); if (yy < scat.y0 + Math.round(8 * k)) continue; text(v, 9.5, x0 - 6, yy, 'right', dimC); }
+    for (const v of niceTicks(0, xmax * 1.15, 3)) text(v, 9.5, XS(v), scat.y1 + 11 * k, 'center', dimC);
+    g.save();
+    for (const [px, py] of pts) {
+      g.fillStyle = tone(1); g.globalAlpha = 0.75;
+      g.beginPath(); g.arc(XS(px), YS(py), 2.4, 0, Math.PI * 2); g.fill();
+    }
+    g.restore();
+    if (!pts.length) text('这个窗口里还没有采样点。', 11, (x0 + x1) / 2, (scat.y0 + scat.y1) / 2, 'center', dimC, fontCjk(11));
+  }
+
+  // 跨图十字线（悬停时把四个图对齐到同一个时间点）
+  if (hovered !== null && tsArr[hovered] !== null) {
+    const hx = X(tsArr[hovered]);
+    const bottom = scat ? scat.y1 : panels[panels.length - 1].y1;
+    line(hx, padT, hx, bottom, cvar('--ch-1', '#4ed8af'), 1);
+    for (const p of panels) {
+      const list = visible.filter((s) => s.chart === (p.chart && p.chart.key));
+      const left = list.filter((s) => (s.axis || 'l') === 'l');
+      const right = list.filter((s) => s.axis === 'r');
+      const sl = metricsRangeOf(left); const sr = metricsRangeOf(right);
+      for (const s of list) {
+        const sc = (s.axis === 'r') ? sr : sl;
+        const v = s.values[hovered];
+        if (!sc || typeof v !== 'number') continue;
+        const yy = p.y1 - ((v - sc.lo) / (sc.hi - sc.lo)) * (p.y1 - p.y0);
+        g.save(); g.fillStyle = tone(s.tone);
+        g.beginPath(); g.arc(hx, yy, 2.8, 0, Math.PI * 2); g.fill();
+        g.restore();
+      }
+    }
+  }
+}
+
+/** 悬停气泡：时间 + 每个可见系列的数值 + ★「峰值现场」（那一刻的 AI / 真人数与秒偏移）。 */
+function metricsTipHtml(idx) {
+  const snap = S.metrics;
+  if (!snap || !Array.isArray(snap.series)) return '';
+  const t = (snap.ts || [])[idx];
+  if (typeof t !== 'number') return '';
+  const rows = ['<div><b>' + esc(timeFmt(t) + ':' + String(new Date(t).getSeconds()).padStart(2, '0')) + '</b></div>'];
+  for (const s of snap.series) {
+    if (s.tipOnly || S.metricsHidden.has(s.key)) continue;
+    const v = s.values[idx];
+    rows.push('<div><span class="k">' + esc(s.label) + '</span> '
+      + (typeof v === 'number' ? '<b>' + esc(String(v)) + '</b> ' + esc(s.unit) : '<span class="k">—</span>') + '</div>');
+  }
+  const pb = snap.series.find((s) => s.key === 'peakBots');
+  const ph = snap.series.find((s) => s.key === 'peakHumans');
+  const pa = snap.series.find((s) => s.key === 'peakAtSec');
+  const vb = pb ? pb.values[idx] : null;
+  const vh = ph ? ph.values[idx] : null;
+  const va = pa ? pa.values[idx] : null;
+  if (typeof vb === 'number' || typeof vh === 'number' || typeof va === 'number') {
+    rows.push('<div><span class="k">峰值现场</span> '
+      + (typeof vb === 'number' ? '<b>' + vb + '</b> AI' : '—')
+      + ' · ' + (typeof vh === 'number' ? '<b>' + vh + '</b> 真人' : '—')
+      + (typeof va === 'number' ? ' · 第 <b>' + Math.round(va) + '</b> 秒' : '') + '</div>');
+  }
+  return rows.join('');
+}
+
+/** 导出（CSV / JSON）：拉**当前窗口的原始采样点**（`raw=1` ⇒ 不降采样，一点一行）。 */
+async function metricsExport(kind) {
+  if (!S.conn) return;
+  const btn = kind === 'csv' ? $('btn-metrics-csv') : $('btn-metrics-json');
+  const old = btn.textContent;
+  btn.disabled = true; btn.textContent = '导出中…';
+  try {
+    const w = metricsWindow();
+    const r = await api(S.conn, '/metrics?raw=1&since=' + Math.round(w.since) + '&until=' + Math.round(w.until));
+    const series = (Array.isArray(r.series) ? r.series : []).filter((s) => typeof s.values[0] !== 'undefined');
+    const tsArr = Array.isArray(r.ts) ? r.ts : [];
+    const keys = series.map((s) => s.key);
+    let body; let mime; let ext;
+    if (kind === 'csv') {
+      const iso = (ms) => (typeof ms === 'number' ? new Date(ms).toISOString() : '');
+      const lines = ['ts,iso,' + keys.join(',')];
+      for (let i = 0; i < tsArr.length; i++) {
+        if (tsArr[i] === null) continue;
+        lines.push([tsArr[i], iso(tsArr[i]), ...series.map((s) => (typeof s.values[i] === 'number' ? s.values[i] : ''))].join(','));
+      }
+      body = lines.join('\n') + '\n'; mime = 'text/csv;charset=utf-8'; ext = 'csv';
+    } else {
+      body = JSON.stringify({
+        exportedAt: new Date().toISOString(), windowHours: S.metricsRangeH,
+        sampling: r.sampling, query: r.query, charts: r.charts,
+        columns: series.map((s) => ({ key: s.key, label: s.label, unit: s.unit, chart: s.chart, agg: s.agg })),
+        ts: tsArr, series: series.map((s) => ({ key: s.key, values: s.values })),
+      }, null, 2) + '\n';
+      mime = 'application/json;charset=utf-8'; ext = 'json';
+    }
+    const blob = new Blob([body], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const d = new Date();
+    const p = (x) => String(x).padStart(2, '0');
+    a.href = url;
+    a.download = 'sp-metrics-' + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes())
+      + '-' + S.metricsRangeH + 'h.' + ext;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => { try { URL.revokeObjectURL(url); } catch { /* ignore */ } }, 5000);
+    flash('app-flash', '已导出 ' + (kind === 'csv' ? 'CSV' : 'JSON') + '：窗口 ' + S.metricsRangeH + ' 小时 · '
+      + tsArr.filter((t) => t !== null).length + ' 个原始采样点 · ' + sizeFmt(body.length), 'ok');
+  } catch (err) {
+    flash('app-flash', '导出失败：' + err.message, 'err');
+  } finally { btn.disabled = false; btn.textContent = old; }
+}
+
+/* ---- 趋势：交互 ---- */
+$('metrics-range').addEventListener('click', (e) => {
+  const b = e.target.closest && e.target.closest('[data-mrange]');
+  if (!b) return;
+  S.metricsRangeH = Number(b.getAttribute('data-mrange')) || METRICS_DEFAULT_RANGE_H;
+  metricsSavePrefs();
+  renderMetrics();
+  void metricsRefresh(false);
+});
+$('metrics-legend').addEventListener('click', (e) => {
+  const b = e.target.closest && e.target.closest('[data-mseries]');
+  if (!b) return;
+  const key = b.getAttribute('data-mseries');
+  if (S.metricsHidden.has(key)) S.metricsHidden.delete(key); else S.metricsHidden.add(key);
+  metricsSavePrefs();
+  renderMetrics();
+});
+$('btn-metrics-refresh').addEventListener('click', (e) => {
+  const b = e.target; b.disabled = true; const old = b.textContent;
+  b.innerHTML = '<span class="spin"></span> 刷新中';
+  metricsRefresh(true).finally(() => { b.disabled = false; b.textContent = old; });
+});
+$('metrics-auto').addEventListener('change', () => {
+  S.metricsAuto = $('metrics-auto').checked;
+  if (S.metricsOpen) startMetricsPoll();
+  renderMetrics();
+});
+$('metrics-scatter').addEventListener('change', () => {
+  S.metricsScatter = $('metrics-scatter').value;
+  metricsSavePrefs();
+  renderMetrics();
+});
+$('btn-metrics-csv').addEventListener('click', () => void metricsExport('csv'));
+$('btn-metrics-json').addEventListener('click', () => void metricsExport('json'));
+
+/** 悬停：找最近的一个**有点**的桶 ⇒ 跨图十字线 + 气泡（位置跟着鼠标，超边界就翻到另一侧）。 */
+function metricsHoverAt(clientX, clientY) {
+  const cv = $('metrics-canvas');
+  const snap = S.metrics;
+  if (!cv || !snap || !Array.isArray(snap.ts) || !snap.ts.length) return;
+  const rect = cv.getBoundingClientRect();
+  const k = tScale();
+  const padL = Math.round(44 * k); const padR = Math.round(48 * k);
+  const x0 = padL; const x1 = rect.width - padR;
+  const q = snap.query || {};
+  const t0 = q.since; const t1 = (q.until > q.since) ? q.until : q.since + 1;
+  const mx = clientX - rect.left;
+  const t = t0 + ((Math.min(x1, Math.max(x0, mx)) - x0) / Math.max(1, x1 - x0)) * (t1 - t0);
+  let best = null; let bestD = Infinity;
+  for (let i = 0; i < snap.ts.length; i++) {
+    const ti = snap.ts[i];
+    if (ti === null) continue;
+    const d = Math.abs(ti - t);
+    if (d < bestD) { bestD = d; best = i; }
+  }
+  if (best === null) return;
+  S.metricsHover = { idx: best, x: clientX - rect.left, y: clientY - rect.top };
+  drawMetrics();
+  const tip = $('metrics-tip');
+  tip.innerHTML = metricsTipHtml(best);
+  tip.classList.remove('hide');
+  const tw = tip.offsetWidth || 150;
+  const left = (S.metricsHover.x + 14 + tw > rect.width) ? Math.max(4, S.metricsHover.x - tw - 14) : S.metricsHover.x + 14;
+  tip.style.left = Math.round(left) + 'px';
+  tip.style.top = Math.round(Math.min(Math.max(4, S.metricsHover.y + 12), Math.max(4, rect.height - (tip.offsetHeight || 80) - 4))) + 'px';
+}
+$('metrics-canvas').addEventListener('mousemove', (e) => metricsHoverAt(e.clientX, e.clientY));
+$('metrics-canvas').addEventListener('mouseleave', () => {
+  S.metricsHover = null;
+  $('metrics-tip').classList.add('hide');
+  drawMetrics();
+});
+window.addEventListener('resize', () => { if (S.metricsOpen) drawMetrics(); });
+// 系统深浅色切换 ⇒ 图表色也要跟着换（Canvas 的颜色是从 CSS 变量读的，必须重画一次）。
+try {
+  const mq = window.matchMedia('(prefers-color-scheme: light)');
+  const onScheme = () => { if (S.metricsOpen) drawMetrics(); };
+  if (mq.addEventListener) mq.addEventListener('change', onScheme);
+  else if (mq.addListener) mq.addListener(onScheme);
+} catch { /* 老浏览器 */ }
+
+/* ==========================================================================================
+   官方 release 追踪 + 更新提示（工序 host-024）
+   ★ 数据：GET /admin/api/upstream-release（server/admin.js；需 SP_ADMIN_TOKEN、只走请求头、**只读**）。
+     服务端**每 60 分钟**带 ETag 拉一次 api.github.com 的 releases/latest；304 只更新检查时间；
+     失败只填 error，继续展示上一次成功的缓存（面板照常显示，页面其它功能一个都不受影响）。
+   ★ 两处提示（服主口径「在管理页给出对应的更新提示」）：
+     ① 顶部**一句话横幅**（只有真的落后时才出现，可关闭；关闭选择记在本机浏览器，
+        并且**与官方 tag 绑定** —— 官方再发新版，横幅会重新出现，免得关一次以后永远看不见）；
+     ② 「运行状态」卡里**多一行「官方版本」**，落后时带角标 + 独立可收起的「更新追踪」栏。
+   ★ 为什么「立即检查」要等：未认证的 GitHub API 限额 **60 次/小时** ⇒ 服务端有**1 分钟最小重试间隔**，
+     点太快时接口会回 `retryAfterSec`，这里如实告诉服主还要等多久（而不是假装检查了）。
+   ========================================================================================== */
+const UP_POLL_MS = 5 * 60 * 1000;   // 面板每 5 分钟读一次（服务端本身 60 分钟才出一次网）
+const UP_LS = 'sp.modadmin.upstream.v1';
+
+/** 本机偏好（说明展开 / 横幅关闭）——只存你自己的浏览器，不影响任何服务端行为。 */
+function upPrefs() {
+  const def = { bodyOpen: false, bannerHidden: false, bannerTag: null };
+  try {
+    const j = JSON.parse(localStorage.getItem(UP_LS) || 'null');
+    if (!j || typeof j !== 'object') return def;
+    return {
+      bodyOpen: j.bodyOpen === true,
+      bannerHidden: j.bannerHidden === true,
+      bannerTag: typeof j.bannerTag === 'string' ? j.bannerTag : null,
+    };
+  } catch { return def; }
+}
+function upSavePrefs() {
+  try {
+    localStorage.setItem(UP_LS, JSON.stringify({
+      bodyOpen: S.upBodyOpen, bannerHidden: S.upBannerHidden, bannerTag: S.upBannerTag,
+    }));
+  } catch { /* 私密模式 */ }
+}
+
+function stopUpPoll() { if (S.upTimer) { clearInterval(S.upTimer); S.upTimer = 0; } }
+
+function startUpPoll() {
+  stopUpPoll();
+  if (!S.upOpen || !S.upAuto) return;
+  S.upTimer = setInterval(() => {
+    // ★ 横幅要一直准（它不是「展开才有」的东西）⇒ 即使栏收起了，到点也读一次；
+    //   但页签在后台时一次都不发（与另外两栏同一条纪律）。
+    if (!document.hidden) void upRefresh(false);
+  }, UP_POLL_MS);
+}
+
+/** 读一次（GET /admin/api/upstream-release）。`refresh=true` ⇒ 请求服务端立刻检查（仍受 1 分钟闸）。 */
+async function upRefresh(showFlash, refresh) {
+  if (!S.conn || S.upBusy) return;
+  S.upBusy = true;
+  try {
+    const r = await api(S.conn, '/upstream-release' + (refresh ? '?refresh=1' : ''));
+    S.up = r;
+    renderUpstream();
+    renderStatus();
+    if (showFlash) {
+      const t = (r.latest && r.latest.tag) || '-';
+      if (r.error) flash('app-flash', '官方 release 检查失败：' + r.error + '（仍显示上次结果）', 'warn');
+      else if (r.behind) flash('app-flash', '★ 官方已发布 ' + t + '，当前落后 ' + (r.behindCount || 1) + ' 个版本', 'warn');
+      else flash('app-flash', '官方 release 已检查：最新 ' + t + (r.latest && r.latest.publishedAt ? '（' + timeFmt(Date.parse(r.latest.publishedAt)) + '）' : ''), 'ok');
+    }
+  } catch (err) {
+    // ★ 接口本身失败（令牌不对 / 网络不通）**不许影响其它功能**：只在栏里写一句，不弹不炸。
+    $('up-note').innerHTML = '<span class="t-red">读取失败：' + esc(err.message) + '</span>';
+  } finally { S.upBusy = false; }
+}
+
+/** 展开 / 收起「更新追踪」栏（由「运行状态」里那一行触发）——与另外两栏同一套写法。 */
+function toggleUpstream() {
+  S.upOpen = !S.upOpen;
+  if (S.upOpen) {
+    renderUpstream();
+    startUpPoll();
+    void upRefresh(false);
+    try { $('card-upstream').scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch { /* 老浏览器 */ }
+  } else {
+    stopUpPoll();
+    renderUpstream();
+  }
+  renderStatus();
+}
+
+/** 顶部一句话横幅：**只有落后时**出现；可关闭（记住选择，且与官方 tag 绑定）。 */
+function renderUpBanner() {
+  const host = $('up-banner');
+  if (!host) return;
+  const up = S.up || {};
+  const latest = up.latest || null;
+  const tag = latest && latest.tag ? latest.tag : null;
+  // 官方发新版 ⇒ 之前那次「关闭」作废（否则关一次就永远看不见提示了）。
+  if (S.upBannerHidden && S.upBannerTag && tag && S.upBannerTag !== tag) {
+    S.upBannerHidden = false; S.upBannerTag = null; upSavePrefs();
+  }
+  if (!up.behind || !tag || S.upBannerHidden) { host.innerHTML = ''; return; }
+  const cur = (up.current && (up.current.deployedApp || up.current.treeVersion)) || '-';
+  const when = latest.publishedAt ? String(latest.publishedAt).slice(0, 10) : '（未注明时间）';
+  host.innerHTML = '<div class="up-banner behind" id="up-banner-box">'
+    + '<div class="up-banner__t">★ 官方已发布 <b>' + esc(tag) + '</b>（' + esc(when) + '），当前 '
+    + (up.current && up.current.deployedApp ? '线上 ' : '本树 ') + esc(cur)
+    + (up.behindCount ? '，落后 <b>' + esc(String(up.behindCount)) + '</b> 个版本' : '') + '。</div>'
+    + '<div class="up-banner__acts">'
+    + '<button class="ghost sm" data-up-open="1">看更新说明</button>'
+    + '<button class="up-banner__x" data-up-dismiss="1" title="关闭这条提示（官方再发新版会重新出现）" aria-label="关闭">×</button>'
+    + '</div></div>';
+}
+
+/** 更新说明正文（摘要 / 展开全文）。 */
+function upBodyHtml(latest) {
+  if (!latest) return '';
+  const full = typeof latest.body === 'string' ? latest.body : '';
+  const sum = typeof latest.bodySummary === 'string' ? latest.bodySummary : '';
+  const shown = S.upBodyOpen && full ? full : sum;
+  if (!shown) return '<div class="up-body"><span class="t-dim">这一版没有写更新说明。</span></div>';
+  const more = latest.bodyTruncated && !S.upBodyOpen;
+  return '<div class="up-body' + (S.upBodyOpen ? ' open' : '') + '" id="up-body">' + esc(shown)
+    + (more ? '…' : '') + '</div>'
+    + (latest.bodyTruncated
+      ? '<button class="lnk" data-up-body="1">' + (S.upBodyOpen ? '收起全文 ▴' : '展开全文 ▾')
+        + '（共 ' + esc(String(latest.bodyChars || 0)) + ' 字）</button>'
+      : '');
+}
+
+function renderUpstream() {
+  const card = $('card-upstream');
+  if (!card) return;
+  $('up-auto').checked = S.upAuto;
+  if (!S.upOpen) { card.classList.add('hide'); renderUpBanner(); return; }
+  card.classList.remove('hide');
+
+  const up = S.up;
+  if (!up) {
+    $('up-hint').textContent = '正在读取…';
+    $('up-rows').innerHTML = '<div class="row"><span class="k">读取</span><span class="v"><span class="spin"></span> 正在检查…</span></div>';
+    $('up-grid').innerHTML = '';
+    $('up-note').textContent = '正在读取（GET /admin/api/upstream-release）。';
+    renderUpBanner();
+    return;
+  }
+
+  const cur = up.current || {};
+  const latest = up.latest || null;
+  const vc = up.versionCheck || {};
+  const myVer = cur.deployedApp || cur.treeVersion || '未知';
+  const rows = [
+    ['当前版本', esc(myVer)
+      + (cur.deployedApp && cur.treeVersion && cur.deployedApp !== cur.treeVersion
+        ? ' <span class="micro">（线上 ' + esc(cur.deployedApp) + ' · 本树 ' + esc(cur.treeVersion) + '）</span>' : '')
+      + (cur.deployedApp ? ' <span class="micro">部署版（/healthz）</span>' : ' <span class="micro">本树 package.json</span>')],
+    ['官方最新', latest && latest.tag
+      ? '<span class="' + (up.behind ? 't-amber' : 't-mint') + '">' + esc(latest.tag) + '</span>'
+        + (latest.prerelease ? ' <span class="tag warn">预发布</span>' : '')
+      : '<span class="t-dim">未取到</span>'],
+    ['落后版本', up.behind
+      ? '<span class="tag warn">落后 ' + esc(String(up.behindCount || 1)) + ' 个</span>'
+      : (vc.compare === 0 ? '<span class="tag on">同版本</span>' : '<span class="tag off">未判定</span>')],
+    ['发布时间', latest && latest.publishedAt ? esc(timeFmt(Date.parse(latest.publishedAt))) + ' <span class="sep">·</span> <span class="micro">' + esc(String(latest.publishedAt).slice(0, 10)) + '</span>' : '-'],
+    ['上次检查', up.checkedAt ? esc(timeFmt(up.checkedAt)) + ' <span class="sep">·</span> <span class="micro">' + esc(metricSpanFmt(Math.max(0, (Date.now() - up.checkedAt) / 1000)) + '前') + '</span>' : '<span class="t-dim">还没检查过</span>'],
+    ['数据来源', esc(String(up.source || '-')) + ' <span class="sep">·</span> <span class="micro">每 ' + esc(String(up.intervalMin || '-')) + ' 分钟检查</span>'
+      + (up.cached ? ' <span class="tag wait">上次运行的缓存</span>' : '')
+      + (up.stats && up.stats.notModified ? ' <span class="micro">(304 ×' + esc(String(up.stats.notModified)) + ')</span>' : '')],
+  ];
+  $('up-rows').innerHTML = rows.map((r) => '<div class="row"><span class="k">' + r[0] + '</span><span class="v">' + r[1] + '</span></div>').join('');
+
+  // 明细：一条 release（官方 latest）+ 资产清单 + 说明正文。
+  const assets = (latest && Array.isArray(latest.assets)) ? latest.assets : [];
+  $('up-grid').innerHTML = (!latest
+    ? '<p class="empty">还没有取到官方的 release 信息。网络不通时这里会保留上一次成功的结果；'
+      + '一次都没成功过就是空的。点「立即检查」可手动重试。</p>'
+    : '<div class="up-rel">'
+      + '<div class="up-rel__hd"><span class="up-rel__tag">' + esc(latest.tag || '(无 tag)') + '</span>'
+      + '<span class="micro">' + esc(latest.name || '') + '</span></div>'
+      + '<div class="up-rel__meta">published ' + esc(latest.publishedAt || '(未注明)')
+      + ' <span class="sep">·</span> ' + assets.length + ' 个资产'
+      + (latest.bodyChars ? ' <span class="sep">·</span> 说明 ' + esc(String(latest.bodyChars)) + ' 字' : '')
+      + (latest.missing && latest.missing.length ? ' <span class="sep">·</span> <span class="t-amber">缺字段 ' + esc(latest.missing.join(', ')) + '</span>' : '')
+      + '</div>'
+      + upBodyHtml(latest)
+      + (assets.length
+        ? '<div class="up-assets"><table class="rtable"><thead><tr><th>资产</th><th>大小</th><th>sha256</th></tr></thead><tbody>'
+          + assets.map((a) => '<tr><td>' + esc(a.name || '-') + '</td><td>' + esc(a.size == null ? '-' : sizeFmt(a.size))
+            + '</td><td>' + (a.digest ? esc(a.digest) : '<span class="t-dim">官方未给摘要</span>') + '</td></tr>').join('')
+          + '</tbody></table></div>'
+        : '<p class="note">这一版没有附带资产。</p>')
+      + '</div>');
+
+  // 失败摘要（★ 一行，不刷屏）：错误 + 仍显示的上次结果。
+  const note = [];
+  if (up.error) note.push('<span class="t-red">检查失败：' + esc(up.error) + '</span>'
+    + (latest ? '（下面是**上次成功**的结果，页面其它功能不受影响）' : '（还没有过成功的结果）'));
+  else if (up.behind) note.push('<span class="t-amber">★ 官方已发布新版本：' + esc(latest.tag) + '</span>，建议在停机窗口内跟进（这是提示，不会自动升级）。');
+  else if (latest) note.push('<span class="t-mint">已是最新</span>（与官方 ' + esc(latest.tag) + ' 一致）。');
+  else note.push('还没有数据。');
+  if (vc.warning) note.push('<span class="t-amber">' + esc(vc.warning) + '</span>');
+  if (vc.note) note.push(esc(vc.note));
+  note.push('数据来自 <code>' + esc(String(up.repo || '-')) + '</code> 的 release（只读，只走 <code>api.github.com</code>，'
+    + '不下载任何资产）。服务端每 <b>' + esc(String(up.intervalMin || '-')) + ' 分钟</b>检查一次；'
+    + '面板收起 / 页签在后台时本页不轮询。');
+  $('up-note').innerHTML = note.join(' ');
+
+  $('up-hint').textContent = (up.behind ? '★ 有更新 · ' : '') + (latest ? ('官方 ' + latest.tag) : '未取到')
+    + (up.error ? ' · 检查失败' : '') + (up.cached ? ' · 缓存' : '')
+    + (upOpenNow() ? ' · 每 5 分钟自动刷新' : '');
+  renderUpBanner();
+}
+
+/** 栏是否展开（供提示文案用；写成函数免得读的时候 S 还没初始化）。 */
+function upOpenNow() { return S.upOpen === true && S.upAuto === true; }
+
+/* ---- 更新追踪：交互 ---- */
+$('status-rows').addEventListener('click', (e) => {
+  const u = e.target.closest && e.target.closest('[data-up-toggle]');
+  if (u) toggleUpstream();
+});
+$('up-banner').addEventListener('click', (e) => {
+  const d = e.target.closest && e.target.closest('[data-up-dismiss]');
+  if (d) {
+    S.upBannerHidden = true;
+    S.upBannerTag = (S.up && S.up.latest && S.up.latest.tag) || null;
+    upSavePrefs();
+    renderUpBanner();
+    return;
+  }
+  const o = e.target.closest && e.target.closest('[data-up-open]');
+  if (o) { if (!S.upOpen) toggleUpstream(); else { renderUpstream(); try { $('card-upstream').scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch { /* 老浏览器 */ } } }
+});
+$('up-grid').addEventListener('click', (e) => {
+  const b = e.target.closest && e.target.closest('[data-up-body]');
+  if (!b) return;
+  S.upBodyOpen = !S.upBodyOpen;
+  upSavePrefs();
+  renderUpstream();
+});
+$('btn-up-check').addEventListener('click', async (e) => {
+  const b = e.target; b.disabled = true; const old = b.textContent;
+  b.innerHTML = '<span class="spin"></span> 检查中';
+  try {
+    // ★ 服务端有 1 分钟最小重试间隔（GitHub 限额 60 次/小时）⇒ 太勤时如实说还要等多久。
+    const left = (S.up && S.up.retryAfterSec) ? S.up.retryAfterSec : 0;
+    if (left > 0) {
+      flash('app-flash', '刚刚才查过：服务端每 ' + ((S.up && S.up.intervalMin) || 60) + ' 分钟才出一次网'
+        + '（GitHub 未认证限额 60 次/小时），' + left + ' 秒后可再查', 'warn');
+    }
+    await upRefresh(true, true);
+    // ★ 检查是**后台发起**的（不阻塞响应）⇒ 这里按小步回读，等 `checking` 落回 false 再收工，
+    //   这样「立即检查」点下去的结果一定能在面板上看到（最多等 ~12 秒，超时就明说结果稍后自己出现）。
+    for (let i = 0; i < 12; i++) {
+      if (!S.up || S.up.checking !== true) break;
+      await new Promise((r) => setTimeout(r, 1000));
+      await upRefresh(false);
+    }
+    await upRefresh(false);
+    if (S.up && S.up.checking === true) flash('app-flash', '检查还在进行中，稍后自动刷新即可看到结果', 'warn');
+  } catch (err) { flash('app-flash', '检查失败：' + err.message, 'err'); }
+  finally { b.disabled = false; b.textContent = old; }
+});
+$('up-auto').addEventListener('change', () => {
+  S.upAuto = $('up-auto').checked;
+  startUpPoll();
+  renderUpstream();
+});
+
+/* ---- 列表交互 ---- */
+$('chips').addEventListener('click', (e) => {
+  const f = e.target.closest && e.target.closest('[data-f]');
+  if (!f) return;
+  S.filter = f.getAttribute('data-f');
+  renderMods();
+});
+$('q').addEventListener('input', () => {
+  S.q = $('q').value;
+  $('search-wrap').classList.toggle('has', !!S.q);
+  renderMods();
+});
+$('btn-clr').addEventListener('click', () => { $('q').value = ''; S.q = ''; $('search-wrap').classList.remove('has'); renderMods(); $('q').focus(); });
+$('sort').addEventListener('change', () => { S.sort = $('sort').value; renderMods(); });
+
+$('modlist').addEventListener('click', async (e) => {
+  // ★「查看详情 ▾」是纯前端展开，绝不能走到下面的 POST 分支去。
+  const d = e.target.closest && e.target.closest('[data-detail]');
+  if (d) {
+    const mid = d.getAttribute('data-detail');
+    if (S.openDesc.has(mid)) S.openDesc.delete(mid); else S.openDesc.add(mid);
+    renderMods();
+    return;
+  }
+  // ★ 「版本更新日志 ▾」（「待更新③」）：同样是纯前端展开。快照里只有最近 3 版，
+  //   第一次展开时再去拉**完整**日志（GET，只读、带令牌），拿到就缓存到本次会话。
+  const lg = e.target.closest && e.target.closest('[data-log]');
+  if (lg) {
+    const mid = lg.getAttribute('data-log');
+    if (S.openLog.has(mid)) { S.openLog.delete(mid); renderMods(); return; }
+    S.openLog.add(mid);
+    if (!S.logs[mid] && !S.logBusy.has(mid)) {
+      S.logBusy.add(mid);
+      renderMods();
+      try {
+        const r = await api(S.conn, '/changelog?id=' + encodeURIComponent(mid));
+        S.logs[mid] = Array.isArray(r.versions) ? r.versions : [];
+      } catch (err) {
+        S.logs[mid] = [];
+        flash('app-flash', '读取 ' + mid + ' 的版本日志失败：' + err.message, 'warn');
+      } finally { S.logBusy.delete(mid); }
+    }
+    renderMods();
+    return;
+  }
+  const b = e.target.closest && e.target.closest('[data-act]');
+  if (!b || S.busy) return;
+  const act = b.getAttribute('data-act'), id = b.getAttribute('data-id');
+  if (act === 'remove' && !confirm('确认卸载 ' + id + '？\n目录会被移到服务器上的 _removed/，可恢复。')) return;
+  S.busy = true; b.disabled = true;
+  const old = b.textContent; b.innerHTML = '<span class="spin"></span>';
+  try {
+    const r = await api(S.conn, '/mods/' + encodeURIComponent(id) + '/' + act, { method: 'POST' });
+    if (act === 'pack') {
+      // 打包只把包写到服务器的 .exports/；要真的落到本机，还得再走一次**带令牌**的下载。
+      flash('app-flash', '已导出 ' + r.file + '（' + sizeFmt(r.bytes) + '），正在下载…', 'ok');
+      await refresh(false);
+      try {
+        const d = await downloadExport(r.file);
+        flash('app-flash', '已导出并下载 ' + d.name + '（' + sizeFmt(d.bytes) + '）', 'ok');
+      } catch (e2) {
+        flash('app-flash', '已导出 ' + r.file + '（' + sizeFmt(r.bytes) + '），但自动下载失败：' + e2.message
+          + ' —— 可在下方「导出」列表里手动下载', 'warn');
+      }
+    } else {
+      flash('app-flash', (r.detail || '完成') + ' —— 需要「重载 Mod」才生效', 'ok');
+      await refresh(false);
+    }
+  } catch (err) {
+    flash('app-flash', err.message, 'err');
+    b.disabled = false; b.textContent = old;
+  } finally { S.busy = false; }
+});
+
+/* ---- 导出列表里的「下载」按钮（走 downloadExport，带令牌）---- */
+$('exports-out').addEventListener('click', async (e) => {
+  const b = e.target.closest && e.target.closest('[data-dl]');
+  if (!b || b.disabled) return;
+  const file = b.getAttribute('data-dl');
+  const old = b.textContent;
+  b.disabled = true; b.innerHTML = '<span class="spin"></span>';
+  try {
+    const d = await downloadExport(file);
+    flash('app-flash', '已下载 ' + d.name + '（' + sizeFmt(d.bytes) + '）', 'ok');
+  } catch (err) {
+    flash('app-flash', err.message, 'err');
+  } finally { b.disabled = false; b.textContent = old; }
+});
+
+/* ---- 上传 ---- */
+const drop = $('drop'), fileInput = $('file');
+drop.addEventListener('click', () => fileInput.click());
+drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('over'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+drop.addEventListener('drop', (e) => {
+  e.preventDefault(); drop.classList.remove('over');
+  if (e.dataTransfer.files && e.dataTransfer.files[0]) upload(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) upload(fileInput.files[0]); });
+
+async function upload(file) {
+  if (!/\.(spmod|zip)$/i.test(file.name)) { flash('app-flash', '只接受 .spmod / .zip（收到 ' + file.name + '）', 'err'); return; }
+  if (file.size > 32 * 1024 * 1024) { flash('app-flash', '文件超过 32 MB', 'err'); return; }
+  const t = $('drop-text');
+  t.innerHTML = '<span class="spin"></span> 正在上传并校验 ' + esc(file.name) + '（' + sizeFmt(file.size) + '）…';
+  try {
+    const r = await api(S.conn, '/install?name=' + encodeURIComponent(file.name), { method: 'POST', raw: file });
+    flash('app-flash', '安装完成：' + (r.detail || 'ok') + ' —— 需要「重载 Mod」才生效', 'ok');
+    t.textContent = '把 .spmod 拖到这里，或点击选择文件';
+    await refresh(false);
+  } catch (err) {
+    flash('app-flash', err.message, 'err');
+    t.textContent = '把 .spmod 拖到这里，或点击选择文件';
+  } finally { fileInput.value = ''; }
+}
+
+/* ---- 维护动作 ---- */
+$('btn-verify').addEventListener('click', async (e) => {
+  const b = e.target; b.disabled = true; const old = b.textContent; b.innerHTML = '<span class="spin"></span> 校验中';
+  try {
+    const r = await api(S.conn, '/verify', { method: 'POST' });
+    const bad = r.rows.filter((x) => (x.errors || []).length);
+    const head = bad.length
+      ? '<span class="t-red">' + bad.length + ' 个 Mod 校验未通过</span>'
+      : '<span class="t-mint">全部通过</span>';
+    $('verify-out').innerHTML = '<p class="note" style="margin-top:12px">' + head
+      + ' · ' + r.rows.length + ' 个 Mod · ' + timeFmt(r.ts) + '</p>'
+      + r.rows.map((x) => '<div class="row"><span class="k">'
+        + ((x.errors || []).length ? '<span class="tag err">✗</span> ' : '<span class="tag on">✓</span> ')
+        + esc(x.id) + '</span><span class="v">' + x.ops + ' ops</span></div>'
+        + (x.errors || []).map((er) => '<div class="msgs"><div class="e">' + esc(er) + '</div></div>').join('')
+        + (x.warnings || []).map((w) => '<div class="msgs"><div class="w">' + esc(w) + '</div></div>').join('')).join('');
+    flash('app-flash', bad.length ? ('深度校验：' + bad.length + ' 个 Mod 有问题') : '深度校验：全部通过', bad.length ? 'warn' : 'ok');
+    await refresh(false);
+  } catch (err) { flash('app-flash', err.message, 'err'); }
+  finally { b.disabled = false; b.textContent = old; }
+});
+
+$('btn-reload').addEventListener('click', async (e) => {
+  const b = e.target; b.disabled = true; const old = b.textContent; b.innerHTML = '<span class="spin"></span> 重载中';
+  try {
+    const r = await api(S.conn, '/reload', { method: 'POST' });
+    flash('app-flash', '已重载：' + r.modsEnabled + ' 个 Mod 生效（revision ' + r.revision + '）。' + (r.note || ''), 'ok');
+    await refresh(false);
+  } catch (err) { flash('app-flash', err.message, 'err'); }
+  finally { b.disabled = false; b.textContent = old; }
+});
+
+$('btn-restart').addEventListener('click', async (e) => {
+  if (!confirm('确认重启服务端进程？\n进行中的对局会结束（本游戏无存档），约 1~2 秒后自动恢复。')) return;
+  const b = e.target; b.disabled = true;
+  try {
+    await api(S.conn, '/restart', { method: 'POST' });
+    flash('app-flash', '重启指令已下发，等待服务恢复…', 'warn');
+    let tries = 0;
+    const timer = setInterval(async () => {
+      tries++;
+      try {
+        await api(current(), '/ping');
+        clearInterval(timer);
+        flash('app-flash', '服务已恢复。', 'ok');
+        await refresh(false);
+      } catch {
+        if (tries > 20) { clearInterval(timer); flash('app-flash', '服务在 20 秒内没有恢复，请到服务器上看 systemctl status。', 'err'); }
+      }
+    }, 1000);
+  } catch (err) { flash('app-flash', err.message, 'err'); b.disabled = false; }
+});
+
+/* ---- 实时文档（横幅公告）---- */
+// 「持续」下拉切换 ⇒ 只有「自定义…」才露出分钟数输入框（工序 75）。
+$('live-mins').addEventListener('change', () => liveSyncMinsUI());
+$('live-mins-custom').addEventListener('input', () => {
+  // 就地夹取（1 ~ 43200 分钟），免得手滑多打几位数字被静默改写；越界时把输入框本身改回来。
+  const el = $('live-mins-custom');
+  const n = Number(el.value);
+  if (!Number.isFinite(n) || !el.value) return;
+  if (n > LIVE_MINS_MAX) el.value = String(LIVE_MINS_MAX);
+  else if (n < LIVE_MINS_MIN) el.value = String(LIVE_MINS_MIN);
+});
+
+$('btn-live-load').addEventListener('click', async (e) => {
+  const b = e.target; b.disabled = true; const old = b.textContent; b.innerHTML = '<span class="spin"></span>';
+  try { await liveRefresh(true); } catch (err) { flash('app-flash', err.message, 'err'); }
+  finally { b.disabled = false; b.textContent = old; }
+});
+
+$('btn-live-pub').addEventListener('click', async (e) => {
+  const item = liveReadForm();
+  if (!item) { flash('app-flash', '请先写「横幅正文」', 'err'); return; }
+  // ★ 1.1.0 起不再有「结束必须晚于开始」这条校验（那个输入项没有了）：时长是正数由 liveReadMins 保证，
+  //   截止时刻是算出来的。这里改拦两种**真会让人白等**的错：
+  //   ① 选了「自定义…」却没填分钟数；
+  //   ② 「开始」填在过去 —— 时长是从「开始」起算的，一个过去的开始会让这条公告一发布就已经（或很快）
+  //      过期，正是工序 75 那个"发了看不见"的坑（服主真机踩过）。要立刻显示就留空。
+  if ($('live-mins').value === 'custom' && !$('live-mins-custom').value) {
+    flash('app-flash', '「自定义」要填一个分钟数（1 ~ ' + LIVE_MINS_MAX + '）', 'err'); return;
+  }
+  if (Number.isFinite(item.from) && item.from < Date.now() - 60000) {
+    flash('app-flash', '「开始」填在过去（' + timeFmt(item.from) + '）；想立刻显示就把它留空，时长从发布那一刻起算', 'err'); return;
+  }
+  const b = e.target; b.disabled = true; const old = b.textContent; b.innerHTML = '<span class="spin"></span> 发布中';
+  try {
+    // ★ upsert：同一个 id 就地覆盖，其余条目原样保留（撤回单条走每条右边的「删除」）。
+    const items = liveItems().filter((x) => x && x.id !== item.id);
+    items.push(item);
+    await liveWrite({ items }, '已发布');
+    $('live-text').value = '';
+    $('live-key').value = '';
+  } catch (err) { flash('app-flash', err.message, 'err'); }
+  finally { b.disabled = false; b.textContent = old; }
+});
+
+$('btn-live-clear').addEventListener('click', async (e) => {
+  if (!confirm('确认撤回全部横幅公告？\n玩家端在 20 秒内不再显示（不影响正在进行的对局）。')) return;
+  const b = e.target; b.disabled = true; const old = b.textContent; b.innerHTML = '<span class="spin"></span> 撤回中';
+  try { await liveWrite({ items: [] }, '已撤回全部横幅'); }
+  catch (err) { flash('app-flash', err.message, 'err'); }
+  finally { b.disabled = false; b.textContent = old; }
+});
+
+$('live-list').addEventListener('click', async (e) => {
+  const b = e.target.closest && e.target.closest('[data-live-del]');
+  if (!b || b.disabled) return;
+  const key = b.getAttribute('data-live-del');
+  b.disabled = true;
+  try { await liveWrite({ items: liveItems().filter((x) => x && String(x.id || '') !== key) }, '已删除 1 条'); }
+  catch (err) { flash('app-flash', err.message, 'err'); b.disabled = false; }
+});
+
+/* ---- 启动 ---- */
+// ★ 工序 114：① 跟随游戏「设置 → 文字大小」（同源时读 sp.pref.settings ⇒ <html data-text> ⇒ --t/--tscale）；
+//   ② 趋势栏的本机偏好（系列开关 / 窗口 / 散点）从你自己的浏览器读回来。两者失败都不影响其它功能。
+applyTextSize();
+{
+  const p = metricsPrefs();
+  S.metricsHidden = new Set(p.hidden);
+  S.metricsRangeH = p.rangeH;
+  S.metricsScatter = p.scatter;
+}
+// ★ 工序 host-024：官方 release 追踪的本机偏好（说明是否展开 / 顶部横幅是否被关掉 + 关掉时官方是哪个 tag）。
+{
+  const p = upPrefs();
+  S.upBodyOpen = p.bodyOpen;
+  S.upBannerHidden = p.bannerHidden;
+  S.upBannerTag = p.bannerTag;
+}
+renderConns();
+if (current()) openApp(); else renderConns();
+</script>
+</body>
+</html>

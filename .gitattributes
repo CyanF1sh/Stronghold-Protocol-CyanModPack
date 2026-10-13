@@ -1,0 +1,3 @@
+# 行尾与文本属性：本仓是**纯文本仓**（无二进制），全仓统一 LF、无 BOM。
+# 有了这一条，Windows 上 `core.autocrlf=true` 也不会把工作区改成 CRLF，也不会在 add 时刷警告。
+* text=auto eol=lf

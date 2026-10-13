@@ -1,0 +1,19 @@
+{
+  "ops": [
+    {
+      "op": "add",
+      "path": "chat",
+      "value": {
+        "enabled": true,
+        "maxLen": 60,
+        "cooldownMs": 2000,
+        "burst": 5,
+        "burstWindowMs": 20000,
+        "roomBurst": 12,
+        "roomWindowMs": 30000,
+        "denyRooms": [],
+        "blockWords": []
+      }
+    }
+  ]
+}

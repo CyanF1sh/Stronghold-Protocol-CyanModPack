@@ -1,0 +1,12 @@
+{
+  "id": "cyanfish.boss-pairing",
+  "name": "最终攻势 · 随机配队",
+  "summary": "最终攻势（boss 回合）的队友改为每局随机挑选，不再固定按座位两两配队",
+  "version": "1.0.0",
+  "apiVersion": 1,
+  "gameVersion": "0.2.5",
+  "upstreamFixedIn": "0.2.5（docs/history/0.2.5.md §30.12：维护者要求「首领每局随机配对、隐藏首领沿用同局分组」，基座已内建 m.bossPairs）",
+  "author": "CyanFish",
+  "description": "★★ **已撤项（0.2.5 重缝时）**：上游 0.2.5 把「首领改为每局随机配对，准备期至开战固定，隐藏首领沿用同局分组」做成了**基座行为**（`server/match/finalAssault.js pairPlayers(alive, rng, previous)` + `Match.bossPairs` + `m.public.bossPairs`，见 `docs/history/0.2.5.md` §30.12）—— 本 Mod 想做的事已经被官方做了，而且官方那版还多做了「隐藏首领沿用同局分组 / 队友退出后保持完整对子」。**基座自 0.2.5 起不再调用本 Mod 的接缝入口 `bossPairGroups`**（`match/phases.js` 与 `match/bossRounds.js` 都改走官方路径）⇒ 本 Mod 的数据补丁 `config.bossPairing` **不再被任何代码读取 = no-op**。\n\n处置：保留目录与文件（不删），把 `upstreamFixedIn` 登记为 `0.2.5`；`server/match/bossPairing.js` 与 `finalAssault.bossPairGroups` 暂时留作未被调用的死代码，等撤项手续（§4.13 登记 + 工作区根镜像同步）走完再一并删除。**本 Mod 在 `LIVE_MODS_EXCLUDED` 里（线上连目录都不上传）⇒ 对正式服零影响。**\n\n—— 以下为撤项前的原文（保留作溯源）——\n\n基座（= 官方 0.2.4 及更早的口径）在最终攻势（同盟第 14 回合 / 隐秘核心第 15 回合）里把**存活玩家按座位两两配对**：座位 0+1 一组、2+3 一组……，组内座位靠前的那位守战场左半边。所以同一批人反复开局，每局的队友**永远一样**。\n\n本 Mod 只往配置里加一段计数表（纯数据，一行代码都没有），把这条接缝切到「随机挑队友」：每个 boss 回合开始时按当时的**实际存活人数**重新随机分组。\n\n口径：\n• 随机的只是「谁和谁一队」；**组内左右仍按座位决定**（座位靠前的那位照样守左半边），所以 2 人房的左右不会被翻过来。\n• 随机用的是**独立的派生随机流**，不碰波次 / 商店 / 机变 / 机器人那几条流 —— 打开本 Mod 时敌人的波次内容、商店、发卡与 AI 决策**逐值不变**，只有分组变。\n• 每个 boss 回合各随机一次（第 14 回合与第 15 回合不是同一次洗牌）；中途有人被淘汰时按新的存活集合重新分组（与官方同一套逻辑）。\n• 分组只由「本局种子 + 回合号 + 存活集合」决定 ⇒ 同一局里客户端看到的战场与服务器完全一致，不需要客户端也装。\n\n依赖与风险：纯 L2 数据 Mod（只加 `config.bossPairing` 一段表），不含行为代码、不含美术，对所有玩家生效。不装它时基座逐值等于官方（按座位配对）。与 cyanfish.max-seats 无依赖、可各自单独开关：本 Mod 不写 `config.coop`（两个 Mod 不能共用同一条 `add`，见 docs/MODS.md §4.13）。",
+  "loadAfter": []
+}

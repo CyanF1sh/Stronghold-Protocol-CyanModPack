@@ -1,0 +1,159 @@
+{
+  "ops": [
+    {
+      "op": "add",
+      "path": "diy.slots.chess_char_3_diy1_a",
+      "value": {
+        "tier": 3,
+        "goldenId": "chess_char_3_diy1_b",
+        "shopLevel": 3,
+        "requirement": "TIER_6",
+        "voidedByTiers": [5, 6],
+        "voidedNote": {
+          "enabled": true,
+          "text": "以失去所有高阶自选为束缚\n换取一个III阶自选位",
+          "style": {
+            "border": "1px solid rgba(255,0,36,.6)",
+            "border-radius": "2px",
+            "background": "linear-gradient(180deg, rgba(231,49,24,.32), rgba(20,4,4,.85))",
+            "box-shadow": "inset 0 0 0 1px rgba(255,0,36,.22), 0 0 8px rgba(231,49,24,.3)",
+            "color": "#ffb9ae"
+          }
+        }
+      }
+    },
+    {
+      "op": "add",
+      "path": "diy.prototypes.3",
+      "value": [
+        "char_601_cguard",
+        "char_602_cdfend",
+        "char_603_csnipe",
+        "char_604_ccast",
+        "char_605_cmedic",
+        "char_606_csuppo",
+        "char_608_acpion",
+        "char_609_acguad",
+        "char_610_acfend",
+        "char_611_acnipe",
+        "char_612_accast",
+        "char_613_acmedc",
+        "char_614_acsupo",
+        "char_615_acspec",
+        "char_617_sharp2"
+      ]
+    },
+    {
+      "op": "add",
+      "path": "diy.locked.3",
+      "value": {
+        "char_601_cguard": {
+          "skillIndex": 2,
+          "uniEquipId": null,
+          "from": [
+            "chess_char_5_07_a"
+          ]
+        },
+        "char_602_cdfend": {
+          "skillIndex": 2,
+          "uniEquipId": null,
+          "from": [
+            "chess_char_5_05_a"
+          ]
+        },
+        "char_603_csnipe": {
+          "skillIndex": 2,
+          "uniEquipId": null,
+          "from": [
+            "chess_char_5_15_a"
+          ]
+        },
+        "char_604_ccast": {
+          "skillIndex": 2,
+          "uniEquipId": null,
+          "from": [
+            "chess_char_5_02_a"
+          ]
+        },
+        "char_605_cmedic": {
+          "skillIndex": 2,
+          "uniEquipId": null,
+          "from": []
+        },
+        "char_606_csuppo": {
+          "skillIndex": 2,
+          "uniEquipId": null,
+          "from": [
+            "chess_char_5_10_a"
+          ]
+        },
+        "char_608_acpion": {
+          "skillIndex": 2,
+          "uniEquipId": "uniequip_002_acpion",
+          "from": [
+            "chess_char_5_14_a"
+          ]
+        },
+        "char_609_acguad": {
+          "skillIndex": 2,
+          "uniEquipId": "uniequip_002_acguad",
+          "from": [
+            "chess_char_5_06_a",
+            "chess_char_5_13_a"
+          ]
+        },
+        "char_610_acfend": {
+          "skillIndex": 2,
+          "uniEquipId": "uniequip_002_acfend",
+          "from": [
+            "chess_char_5_08_a"
+          ]
+        },
+        "char_611_acnipe": {
+          "skillIndex": 2,
+          "uniEquipId": "uniequip_002_acnipe",
+          "from": [
+            "chess_char_5_18_a",
+            "chess_char_5_22_a"
+          ]
+        },
+        "char_612_accast": {
+          "skillIndex": 2,
+          "uniEquipId": "uniequip_002_accast",
+          "from": [
+            "chess_char_5_03_a"
+          ]
+        },
+        "char_613_acmedc": {
+          "skillIndex": 2,
+          "uniEquipId": "uniequip_002_acmedc",
+          "from": [
+            "chess_char_5_11_a"
+          ]
+        },
+        "char_614_acsupo": {
+          "skillIndex": 2,
+          "uniEquipId": "uniequip_002_acsupo",
+          "from": [
+            "chess_char_5_12_a",
+            "chess_char_5_20_a"
+          ]
+        },
+        "char_615_acspec": {
+          "skillIndex": 2,
+          "uniEquipId": "uniequip_002_acspec",
+          "from": [
+            "chess_char_5_17_a"
+          ]
+        },
+        "char_617_sharp2": {
+          "skillIndex": 0,
+          "uniEquipId": "uniequip_002_sharp2",
+          "from": [
+            "chess_char_5_19_a"
+          ]
+        }
+      }
+    }
+  ]
+}

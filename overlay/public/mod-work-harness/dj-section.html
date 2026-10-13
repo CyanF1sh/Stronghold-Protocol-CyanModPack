@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>工序 43 · 模组设置栏位渲染台（dev harness）</title>
+<!-- ==========================================================================================
+     这个文件是**开发/验收用的渲染台**，不是游戏的一部分，也不参与任何 Mod 的加载。
+
+     为什么需要它：**「模组设置」栏位（`mods/*/client/section.js`）平时只有在游戏里走到
+     「干员调配」顶栏（或战斗中的官方设置弹窗）才会被画出来**；而本机的素材构建状况、
+     屏幕流程与登录步骤都可能让自动化截图卡在前面。为了能**逐字用真的组件**取到
+     「DJ 整活」那一栏的改前 / 改后截图，这里用**宿主自己的** Preact + htm（`/vendor/*`）、
+     **宿主自己的**表单 CSS（`/css/screens/game.css` + `/css/theme.css`）与真实 `api.ui` 形状，
+     把 `cyanfish.dj-models` 的 `DjModelsSection` 直接渲染出来 —— 没有任何一份"翻版 UI"。
+
+     它只做两件事：① 读出宿主 CSS 的自定义属性供面板使用（宿主自己会设，这里补一份兜底）；
+     ② 用一个与 `public/js/ui/extensions.js` 同形状的最小 `api` 调 `DjModelsSection`。
+
+     ★ 不写数据、不发请求、不注册任何 Mod、不改任何 Mod：纯粹把组件画进这个页面。
+     ========================================================================================== -->
+<style>
+  /* 只铺一层宿主观感的底（颜色全部取自宿主的 token 名，值由下面的脚本从 /css/theme.css 读出来）。 */
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--bg-0, #080b0a); color: var(--text-hi, #eaf7f2);
+    font-family: var(--font-cjk, system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif); }
+  /* ★ 面板容器：宽度取**独立弹窗**那一档（`cyanfish.mod-settings` 用 width="9rem"），
+     根字号按宿主的桌面口径固定成 100px（实测 1rem≈100px）。这样量出来的行高 / 换行
+     与真机面板逐值可比。 */
+  html { font-size: 100px; }
+  #stage { width: 9rem; margin: .2rem auto; padding: .2rem .3rem; background: var(--bg-1, #0c110f);
+    border: 1px solid var(--line, #1e2b27); border-radius: 3px; box-sizing: border-box; }
+  #stage h3 { margin: 0 0 .12rem; font-size: .16rem; font-weight: 500; color: var(--text-lo, #7d918a); }
+  /* 宿主的表单样式表里 .set-row 的标签列是 3.3rem；本渲染台的宽度就是 9rem 面板的内容列。 */
+  .set-list { display: flex; flex-direction: column; gap: .16rem; }
+</style>
+<link rel="stylesheet" href="/css/theme.css" />
+<link rel="stylesheet" href="/css/screens/game.css" />
+</head>
+<body>
+<div id="stage">
+  <h3>模组设置 · 🎉 DJ 整活（真实组件，宿主 CSS + 宿主 Preact）</h3>
+  <div id="root" class="set-list" data-harness-root="1"></div>
+</div>
+<script type="module">
+import { h, render } from '/vendor/preact.module.js';
+import { useState, useEffect, useRef, useMemo, useCallback } from '/vendor/hooks.module.js';
+import htm from '/vendor/htm.module.js';
+
+// 与宿主 public/js/ui/components.js 第 24-36 行同一份写法：htm.bind(h)，并把静态子树缓存关掉
+// （`this[0] = 3` 是 htm 的文档化 opt-out），否则同一次会话里静态子树的 vnode 会被复用。
+function hFresh(...args) { this[0] = 3; return h(...args); }
+const html = htm.bind(hFresh);
+
+const { createStore, RANGES, SPIN_MODES, GROUPS } = await import('/mods/cyanfish.dj-models/client/config.js');
+const { DjModelsSection } = await import('/mods/cyanfish.dj-models/client/section.js');
+
+// ---- 最小的 host api（形状与 public/js/ui/extensions.js 给的 ui 句柄一致）----
+const api = {
+  ui: {
+    html, h,
+    hooks: { useState, useEffect, useRef, useMemo, useCallback },
+    Button: function Button({ variant = 'secondary', size = 'sm', icon, children, ...rest }) {
+      const cls = 'set-btn' + (variant === 'primary' ? ' primary' : '') + (size === 'sm' ? ' sm' : '');
+      return html`<button type="button" class=${cls} ...${rest}>${children}</button>`;
+    },
+    toast() {}, toastError() {}, confirmDialog: async () => true, alertDialog: async () => {},
+  },
+  log: console,
+};
+const store = createStore({ storage: null });     // 不落盘：渲染台绝不写玩家的 localStorage
+const ENG = {
+  hook: 'app', writesFrame: 0, budget: 400, budgetHit: 0, costMs: 0.041, pending: 0,
+  spinPeriod: store.get().spinPeriod, squashPeriod: store.get().squashPeriod,
+  squashMinPct: store.get().squashMinPct, widthMaxPct: store.get().widthMaxPct,
+  chaos: store.get().chaos, chaosTargets: 0, fb: store.get().fbSwap, fbSwaps: 0, fbSwapsTotal: 0,
+  fbEligible: 0, fbBack: 0, fbNoBack: 0, fbHeld: 0, fbStun: 0, fbBlocked: 0, fbDead: store.get().fbDead,
+};
+const DOMST = { reduced: false, inMatch: false, active: false, marked: 0, domMode: store.get().domMode, deg: 60, guard: false, guarded: 0 };
+
+function Harness() {
+  return html`<${DjModelsSection} api=${api} store=${store} rng=${RANGES} spinModes=${SPIN_MODES}
+    groups=${GROUPS} version="1.6.0" onStatus=${() => ENG} onDomStatus=${() => DOMST} />`;
+}
+render(html`<${Harness} />`, document.getElementById('root'));
+window.__HARNESS_READY__ = true;
+</script>
+</body>
+</html>

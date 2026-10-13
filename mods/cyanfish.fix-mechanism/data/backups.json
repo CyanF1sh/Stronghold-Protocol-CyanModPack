@@ -1,0 +1,5 @@
+{
+  "ops": [
+    { "op": "add", "path": "mechanics", "value": { "bondCopyLayers": true, "indomRaidSp": true } }
+  ]
+}

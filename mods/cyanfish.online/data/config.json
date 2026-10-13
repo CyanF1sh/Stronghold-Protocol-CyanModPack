@@ -1,0 +1,13 @@
+{
+  "ops": [
+    {
+      "op": "add",
+      "path": "online",
+      "value": {
+        "enabled": true,
+        "pollSec": 20,
+        "showMatches": true
+      }
+    }
+  ]
+}

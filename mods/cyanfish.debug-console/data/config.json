@@ -1,0 +1,33 @@
+{
+  "ops": [
+    {
+      "op": "add",
+      "path": "debug",
+      "value": {
+        "enabled": true,
+        "actions": [
+          "setRound",
+          "setFunds",
+          "setLp",
+          "addLayers",
+          "setLayers",
+          "grantChess",
+          "grantItem",
+          "equipItem",
+          "setWave",
+          "setWaveList",
+          "setEnemyScale",
+          "setEnemyAttr",
+          "rebuildWave",
+          "applyChoice",
+          "clearChoice"
+        ],
+        "maxRound": 15,
+        "maxFunds": 999,
+        "maxLp": 99,
+        "maxLayers": 999,
+        "maxCount": 30
+      }
+    }
+  ]
+}

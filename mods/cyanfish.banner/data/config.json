@@ -1,0 +1,14 @@
+{
+  "ops": [
+    {
+      "op": "add",
+      "path": "banner",
+      "value": {
+        "enabled": true,
+        "pollSec": 20,
+        "maxItems": 3,
+        "items": []
+      }
+    }
+  ]
+}
